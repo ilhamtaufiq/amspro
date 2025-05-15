@@ -6,6 +6,10 @@ export interface User {
     name: string;
     email: string;
     email_verified_at: string;
+    roles: { id: number; name: string }[];
+    permissions?: string[];
+    created_at?: string;
+    updated_at?: string;
 }
 
 export type PageProps<
@@ -14,6 +18,7 @@ export type PageProps<
     auth: {
         user: User;
     };
+    [key: string]: any;
 };
 
 export type MenuItemProp = {

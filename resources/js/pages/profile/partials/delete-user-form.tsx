@@ -104,8 +104,8 @@ export default function DeleteUserForm({
 
                             <AlertDialogAction
                                 type={"submit"}
-                                variant={"destructive"}
                                 disabled={processing}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                                 Delete Account
                             </AlertDialogAction>
