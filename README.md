@@ -1,46 +1,103 @@
-# Laravel + shadcn/ui + InertiaJS Starter Template
+# AMS Pro
 
-![Laravel + shadcn/ui + InertiaJS Starter Template](https://raw.githubusercontent.com/mahmudz/laravel-shadcn-app-panel/main/public/repository-cover.png)
+AMS Pro adalah aplikasi web modern yang dibangun menggunakan React, TypeScript, dan Inertia.js.
 
-This is a template to start building a custom user/admin panel quickly.
-Feel free to customize this template to fit the specific needs of your Laravel application!
+## Teknologi yang Digunakan
 
-## Technologies
+- React 18
+- TypeScript
+- Inertia.js
+- Tailwind CSS
+- Radix UI Components
+- Vite
+- Laravel (Backend)
 
-- [Laravel 11](https://laravel.com/docs/)
-- [shadcn/ui](https://ui.shadcn.com/docs)
-- [InertiaJS](https://inertiajs.com/)
+## Persyaratan Sistem
 
-## Prerequisites
+- Node.js (versi terbaru LTS)
+- npm atau yarn
+- PHP 8.1 atau lebih tinggi
+- Composer
 
-Before you begin, ensure you have met the following requirements:
+## Instalasi
 
-- PHP >= 8.2
-- Composer (for package management)
-- Node.js & npm (for frontend dependencies)
-- MySQL or another [compatible database](https://laravel.com/docs/11.x/database#configuration)
-
-## Installation
-
-1. Clone the repository: `git clone https://github.com/mahmudz/laravel-shadcn-app-panel.git`
-2. Navigate into the project directory: `cd [project directory]`
-3. Install PHP dependencies: `composer install`
-4. Copy `.env.example` to `.env` and configure your environment variables, including database settings and application key.
-5. Generate application key: `php artisan key:generate`
-6. Run database migrations: `php artisan migrate`
-7. Optionally, seed the database: `php artisan db:seed`
-8. Install frontend dependencies: `npm install && npm run dev` (for development) or `npm install && npm run build` (for production)
-
-## Usage
-
-To start the development server, run:
-
-```
-php artisan serve
+1. Clone repositori ini
+```bash
+git clone [URL_REPOSITORI]
+cd amspro
 ```
 
-Access the application in your browser at `http://localhost:8000` by default.
+2. Install dependensi
+```bash
+npm install
+# atau
+yarn install
+```
 
-## Contact
+3. Install dependensi PHP
+```bash
+composer install
+```
 
-If you have any questions, feedback, or support requests, you can reach me here [mahmudbappy.pri@gmail.com](https://github.com/mahmudz/laravel-shadcn-app-panel.git)
+4. Salin file .env.example ke .env
+```bash
+cp .env.example .env
+```
+
+5. Generate application key
+```bash
+php artisan key:generate
+```
+
+6. Jalankan migrasi database
+```bash
+php artisan migrate
+```
+
+## Pengembangan
+
+Untuk menjalankan server pengembangan:
+
+```bash
+npm run dev
+# atau
+yarn dev
+```
+
+Aplikasi akan berjalan di `http://localhost:5173`
+
+## Build untuk Produksi
+
+Untuk membuat build produksi:
+
+```bash
+npm run build
+# atau
+yarn build
+```
+
+## Fitur Utama
+
+- Antarmuka pengguna modern dengan Tailwind CSS
+- Komponen UI yang dapat diakses menggunakan Radix UI
+- Integrasi peta dengan Leaflet
+- Grafik dan visualisasi data dengan Recharts
+- Manajemen tema gelap/terang
+- Tabel data yang dapat dikustomisasi
+- Notifikasi toast
+- Dan banyak lagi...
+
+## Struktur Proyek
+
+- `/resources` - Berisi file-file frontend (React components, styles, dll)
+- `/app` - Berisi kode backend Laravel
+- `/public` - File-file statis
+- `/database` - Migrasi dan seeder database
+
+## Kontribusi
+
+Silakan buat pull request untuk kontribusi. Untuk perubahan besar, harap buka issue terlebih dahulu untuk mendiskusikan perubahan yang diinginkan.
+
+## Lisensi
+
+[Masukkan informasi lisensi di sini]

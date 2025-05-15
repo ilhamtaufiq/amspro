@@ -1,7 +1,7 @@
 {
     "name": "laravel/laravel",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Aplikasi Manajemen Proyek Bidang Air Minum dan Sanitasi DISPERKIM Cianjur.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
