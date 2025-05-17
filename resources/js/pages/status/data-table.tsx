@@ -27,6 +27,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   meta: Meta;
   tahun: number;
+  search?: string;
 }
 
 export function DataTable<TData extends Status, TValue>({
@@ -34,12 +35,13 @@ export function DataTable<TData extends Status, TValue>({
   data: initialData,
   meta,
   tahun,
+  search,
 }: DataTableProps<TData, TValue>) {
   const [data, setData] = React.useState<TData[]>(initialData);
   const [sorting, setSorting] = React.useState<
     { id: string; desc: boolean }[]
   >([]);
-  const [search, setSearch] = React.useState(""); // State untuk input pencarian
+  const [searchState, setSearchState] = React.useState(search || ""); // State untuk input pencarian
   const [isSearching, setIsSearching] = React.useState(false); // State untuk indikator loading
 
   React.useEffect(() => {
@@ -75,21 +77,21 @@ export function DataTable<TData extends Status, TValue>({
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setSearch(value);
+    setSearchState(value);
     debouncedSearch(value);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      performSearch(search); // Langsung cari saat tekan Enter
+      performSearch(searchState); // Langsung cari saat tekan Enter
     }
   };
 
   const handlePageChange = (page: number) => {
     router.get(
       "/status",
-      { search, tahun, page },
+      { search: searchState, tahun, page },
       { preserveState: true, preserveScroll: true }
     );
   };
@@ -112,7 +114,7 @@ export function DataTable<TData extends Status, TValue>({
         <div className="relative">
           <Input
             placeholder="Cari nama pekerjaan, penyedia..."
-            value={search}
+            value={searchState}
             onChange={handleSearch}
             onKeyDown={handleKeyDown}
             className="max-w-sm pr-8"

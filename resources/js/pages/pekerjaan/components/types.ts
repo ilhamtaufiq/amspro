@@ -29,6 +29,8 @@ export interface Kontrak {
   nomor_penawaran: string;
   tanggal_penawaran: string;
   nilai_kontrak: number;
+  tgl_sppbj: string;
+  tgl_spk: string;
   tgl_spmk: string;
   tgl_selesai: string;
   sppbj: string;
@@ -114,9 +116,11 @@ export interface Penerima {
   jumlah_jiwa: number;
   nik: string;
   alamat: string | null;
+  ktp_path: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
+
 export interface Berkas {
   id: number;
   pekerjaan_id: number;

@@ -50,6 +50,8 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
     nomor_penawaran: kontrak?.nomor_penawaran || "",
     tanggal_penawaran: kontrak?.tanggal_penawaran || "",
     nilai_kontrak: kontrak?.nilai_kontrak || 0,
+    tgl_sppbj: kontrak?.tgl_sppbj || "",
+    tgl_spk: kontrak?.tgl_spk || "",
     tgl_spmk: kontrak?.tgl_spmk || "",
     tgl_selesai: kontrak?.tgl_selesai || "",
     sppbj: kontrak?.sppbj || "",
@@ -256,7 +258,7 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
                 onChange={(e) => setContractData("tgl_sppbj", e.target.value)}
                 required
               />
-              {contractErrors.tgl_spmk && <span className="text-red-500 text-sm">{contractErrors.tgl_sppbj}</span>}
+              {contractErrors.tgl_sppbj && <span className="text-red-500 text-sm">{contractErrors.tgl_sppbj}</span>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="tgl_spk">Tanggal SPK</Label>

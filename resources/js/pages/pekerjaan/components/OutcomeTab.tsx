@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@/components/ui/Spinner";
 import type { PageProps } from "./types";
 import { useState } from "react";
 
@@ -110,7 +110,7 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
       }
     } catch (err) {
       console.error("OCR preview error:", err);
-      setOcrError(`Gagal mengekstrak data KTP: ${err.message}`);
+      setOcrError(`Gagal mengekstrak data KTP: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setOcrLoading(false);
     }
