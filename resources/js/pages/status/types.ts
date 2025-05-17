@@ -2,8 +2,8 @@ export interface Status {
   id: number;
   pekerjaan_id: number;
   nama_pekerjaan: string;
-  mulai: string;
-  selesai: string;
+  tgl_spmk: string;
+  tgl_selesai: string;
   penyedia: string;
   pagu: number;
   nilai_kontrak: number;

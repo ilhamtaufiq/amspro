@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
+use Laravel\Scout\Searchable;
 
 class Pekerjaan extends Model
 {
     use HasFactory;
+    use Searchable;
     protected $table = "tbl_pekerjaan";
     protected $fillable = [
         'nama_paket',
@@ -20,9 +22,26 @@ class Pekerjaan extends Model
     ];
 
     /**
+     * Configure the Meilisearch index settings.
+     */
+    public function configureSearchableIndex()
+    {
+        $engine = $this->searchableUsing();
+        $engine->updateIndexSettings($this->searchableAs(), [
+            'filterableAttributes' => ['tahun_anggaran', 'n_kec', 'n_desa'],
+        ]);
+    }
+
+    /**
+     * Get the index name for the model.
+     */
+    public function searchableAs()
+    {
+        return 'tbl_pekerjaan';
+    }
+
+    /**
      * Get the kegiatan associated with the Pekerjaan
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function kegiatan()
     {
@@ -31,8 +50,6 @@ class Pekerjaan extends Model
 
     /**
      * Get all of the foto for the Pekerjaan
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function foto()
     {
@@ -40,26 +57,26 @@ class Pekerjaan extends Model
     }
 
     /**
-     * Get all of the comments for the Pekerjaan
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * Get all of the penerima for the Pekerjaan
      */
     public function penerima()
     {
         return $this->hasMany(Penerima::class, 'pekerjaan_id', 'id');
     }
-       // Relasi ke kecamatan
-       public function kecamatan()
-       {
-           return $this->belongsTo(Kecamatan::class, 'kecamatan_id');
-       }
 
-       // Relasi ke desa
-       public function desa()
-       {
-           return $this->belongsTo(Desa::class, 'desa_id');
-       }
-       public function berkas()
+    // Relasi ke kecamatan
+    public function kecamatan()
+    {
+        return $this->belongsTo(Kecamatan::class, 'kecamatan_id');
+    }
+
+    // Relasi ke desa
+    public function desa()
+    {
+        return $this->belongsTo(Desa::class, 'desa_id');
+    }
+
+    public function berkas()
     {
         return $this->hasMany(Berkas::class, 'pekerjaan_id');
     }
@@ -75,10 +92,9 @@ class Pekerjaan extends Model
             'id' // Local key on kegiatan table
         );
     }
+
     /**
      * Get all of the progresses for the Pekerjaan
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function progresses()
     {
@@ -87,24 +103,34 @@ class Pekerjaan extends Model
 
     /**
      * Get all of the outputs for the Pekerjaan
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function outputs()
     {
         return $this->hasMany(Output::class, 'pekerjaan_id');
     }
+
     public function keuangan()
     {
         return $this->hasOne(Keuangan::class, 'pekerjaan_id');
     }
-     public function kontrak()
+
+    public function kontrak()
     {
         return $this->hasOne(Kontrak::class, 'id_pekerjaan');
     }
+
     public function penerimas()
     {
         return $this->hasMany(Penerima::class);
     }
 
+    public function toSearchableArray()
+    {
+        return [
+            'nama_paket' => $this->nama_paket,
+            'tahun_anggaran' => $this->kegiatan->tahun_anggaran ?? null,
+            'n_kec' => $this->kecamatan->n_kec ?? null,
+            'n_desa' => $this->desa->n_desa ?? null,
+        ];
+    }
 }

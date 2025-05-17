@@ -29,8 +29,8 @@ export interface Kontrak {
   nomor_penawaran: string;
   tanggal_penawaran: string;
   nilai_kontrak: number;
-  mulai: string;
-  selesai: string;
+  tgl_spmk: string;
+  tgl_selesai: string;
   sppbj: string;
   spk: string;
   spmk: string;

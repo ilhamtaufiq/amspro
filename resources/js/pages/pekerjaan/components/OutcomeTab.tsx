@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import type { PageProps } from "./types";
+import { useState } from "react";
 
 export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PageProps) {
   const { data, setData, post, put, processing, errors: penerimaErrors, reset } = useForm<{
@@ -12,12 +14,17 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
     jumlah_jiwa: number;
     nik: string;
     alamat: string;
+    ktp?: File | null;
   }>({
     nama: "",
     jumlah_jiwa: 0,
     nik: "",
     alamat: "",
+    ktp: null,
   });
+
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState<string | null>(null);
 
   // Defensive permission checks
   const permissions = auth?.user?.permissions ?? [];
@@ -42,16 +49,93 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
     );
   }
 
+  const handleOcrPreview = async () => {
+    if (!data.ktp) {
+      alert("Silakan unggah file KTP terlebih dahulu.");
+      return;
+    }
+
+    setOcrLoading(true);
+    setOcrError(null);
+    const formData = new FormData();
+    formData.append("ktp", data.ktp);
+
+    try {
+      // Get CSRF token from meta tag
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      if (!csrfToken) {
+        throw new Error('CSRF token not found');
+      }
+
+      const response = await fetch(route("penerima.ocr", pekerjaan.id), {
+        method: "POST",
+        body: formData,
+        headers: {
+          'X-CSRF-TOKEN': csrfToken,
+        },
+      });
+
+      // Log raw response for debugging
+      const rawResponse = await response.text();
+      console.log('Raw OCR response:', rawResponse);
+
+      // Attempt to parse JSON
+      let ocrData;
+      try {
+        ocrData = JSON.parse(rawResponse);
+      } catch (e) {
+        console.error('Failed to parse JSON:', e);
+        throw new Error('Invalid JSON response from server: ' + rawResponse.substring(0, 100));
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      if (ocrData.error) {
+        setOcrError(ocrData.error);
+        setData({
+          ...data,
+          nama: ocrData.nama || data.nama,
+          nik: ocrData.nik || data.nik,
+          alamat: ocrData.alamat || data.alamat,
+        });
+      } else {
+        setData({
+          ...data,
+          nama: ocrData.nama || data.nama,
+          nik: ocrData.nik || data.nik,
+          alamat: ocrData.alamat || data.alamat,
+        });
+      }
+    } catch (err) {
+      console.error("OCR preview error:", err);
+      setOcrError(`Gagal mengekstrak data KTP: ${err.message}`);
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const formData = new FormData();
+    formData.append("nama", data.nama);
+    formData.append("jumlah_jiwa", data.jumlah_jiwa.toString());
+    formData.append("nik", data.nik);
+    formData.append("alamat", data.alamat);
+    if (data.ktp) {
+      formData.append("ktp", data.ktp);
+    }
+
     if (data.id && canEditPenerima) {
       put(route("penerima.update", [pekerjaan.id, data.id]), {
+        data: formData,
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
           reset();
           if (flash?.success) {
-            alert(flash.success); // Use backend flash message
+            alert(flash.success);
           } else {
             alert("Data penerima berhasil diperbarui!");
           }
@@ -63,6 +147,7 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
       });
     } else if (canCreatePenerima) {
       post(route("penerima.store", pekerjaan.id), {
+        data: formData,
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
@@ -89,6 +174,7 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
         jumlah_jiwa: penerima.jumlah_jiwa,
         nik: penerima.nik,
         alamat: penerima.alamat || "",
+        ktp: null,
       });
     }
   };
@@ -121,7 +207,7 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
       </CardHeader>
       <CardContent className="space-y-4">
         {(canCreatePenerima || canEditPenerima) ? (
-          <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+          <form onSubmit={handleSubmit} className="space-y-4 mb-6" encType="multipart/form-data">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nama">Nama</Label>
@@ -163,13 +249,41 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
                 />
                 {penerimaErrors.alamat && <span className="text-red-500 text-sm">{penerimaErrors.alamat}</span>}
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="ktp">Upload KTP</Label>
+                <Input
+                  id="ktp"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setData("ktp", e.target.files?.[0] || null)}
+                />
+                {penerimaErrors.ktp && <span className="text-red-500 text-sm">{penerimaErrors.ktp}</span>}
+              </div>
             </div>
-            <Button
-              type="submit"
-              disabled={processing || (!canCreatePenerima && !Boolean(data.id)) || (!canEditPenerima && Boolean(data.id))}
-            >
-              {processing ? "Memproses..." : data.id ? "Perbarui Penerima" : "Tambah Penerima"}
-            </Button>
+            {ocrError && <p className="text-red-500 text-sm">{ocrError}</p>}
+            <div className="flex gap-2 items-center">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleOcrPreview}
+                disabled={ocrLoading || !data.ktp}
+              >
+                {ocrLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner className="h-4 w-4" />
+                    Memproses OCR...
+                  </span>
+                ) : (
+                  "Pratinjau OCR"
+                )}
+              </Button>
+              <Button
+                type="submit"
+                disabled={processing || (!canCreatePenerima && !Boolean(data.id)) || (!canEditPenerima && Boolean(data.id))}
+              >
+                {processing ? "Memproses..." : data.id ? "Perbarui Penerima" : "Tambah Penerima"}
+              </Button>
+            </div>
           </form>
         ) : null}
 
@@ -195,6 +309,10 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
                       <div className="flex justify-between">
                         <p className="text-sm">Alamat</p>
                         <p className="text-sm">{penerima.alamat || "N/A"}</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="text-sm">KTP</p>
+                        <p className="text-sm">{penerima.ktp_path ? "Uploaded" : "N/A"}</p>
                       </div>
                       {(canEditPenerima || canDeletePenerima) && (
                         <div className="flex gap-2">

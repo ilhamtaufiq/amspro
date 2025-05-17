@@ -13,9 +13,9 @@ use App\Http\Controllers\OutputController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\PenerimaController;
 use App\Http\Controllers\BerkasController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StatusController;
-use App\Http\Controllers\DeepSeekController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -40,11 +40,11 @@ Route::post('/set-tahun', function (Request $request) {
     ]);
 })->middleware('auth')->name('set-tahun');
 
-Route::post('/deepseek/query', [DeepSeekController::class, 'query']);
-// Route::get('/dashboard', function () {
-//     return Inertia::render('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', function () {
+    return Inertia::render('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+Route::match(['get', 'post'], '/chat', [ChatController::class, 'index'])->name('chat.index');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Profile Routes (Accessible to all authenticated users)
@@ -57,7 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Pekerjaan Resource Routes (Restricted by permissions)
     Route::resource('pekerjaan', PekerjaanController::class)->middleware(['permission:view pekerjaan|create pekerjaan|edit pekerjaan|delete pekerjaan']);
-
+    Route::post('/pekerjaan/{pekerjaan}/penerima/ocr', [PenerimaController::class, 'ocrPreview'])->name('penerima.ocr');
     // Kontrak Resource Routes (Restricted by permissions)
     Route::resource('kontrak', KontrakController::class)->middleware(['permission:view kontrak|create kontrak|edit kontrak|delete kontrak']);
 
@@ -110,6 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/progress/{progress}', [ProgressController::class, 'destroy'])->name('progress.destroy')->middleware('permission:delete pekerjaan');
     });
     Route::post('/pekerjaan/import', [PekerjaanController::class, 'import'])->name('pekerjaan.import');
+    Route::get('/datapaket/export', [PekerjaanController::class, 'export'])->name('pekerjaan.export');
 });
 
 require __DIR__ . '/auth.php';

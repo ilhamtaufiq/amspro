@@ -14,6 +14,7 @@ use App\Models\Progress; // Add Progress model
 use App\Models\Berkas; // Add Progress model
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\PekerjaanImport;
+use App\Exports\PekerjaanExport;
 use Illuminate\Http\Request;
 use App\Helpers\ApiResponse;
 use Inertia\Inertia;
@@ -290,8 +291,10 @@ class PekerjaanController extends Controller
                 'nomor_penawaran' => $kontrak->nomor_penawaran,
                 'tanggal_penawaran' => $kontrak->tanggal_penawaran,
                 'nilai_kontrak' => $kontrak->nilai_kontrak,
-                'mulai' => $kontrak->mulai,
-                'selesai' => $kontrak->selesai,
+                'tgl_sppbj' => $kontrak->tgl_sppbj,
+                'tgl_spk' => $kontrak->tgl_spk,
+                'tgl_spmk' => $kontrak->tgl_spmk,
+                'tgl_selesai' => $kontrak->tgl_selesai,
                 'sppbj' => $kontrak->sppbj,
                 'spk' => $kontrak->spk,
                 'spmk' => $kontrak->spmk,
@@ -381,6 +384,16 @@ class PekerjaanController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal mengimport data: ' . $e->getMessage());
         }
+    }
+    public function export(Request $request)
+    {
+        $tahun = $request->query('tahun', now()->year);
+        $search = $request->query('search', '');
+
+        return Excel::download(
+            new PekerjaanExport($tahun, $search),
+            'pekerjaan_' . $tahun . '_' . now()->format('Ymd_His') . '.xlsx'
+        );
     }
     public function downloadTemplate()
     {

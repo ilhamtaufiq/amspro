@@ -14,18 +14,34 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // Get the tahun query parameter, default to current year if not provided
+        $tahun = $request->query('tahun', date('Y'));
+
         // Statistik Utama
         $stats = [
-            'totalPekerjaan' => Pekerjaan::count(),
-            'totalKegiatan' => Kegiatan::count(),
-            'totalPenerima' => Penerima::count(),
-            'realisasiKeuangan' => Keuangan::sum('realisasi'),
+            'totalPekerjaan' => Pekerjaan::whereHas('kegiatan', function ($query) use ($tahun) {
+                $query->where('tahun_anggaran', $tahun);
+            })->count(),
+            'totalKegiatan' => Kegiatan::where('tahun_anggaran', $tahun)->count(),
+            'totalPenerima' => Penerima::whereHas('pekerjaan', function ($query) use ($tahun) {
+                $query->whereHas('kegiatan', function ($q) use ($tahun) {
+                    $q->where('tahun_anggaran', $tahun);
+                });
+            })->count(),
+            'realisasiKeuangan' => Keuangan::whereHas('pekerjaan', function ($query) use ($tahun) {
+                $query->whereHas('kegiatan', function ($q) use ($tahun) {
+                    $q->where('tahun_anggaran', $tahun);
+                });
+            })->sum('realisasi'),
         ];
 
         // Pekerjaan Terbaru (5 terbaru)
-        $recentPekerjaan = Pekerjaan::with(['kecamatan', 'desa'])
+        $recentPekerjaan = Pekerjaan::with(['kegiatan', 'kecamatan', 'desa'])
+            ->whereHas('kegiatan', function ($query) use ($tahun) {
+                $query->where('tahun_anggaran', $tahun);
+            })
             ->latest()
             ->take(5)
             ->get(['id', 'nama_paket', 'pagu', 'kecamatan_id', 'desa_id', 'created_at'])
@@ -42,6 +58,11 @@ class DashboardController extends Controller
 
         // Data Progres untuk Grafik
         $progressData = Progress::with('pekerjaan')
+            ->whereHas('pekerjaan', function ($query) use ($tahun) {
+                $query->whereHas('kegiatan', function ($q) use ($tahun) {
+                    $q->where('tahun_anggaran', $tahun);
+                });
+            })
             ->get()
             ->map(function ($progress) {
                 return [
@@ -53,12 +74,25 @@ class DashboardController extends Controller
 
         // Ringkasan Kontrak
         $kontrakStats = [
-            'totalKontrak' => Kontrak::count(),
-            'nilaiKontrak' => Kontrak::sum('nilai_kontrak'),
+            'totalKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($tahun) {
+                $query->whereHas('kegiatan', function ($q) use ($tahun) {
+                    $q->where('tahun_anggaran', $tahun);
+                });
+            })->count(),
+            'nilaiKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($tahun) {
+                $query->whereHas('kegiatan', function ($q) use ($tahun) {
+                    $q->where('tahun_anggaran', $tahun);
+                });
+            })->sum('nilai_kontrak'),
         ];
 
         // Data Foto untuk Peta dan Galeri
         $fotoData = Foto::with('pekerjaan')
+            ->whereHas('pekerjaan', function ($query) use ($tahun) {
+                $query->whereHas('kegiatan', function ($q) use ($tahun) {
+                    $q->where('tahun_anggaran', $tahun);
+                });
+            })
             ->latest()
             ->take(10)
             ->get()
@@ -82,6 +116,7 @@ class DashboardController extends Controller
             'progressData' => $progressData,
             'kontrakStats' => $kontrakStats,
             'fotoData' => $fotoData,
+            'tahun_aktif' => (int) $tahun,
         ]);
     }
 }

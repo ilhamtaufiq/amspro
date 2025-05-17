@@ -12,8 +12,8 @@ export const columns: ColumnDef<Status>[] = [
     accessorKey: "mulai_selesai",
     header: "Mulai - Selesai",
     cell: ({ row }) => {
-      const mulai = row.original.mulai ?? "N/A";
-      const selesai = row.original.selesai ?? "N/A";
+      const mulai = row.original.tgl_spmk ?? "N/A";
+      const selesai = row.original.tgl_selesai ?? "N/A";
       return `${mulai} - ${selesai}`;
     },
   },

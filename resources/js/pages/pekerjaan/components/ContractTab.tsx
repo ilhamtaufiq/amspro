@@ -23,8 +23,10 @@ interface KontrakFormData {
   nomor_penawaran: string;
   tanggal_penawaran: string;
   nilai_kontrak: number;
-  mulai: string;
-  selesai: string;
+  tgl_sppbj: string;
+  tgl_spk: string;
+  tgl_spmk: string;
+  tgl_selesai: string;
   sppbj: string;
   spk: string;
   spmk: string;
@@ -48,8 +50,8 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
     nomor_penawaran: kontrak?.nomor_penawaran || "",
     tanggal_penawaran: kontrak?.tanggal_penawaran || "",
     nilai_kontrak: kontrak?.nilai_kontrak || 0,
-    mulai: kontrak?.mulai || "",
-    selesai: kontrak?.selesai || "",
+    tgl_spmk: kontrak?.tgl_spmk || "",
+    tgl_selesai: kontrak?.tgl_selesai || "",
     sppbj: kontrak?.sppbj || "",
     spk: kontrak?.spk || "",
     spmk: kontrak?.spmk || "",
@@ -245,27 +247,49 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
               />
               {contractErrors.nilai_kontrak && <span className="text-red-500 text-sm">{contractErrors.nilai_kontrak}</span>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="mulai">Tanggal Mulai</Label>
+             <div className="space-y-2">
+              <Label htmlFor="tgl_sppbj">Tanggal SPPBJ</Label>
               <Input
-                id="mulai"
+                id="tgl_sppbj"
                 type="date"
-                value={contractData.mulai}
-                onChange={(e) => setContractData("mulai", e.target.value)}
+                value={contractData.tgl_sppbj}
+                onChange={(e) => setContractData("tgl_sppbj", e.target.value)}
                 required
               />
-              {contractErrors.mulai && <span className="text-red-500 text-sm">{contractErrors.mulai}</span>}
+              {contractErrors.tgl_spmk && <span className="text-red-500 text-sm">{contractErrors.tgl_sppbj}</span>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="selesai">Tanggal Selesai</Label>
+              <Label htmlFor="tgl_spk">Tanggal SPK</Label>
               <Input
-                id="selesai"
+                id="tgl_spk"
                 type="date"
-                value={contractData.selesai}
-                onChange={(e) => setContractData("selesai", e.target.value)}
+                value={contractData.tgl_spk}
+                onChange={(e) => setContractData("tgl_spk", e.target.value)}
                 required
               />
-              {contractErrors.selesai && <span className="text-red-500 text-sm">{contractErrors.selesai}</span>}
+              {contractErrors.tgl_spk && <span className="text-red-500 text-sm">{contractErrors.tgl_spk}</span>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tgl_spmk">Tanggal Mulai</Label>
+              <Input
+                id="tgl_spmk"
+                type="date"
+                value={contractData.tgl_spmk}
+                onChange={(e) => setContractData("tgl_spmk", e.target.value)}
+                required
+              />
+              {contractErrors.tgl_spmk && <span className="text-red-500 text-sm">{contractErrors.tgl_spmk}</span>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tgl_selesai">Tanggal Selesai</Label>
+              <Input
+                id="tgl_selesai"
+                type="date"
+                value={contractData.tgl_selesai}
+                onChange={(e) => setContractData("tgl_selesai", e.target.value)}
+                required
+              />
+              {contractErrors.tgl_selesai && <span className="text-red-500 text-sm">{contractErrors.tgl_selesai}</span>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="sppbj">SPPBJ</Label>

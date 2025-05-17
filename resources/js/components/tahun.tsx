@@ -90,7 +90,17 @@ export function PilihTahun() {
         method: "get",
         preserveState: true,
         preserveScroll: true,
-        only: ["pekerjaan", "meta", "tahun_aktif", "kegiatanList", "kecamatanList", "desaList", "statuses"],
+        only: [
+            "pekerjaan",
+            "meta",
+            "tahun_aktif",
+            "kegiatanList",
+            "kecamatanList",
+            "desaList",
+            "statuses",
+            "stats",
+            "kontrakStats"
+        ],
         onSuccess: (page: any) => {
         //   console.log("Year change response:", page); // Debug
         },

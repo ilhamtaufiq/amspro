@@ -33,9 +33,9 @@ export function StatusTab({ pekerjaan, kontrak, keuangan, progresses, outputs }:
 
     if (kontrak) {
       const today = new Date();
-      if (kontrak.mulai) {
+      if (kontrak.tgl_spmk) {
         try {
-          const mulaiDate = new Date(kontrak.mulai);
+          const mulaiDate = new Date(kontrak.tgl_spmk);
           if (!isNaN(mulaiDate.getTime())) {
             contractMilestones.push({
               title: "Mulai Proyek",
@@ -48,13 +48,13 @@ export function StatusTab({ pekerjaan, kontrak, keuangan, progresses, outputs }:
             });
           }
         } catch (e) {
-          console.warn("Invalid kontrak.mulai date:", kontrak.mulai);
+          console.warn("Invalid kontrak.tgl_spmk date:", kontrak.tgl_spmk);
         }
       }
 
-      if (kontrak.selesai) {
+      if (kontrak.tgl_selesai) {
         try {
-          const selesaiDate = new Date(kontrak.selesai);
+          const selesaiDate = new Date(kontrak.tgl_selesai);
           if (!isNaN(selesaiDate.getTime())) {
             contractMilestones.push({
               title: "Target Selesai Proyek",
@@ -67,7 +67,7 @@ export function StatusTab({ pekerjaan, kontrak, keuangan, progresses, outputs }:
             });
           }
         } catch (e) {
-          console.warn("Invalid kontrak.selesai date:", kontrak.selesai);
+          console.warn("Invalid kontrak.tgl_selesai date:", kontrak.tgl_selesai);
         }
       }
 
@@ -75,8 +75,8 @@ export function StatusTab({ pekerjaan, kontrak, keuangan, progresses, outputs }:
         try {
           const sppbjDate = kontrak.tanggal_penawaran
             ? new Date(kontrak.tanggal_penawaran)
-            : kontrak.mulai
-            ? new Date(kontrak.mulai)
+            : kontrak.tgl_spmk
+            ? new Date(kontrak.tgl_spmk)
             : null;
           if (sppbjDate && !isNaN(sppbjDate.getTime())) {
             contractMilestones.push({
@@ -90,7 +90,7 @@ export function StatusTab({ pekerjaan, kontrak, keuangan, progresses, outputs }:
             });
           }
         } catch (e) {
-          console.warn("Invalid date for SPPBJ:", kontrak.tanggal_penawaran || kontrak.mulai);
+          console.warn("Invalid date for SPPBJ:", kontrak.tanggal_penawaran || kontrak.tgl_spmk);
         }
       }
     }
@@ -187,11 +187,11 @@ export function StatusTab({ pekerjaan, kontrak, keuangan, progresses, outputs }:
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Tanggal Mulai</p>
-              <p className="text-sm">{kontrak != null && kontrak.mulai ? kontrak.mulai : "N/A"}</p>
+              <p className="text-sm">{kontrak != null && kontrak.tgl_spmk ? kontrak.tgl_spmk : "N/A"}</p>
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Tanggal Selesai</p>
-              <p className="text-sm">{kontrak != null && kontrak.selesai ? kontrak.selesai : "N/A"}</p>
+              <p className="text-sm">{kontrak != null && kontrak.tgl_selesai ? kontrak.tgl_selesai : "N/A"}</p>
             </div>
           </div>
 

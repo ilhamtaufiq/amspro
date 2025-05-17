@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react"; // Ikon loading
+import { Loader2 } from "lucide-react";
 import { router, usePage } from "@inertiajs/react";
 import { Pekerjaan, Kegiatan, Kecamatan, Desa, Meta } from "./types";
 
@@ -63,14 +63,13 @@ export function DataTable<TData extends Pekerjaan, TValue>({
   const [search, setSearch] = React.useState(initialSearch);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [isSearching, setIsSearching] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
 
-  // Sync data state with initialData when it changes
   React.useEffect(() => {
     setData(initialData);
-    setIsSearching(false); // Reset loading state after data updates
+    setIsSearching(false);
   }, [initialData]);
 
-  // Debounce function
   const debounce = <T extends (...args: any[]) => void>(
     func: T,
     delay: number
@@ -82,19 +81,20 @@ export function DataTable<TData extends Pekerjaan, TValue>({
     };
   };
 
-  const updateTableData = (newData: Pekerjaan | null, isCreate = false, deleteId?: number) => {
+  const updateTableData = (
+    newData: Pekerjaan | null,
+    isCreate = false,
+    deleteId?: number
+  ) => {
     console.log("updateTableData called with:", { newData, isCreate, deleteId });
     setData((prev) => {
       if (newData === null && deleteId) {
-        // Delete: Remove the row
         return prev.filter((item) => item.id !== deleteId);
       }
       if (isCreate && newData) {
-        // Create: Append the new row
         return [newData as unknown as TData, ...prev];
       }
       if (!newData) return prev;
-      // Update: Replace the existing row
       return prev.map((item) =>
         item.id === newData.id ? { ...item, ...newData } as unknown as TData : item
       );
@@ -123,7 +123,7 @@ export function DataTable<TData extends Pekerjaan, TValue>({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      performSearch(search); // Langsung cari saat tekan Enter
+      performSearch(search);
     }
   };
 
@@ -133,6 +133,27 @@ export function DataTable<TData extends Pekerjaan, TValue>({
       { search, tahun, page },
       { preserveState: true, preserveScroll: true }
     );
+  };
+
+  const handleExport = () => {
+    setIsExporting(true);
+    const url = new URL(window.location.origin + "/pekerjaan/export");
+    url.searchParams.append("tahun", tahun.toString());
+    if (search) {
+      url.searchParams.append("search", search);
+    }
+
+    const link = document.createElement("a");
+    link.href = url.toString();
+    link.download = "";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Delay to simulate export process (optional, adjust based on actual backend response time)
+    setTimeout(() => {
+      setIsExporting(false);
+    }, 1000);
   };
 
   const table = useReactTable({
@@ -172,11 +193,29 @@ export function DataTable<TData extends Pekerjaan, TValue>({
               <Loader2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
             )}
           </div>
-          {userPermissions.includes("create pekerjaan") && (
-            <Button onClick={() => setCreateOpen(true)}>
-              Tambah Pekerjaan
-            </Button>
-          )}
+          <div className="flex space-x-2">
+            {userPermissions.includes("create pekerjaan") && (
+              <Button onClick={() => setCreateOpen(true)}>
+                Tambah Pekerjaan
+              </Button>
+            )}
+            {userPermissions.includes("view pekerjaan") && (
+              <Button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="relative"
+              >
+                {isExporting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Mengekspor...
+                  </>
+                ) : (
+                  "Download Excel"
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       <div className="rounded-md border">

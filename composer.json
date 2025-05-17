@@ -9,8 +9,10 @@
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
+        "laravel/scout": "^10.15",
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "^3.1",
+        "meilisearch/meilisearch-php": "^1.14",
         "spatie/laravel-medialibrary": "^11.12",
         "spatie/laravel-permission": "^6.17",
         "tightenco/ziggy": "^2.0"

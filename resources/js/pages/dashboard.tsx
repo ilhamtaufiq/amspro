@@ -1,152 +1,148 @@
-import { useEffect, useRef, useState } from "react";
 import { Head } from "@inertiajs/react";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Loader2 } from "lucide-react";
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
-import { useTheme } from "@/components/theme-provider";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Activity, BarChart3, CreditCard, Package } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
+interface DashboardProps {
+  stats: {
+    totalPekerjaan: number;
+    totalKegiatan: number;
+    totalPenerima: number;
+    realisasiKeuangan: number;
+  };
+  recentPekerjaan: {
+    id: number;
+    nama_paket: string;
+    pagu: number;
+    kecamatan: string;
+    desa: string;
+    created_at: string;
+  }[];
+  kontrakStats: {
+    totalKontrak: number;
+    nilaiKontrak: number;
+  };
+  fotoData: {
+    id: number;
+    pekerjaan_id: number;
+    nama_paket: string;
+    keterangan: string;
+    foto_url: string | null;
+    lat: number | null;
+    lng: number | null;
+  }[];
+  tahun_aktif: number;
 }
 
-export default function Dashboard() {
-  const [prompt, setPrompt] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { theme, setTheme } = useTheme();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!prompt.trim()) return;
-
-    const newMessages: Message[] = [...messages, { role: "user", content: prompt }];
-    setMessages(newMessages);
-    setPrompt("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("/deepseek/query", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
-        },
-        body: JSON.stringify({ prompt }),
-      });
-
-      const data = await res.json();
-      const botReply = data.choices?.[0]?.message?.content || "❌ Tidak ada jawaban.";
-
-      setMessages((prev) => [...prev, { role: "assistant", content: botReply }]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "❌ Gagal mengambil jawaban dari DeepSeek." },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+export default function Dashboard({ stats, recentPekerjaan, kontrakStats, fotoData, tahun_aktif }: DashboardProps) {
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 1,
+      notation: "compact",
+    }).format(value);
   };
 
   return (
-    <AuthenticatedLayout header="DeepSeek ChatBot">
+    <AuthenticatedLayout header={`Dashboard - Tahun ${tahun_aktif}`}>
       <Head title="Dashboard" />
-
-      <div className="container mx-auto p-4 h-[90vh] flex flex-col">
-        {/* Chat Window */}
-        <Card className="flex-1 flex flex-col bg-background border-none shadow-lg">
-          <ScrollArea className="flex-1 p-6">
-            {messages.length === 0 && (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Mulai percakapan dengan DeepSeek!
-              </div>
-            )}
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} mb-4`}
-              >
-                <div className="flex items-start space-x-2 max-w-[80%]">
-                  {msg.role === "assistant" && (
-                    <Avatar>
-                      <AvatarImage src="#" alt="DeepSeek" />
-                      <AvatarFallback>DS</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <Card
-                    className={`p-3 rounded-lg ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground"
-                    }`}
-                  >
-                    <CardContent className="p-0 text-sm whitespace-pre-wrap">
-                      {msg.content}
-                    </CardContent>
-                  </Card>
-                  {msg.role === "user" && (
-                    <Avatar>
-                      <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start mb-4">
-                <div className="flex items-start space-x-2">
-                  <Avatar>
-                    <AvatarFallback>DS</AvatarFallback>
-                  </Avatar>
-                  <Card className="p-3 bg-secondary rounded-lg">
-                    <CardContent className="p-0 text-sm animate-pulse">
-                      Mengetik...
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </ScrollArea>
-
-          {/* Input Form */}
-          <form onSubmit={handleSubmit} className="p-4 border-t bg-background">
-            <div className="relative">
-              <Textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Tanyakan sesuatu kepada DeepSeek..."
-                className="flex-1 resize-none rounded-lg border-none bg-muted/50 focus:ring-2 focus:ring-primary pr-12 pb-12"
-                rows={3}
-              />
-              <Button
-                type="submit"
-                disabled={loading}
-                className="absolute bottom-2 right-2 rounded-full h-8 w-8 p-0 bg-primary hover:bg-primary/90"
-                aria-label={loading ? "Mengirim pesan" : "Kirim pesan"}
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Jumlah Kegiatan</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalKegiatan}</div>
+            <p className="text-xs text-muted-foreground">Total kegiatan terdaftar</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Jumlah Paket Pekerjaan</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalPekerjaan}</div>
+            <p className="text-xs text-muted-foreground">Total paket pekerjaan</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Realisasi Keuangan</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats.realisasiKeuangan)}</div>
+            <p className="text-xs text-muted-foreground">Total realisasi keuangan</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Nilai Kontrak</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(kontrakStats.nilaiKontrak)}</div>
+            <p className="text-xs text-muted-foreground">Total nilai kontrak</p>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Pekerjaan Terbaru</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nama Paket</TableHead>
+                  <TableHead>Pagu</TableHead>
+                  <TableHead>Kecamatan</TableHead>
+                  <TableHead>Desa</TableHead>
+                  <TableHead>Tanggal Dibuat</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentPekerjaan.map((pekerjaan) => (
+                  <TableRow key={pekerjaan.id}>
+                    <TableCell>{pekerjaan.nama_paket}</TableCell>
+                    <TableCell>{formatCurrency(pekerjaan.pagu)}</TableCell>
+                    <TableCell>{pekerjaan.kecamatan}</TableCell>
+                    <TableCell>{pekerjaan.desa}</TableCell>
+                    <TableCell>{pekerjaan.created_at}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Galeri Foto</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {fotoData
+                .filter((foto) => foto.foto_url)
+                .map((foto) => (
+                  <div key={foto.id} className="space-y-2">
+                    <img
+                      src={foto.foto_url!}
+                      alt={foto.keterangan}
+                      className="h-40 w-full object-cover rounded-md"
+                    />
+                    <p className="text-sm font-medium">{foto.nama_paket}</p>
+                    <p className="text-xs text-muted-foreground">{foto.keterangan}</p>
+                  </div>
+                ))}
             </div>
-          </form>
+          </CardContent>
         </Card>
       </div>
     </AuthenticatedLayout>
