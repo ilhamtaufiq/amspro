@@ -19,7 +19,7 @@ const PenyediaEdit: React.FC<{ penyedia: Penyedia }> = ({ penyedia }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Updating penyedia", data); // Debug log
+    // console.log("Updating penyedia", data); // Debug log
     put(route("penyedia.update", penyedia.id), {
       onSuccess: () => reset(),
       onError: (err) => console.error("Error:", err),

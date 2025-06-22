@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import AppearanceDropdown from "@/components/appearance-dropdown";
 import PilihTahun from "@/components/tahun";
-
 export default function AuthenticatedLayout({
     header,
     children
@@ -19,7 +18,6 @@ export default function AuthenticatedLayout({
     return (
         <SidebarProvider>
             <AppSidebar />
-
             <SidebarInset>
                 <header className="top-0 bg-background flex h-16 shrink-0 items-center gap-2 justify-between p-4 border-b md:border-none md:rounded-xl">
                     <div className="flex items-center gap-2">
@@ -38,7 +36,6 @@ export default function AuthenticatedLayout({
                         <AppearanceDropdown />
                     </div>
                 </header>
-
                 <main className="p-4 md:pt-0 h-full">
                     {children}
                 </main>

@@ -130,7 +130,7 @@ function PekerjaanActionsCell({
     e.preventDefault();
     form.put(route("pekerjaan.update", pekerjaan.id), {
       onSuccess: (page: any) => {
-        console.log("Update response:", page); // Debug
+        // console.log("Update response:", page); // Debug
         setEditOpen(false);
         setAlertMessage("Pekerjaan updated successfully.");
         setIsAlertOpen(true);
@@ -158,7 +158,7 @@ function PekerjaanActionsCell({
     e.preventDefault();
     form.post(route("pekerjaan.store"), {
       onSuccess: (page: any) => {
-        console.log("Create response:", page); // Debug
+        // console.log("Create response:", page); // Debug
         setCreateOpen(false);
         setAlertMessage("Pekerjaan created successfully.");
         setIsAlertOpen(true);

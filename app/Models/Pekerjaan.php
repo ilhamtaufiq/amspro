@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
-use Laravel\Scout\Searchable;
+// use Laravel\Scout\Searchable;
 
 class Pekerjaan extends Model
 {
     use HasFactory;
-    use Searchable;
+    // use Searchable;
     protected $table = "tbl_pekerjaan";
     protected $fillable = [
         'nama_paket',
@@ -99,6 +99,10 @@ class Pekerjaan extends Model
     public function progresses()
     {
         return $this->hasMany(Progress::class, 'pekerjaan_id');
+    }
+    public function statuses()
+    {
+        return $this->belongsTo(Status::class, 'pekerjaan_id');
     }
 
     /**

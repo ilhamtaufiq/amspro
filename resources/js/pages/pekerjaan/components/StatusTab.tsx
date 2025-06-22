@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import type { PageProps, Progress as ProgressType } from "./types";
-
+import { idDate } from "@/lib/utils";
 export function StatusTab({ pekerjaan, kontrak, keuangan, progresses, outputs }: PageProps) {
   const calculateOverallProgress = () => {
     if (progresses.length === 0) return 0;
@@ -187,11 +187,11 @@ export function StatusTab({ pekerjaan, kontrak, keuangan, progresses, outputs }:
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Tanggal Mulai</p>
-              <p className="text-sm">{kontrak != null && kontrak.tgl_spmk ? kontrak.tgl_spmk : "N/A"}</p>
+              <p className="text-sm">{kontrak != null && idDate(kontrak.tgl_spmk) ? idDate(kontrak.tgl_spmk) : "N/A"}</p>
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Tanggal Selesai</p>
-              <p className="text-sm">{kontrak != null && kontrak.tgl_selesai ? kontrak.tgl_selesai : "N/A"}</p>
+              <p className="text-sm">{kontrak != null && idDate(kontrak.tgl_selesai) ? idDate(kontrak.tgl_selesai) : "N/A"}</p>
             </div>
           </div>
 

@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import { router, usePage } from "@inertiajs/react";
+import { Loader2 } from "lucide-react";
 import { Pekerjaan, Kegiatan, Kecamatan, Desa, Meta } from "./types";
 
 interface AuthUser {
@@ -74,7 +74,7 @@ export function DataTable<TData extends Pekerjaan, TValue>({
     func: T,
     delay: number
   ) => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;;
     return (...args: Parameters<T>) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => func(...args), delay);
@@ -86,7 +86,7 @@ export function DataTable<TData extends Pekerjaan, TValue>({
     isCreate = false,
     deleteId?: number
   ) => {
-    console.log("updateTableData called with:", { newData, isCreate, deleteId });
+    // console.log("updateTableData called with:", { newData, isCreate, deleteId });
     setData((prev) => {
       if (newData === null && deleteId) {
         return prev.filter((item) => item.id !== deleteId);

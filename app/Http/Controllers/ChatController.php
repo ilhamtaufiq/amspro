@@ -1,44 +1,74 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PekerjaanResource;
 use Illuminate\Http\Request;
-use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ChatController extends Controller
 {
-    /**
-     * Display the chat interface and handle incoming messages.
-     */
     public function index(Request $request)
     {
-        // Handle POST request (new message submission)
         if ($request->isMethod('post')) {
-            $request->validate([
-                'message' => 'required|string|max:1000',
-            ]);
+            $userMessage = strtolower($request->input('message'));
 
-            $userMessage = $request->input('message');
-
-            try {
-                $client = new Client();
-                $response = $client->post('https://openrouter.ai/api/v1/chat/completions', [
-                    'headers' => [
-                        'Authorization' => 'Bearer ' . env('OPENROUTER_API_KEY'),
-                        'Content-Type' => 'application/json',
-                    ],
-                    'json' => [
-                        'model' => 'meta-llama/llama-4-maverick:free',
-                        'messages' => [
-                            ['role' => 'user', 'content' => $userMessage],
+            // Contoh: Total pekerjaan
+            if (preg_match('/\b(total pekerjaan|jumlah pekerjaan)\b/i', $userMessage)) {
+                $totalPekerjaan = Cache::remember('total_pekerjaan', now()->addHours(1), function () {
+                    return DB::table('pekerjaan_dataset')->count();
+                });
+                $aiMessage = "Total pekerjaan adalah $totalPekerjaan.";
+                return Inertia::render('chat/index', [
+                    'initialMessages' => [],
+                    'flash' => [
+                        'data' => [
+                            'userMessage' => $userMessage,
+                            'aiMessage' => $aiMessage,
+                            'databaseResults' => null,
+                            'recordCount' => $totalPekerjaan,
                         ],
                     ],
                 ]);
+            }
 
-                $data = json_decode($response->getBody(), true);
-                $aiMessage = $data['choices'][0]['message']['content'] ?? 'No response from AI.';
+            // Contoh: Pencarian berdasarkan kata kunci generik
+            if (preg_match('/\b(data kontrak|kontrak)\b/i', $userMessage)) {
+                // Ekstrak kata kunci pencarian (contoh sederhana)
+                $keywords = explode(' ', $userMessage);
+                $searchTerm = implode('%', array_filter($keywords, fn($word) => !in_array($word, ['data', 'kontrak'])));
+
+                $records = Cache::remember('pekerjaan_search_' . md5($searchTerm), now()->addHours(1), function () use ($searchTerm) {
+                    return DB::table('pekerjaan_dataset')
+                        ->select([
+                            'pekerjaan_id',
+                            'job_name',
+                            'budget',
+                            'contract_value',
+                            'no_spk',
+                            'contract_date',
+                            'provider_name',
+                            'desa',
+                            'kecamatan',
+                            'physical_progress',
+                        ])
+                        ->where('job_name', 'like', "%$searchTerm%")
+                        ->orWhere('desa', 'like', "%$searchTerm%")
+                        ->orWhere('kecamatan', 'like', "%$searchTerm%")
+                        ->paginate(10);
+                });
+
+                $totalRecords = $records->total();
+
+                $aiMessage = $totalRecords > 0
+                    ? "Berikut adalah data kontrak yang ditemukan:\n" .
+                      $records->map(function ($record) {
+                          return "- Pekerjaan: {$record->job_name}, Desa: {$record->desa}, Kecamatan: {$record->kecamatan}, " .
+                                 "Nomor SPK: {$record->no_spk}, Nilai Kontrak: Rp " . number_format($record->contract_value, 0, ',', '.') . ", " .
+                                 "Penyedia: {$record->provider_name}";
+                      })->implode("\n")
+                    : "Tidak ditemukan data kontrak yang sesuai dengan pencarian.";
 
                 return Inertia::render('chat/index', [
                     'initialMessages' => [],
@@ -46,55 +76,50 @@ class ChatController extends Controller
                         'data' => [
                             'userMessage' => $userMessage,
                             'aiMessage' => $aiMessage,
+                            'databaseResults' => PekerjaanResource::collection($records),
+                            'recordCount' => $totalRecords,
                         ],
                     ],
                 ]);
-            } catch (\Exception $e) {
-                Log::error('OpenRouter API error: ' . $e->getMessage());
-                return Inertia::render('Chat', [
-                    'initialMessages' => [],
-                    'flash' => [
-                        'error' => 'Failed to get AI response. Please try again.',
-                    ],
-                ]);
             }
+
+            // Dataset umum
+            $records = Cache::remember('pekerjaan_dataset_page_' . $request->get('page', 1), now()->addHours(1), function () {
+                return DB::table('pekerjaan_dataset')
+                    ->select([
+                        'pekerjaan_id',
+                        'job_name',
+                        'budget',
+                        'kecamatan',
+                        'desa',
+                        'year',
+                        'contract_value',
+                        'no_spk',
+                        'contract_date',
+                        'provider_name',
+                        'recipient_count',
+                        'photo_count',
+                        'physical_progress',
+                        'financial_realization',
+                    ])
+                    ->paginate(100);
+            });
+
+            $totalJobs = Cache::remember('total_pekerjaan', now()->addHours(1), fn() => DB::table('pekerjaan_dataset')->count());
+
+            return Inertia::render('chat/index', [
+                'initialMessages' => [],
+                'flash' => [
+                    'data' => [
+                        'userMessage' => $userMessage,
+                        'aiMessage' => null,
+                        'databaseResults' => PekerjaanResource::collection($records),
+                        'recordCount' => $totalJobs,
+                    ],
+                ],
+            ]);
         }
 
-        // Handle GET request (display chat interface)
-        return Inertia::render('chat/index', [
-            'initialMessages' => [],
-        ]);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return Inertia::render('chat/index', ['initialMessages' => []]);
     }
 }

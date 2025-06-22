@@ -1,7 +1,8 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { router } from "@inertiajs/react";
 import { Status } from "./types";
+import { idDate } from "@/lib/utils";
 
 export const columns: ColumnDef<Status>[] = [
   {
@@ -12,8 +13,8 @@ export const columns: ColumnDef<Status>[] = [
     accessorKey: "mulai_selesai",
     header: "Mulai - Selesai",
     cell: ({ row }) => {
-      const mulai = row.original.tgl_spmk ?? "N/A";
-      const selesai = row.original.tgl_selesai ?? "N/A";
+      const mulai = idDate(row.original.tgl_spmk) ?? "N/A";
+      const selesai = idDate(row.original.tgl_selesai) ?? "N/A";
       return `${mulai} - ${selesai}`;
     },
   },
@@ -47,7 +48,7 @@ export const columns: ColumnDef<Status>[] = [
     accessorKey: "kontrak",
     header: "Kontrak",
     cell: ({ row }) => (
-      <Switch
+      <Checkbox
         checked={row.original.kontrak ?? false}
         onCheckedChange={(checked) => {
           router.put(
@@ -56,6 +57,7 @@ export const columns: ColumnDef<Status>[] = [
             {
               preserveState: true,
               preserveScroll: true,
+              onSuccess: () => {},
             //   onSuccess: () => console.log("Kontrak updated"),
             //   onError: (err) => console.error("Error updating kontrak:", err),
             }
@@ -68,7 +70,7 @@ export const columns: ColumnDef<Status>[] = [
     accessorKey: "nphd",
     header: "NPHD",
     cell: ({ row }) => (
-      <Switch
+      <Checkbox
         checked={row.original.nphd ?? false}
         onCheckedChange={(checked) => {
           router.put(
@@ -77,6 +79,7 @@ export const columns: ColumnDef<Status>[] = [
             {
               preserveState: true,
               preserveScroll: true,
+              onSuccess: () => {},
             //   onSuccess: () => console.log("NPHD updated"),
             //   onError: (err) => console.error("Error updating nphd:", err),
             }
@@ -89,7 +92,7 @@ export const columns: ColumnDef<Status>[] = [
     accessorKey: "review",
     header: "Review",
     cell: ({ row }) => (
-      <Switch
+      <Checkbox
         checked={row.original.review ?? false}
         onCheckedChange={(checked) => {
           router.put(
@@ -98,6 +101,7 @@ export const columns: ColumnDef<Status>[] = [
             {
               preserveState: true,
               preserveScroll: true,
+              onSuccess: () => {},
             //   onSuccess: () => console.log("Review updated"),
             //   onError: (err) => console.error("Error updating review:", err),
             }

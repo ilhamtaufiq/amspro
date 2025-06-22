@@ -45,7 +45,7 @@ export function DataTable<TData extends Status, TValue>({
   const [isSearching, setIsSearching] = React.useState(false); // State untuk indikator loading
 
   React.useEffect(() => {
-    console.log('Data received in DataTable:', initialData);
+    // console.log('Data received in DataTable:', initialData);
     setData(initialData);
     setIsSearching(false); // Reset loading state setelah data diperbarui
   }, [initialData]);
@@ -55,7 +55,7 @@ export function DataTable<TData extends Status, TValue>({
     func: T,
     delay: number
   ) => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;;
     return (...args: Parameters<T>) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => func(...args), delay);
@@ -106,7 +106,7 @@ export function DataTable<TData extends Status, TValue>({
     manualSorting: false,
   });
 
-  console.log('Table rows:', table.getRowModel().rows);
+  // console.log('Table rows:', table.getRowModel().rows);
 
   return (
     <div className="space-y-4">

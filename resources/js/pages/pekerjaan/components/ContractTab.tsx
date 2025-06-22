@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatDate } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -48,12 +49,12 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
     kode_rup: kontrak?.kode_rup || "",
     kode_paket: kontrak?.kode_paket || "",
     nomor_penawaran: kontrak?.nomor_penawaran || "",
-    tanggal_penawaran: kontrak?.tanggal_penawaran || "",
+    tanggal_penawaran: kontrak?.tanggal_penawaran ? formatDate(kontrak.tanggal_penawaran) : "",
     nilai_kontrak: kontrak?.nilai_kontrak || 0,
-    tgl_sppbj: kontrak?.tgl_sppbj || "",
-    tgl_spk: kontrak?.tgl_spk || "",
-    tgl_spmk: kontrak?.tgl_spmk || "",
-    tgl_selesai: kontrak?.tgl_selesai || "",
+    tgl_sppbj: kontrak?.tgl_sppbj ? formatDate(kontrak.tgl_sppbj) : "",
+    tgl_spk: kontrak?.tgl_spk ? formatDate(kontrak.tgl_spk) : "",
+    tgl_spmk: kontrak?.tgl_spmk ? formatDate(kontrak.tgl_spmk) : "",
+    tgl_selesai: kontrak?.tgl_selesai ? formatDate(kontrak.tgl_selesai) : "",
     sppbj: kontrak?.sppbj || "",
     spk: kontrak?.spk || "",
     spmk: kontrak?.spmk || "",
@@ -431,7 +432,7 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium">Tanggal Kontrak</p>
-                <p className="text-sm">{kontrak.tanggal_penawaran}</p>
+                <p className="text-sm">{formatDate(kontrak.tanggal_penawaran)}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium">Nilai Kontrak</p>

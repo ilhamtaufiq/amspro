@@ -77,7 +77,7 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
 
       // Log raw response for debugging
       const rawResponse = await response.text();
-      console.log('Raw OCR response:', rawResponse);
+      // console.log('Raw OCR response:', rawResponse);
 
       // Attempt to parse JSON
       let ocrData;

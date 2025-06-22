@@ -18,7 +18,7 @@ const PenyediaCreate: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting form", data); // Debug log
+    // console.log("Submitting form", data); // Debug log
     post(route("penyedia.store"), {
       onSuccess: () => reset(), // Reset form on success
       onError: (err) => console.error("Error:", err), // Debug errors

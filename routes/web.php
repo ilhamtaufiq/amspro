@@ -22,14 +22,14 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+// Route::get('/', function () {
+//     return Inertia::render('welcome', [
+//         'canLogin' => Route::has('login'),
+//         'canRegister' => Route::has('register'),
+//         'laravelVersion' => Application::VERSION,
+//         'phpVersion' => PHP_VERSION,
+//     ]);
+// });
 
 Route::post('/set-tahun', function (Request $request) {
     $tahun = $request->input('tahun');
@@ -40,10 +40,10 @@ Route::post('/set-tahun', function (Request $request) {
     ]);
 })->middleware('auth')->name('set-tahun');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+// Route::get('/', function () {
+//     return Inertia::render('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 Route::match(['get', 'post'], '/chat', [ChatController::class, 'index'])->name('chat.index');
 
 Route::middleware(['auth', 'verified'])->group(function () {

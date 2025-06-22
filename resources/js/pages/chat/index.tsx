@@ -1,12 +1,20 @@
 import { Head, useForm, usePage } from "@inertiajs/react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, Clock } from "lucide-react";
+import { Loader2, Send, Clock } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // Interfaces for type safety
 interface Message {
@@ -14,14 +22,14 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
-  databaseResults?: any; // Allow database results (e.g., count or array)
+  databaseResults?: string | null; // Markdown table string or null
 }
 
 interface FlashData {
   data?: {
     userMessage?: string;
     aiMessage?: string;
-    databaseResults?: any;
+    databaseResults?: string | null;
   };
   error?: string;
 }
@@ -45,70 +53,117 @@ const formatTimestamp = () => {
   });
 };
 
-// Message component
-const MessageItem = ({ message }: { message: Message }) => (
-  <div
-    className={`flex mb-4 animate-fade-in ${
-      message.role === "user" ? "justify-end" : "justify-start"
-    }`}
-  >
-    <div className="flex items-start space-x-3 max-w-[80%]">
-      {message.role === "assistant" && (
-        <Avatar>
-          <AvatarFallback>AI</AvatarFallback>
-        </Avatar>
-      )}
-      <Card
-        className={`p-3 ${
-          message.role === "user"
-            ? "bg-primary text-primary-foreground"
-            : "bg-secondary text-secondary-foreground"
-        }`}
-      >
-        <CardContent className="p-0 text-sm whitespace-pre-wrap">
-          <p>{message.content}</p>
-          <div className="flex items-center gap-1 text-xs opacity-70 mt-1">
-            <Clock className="h-3 w-3" />
-            <span>{message.timestamp}</span>
-          </div>
-          {message.databaseResults && (
-            <div className="mt-2">
-              <p className="font-medium">Database Results:</p>
-              {Array.isArray(message.databaseResults) ? (
-                message.databaseResults.length > 0 ? (
-                  <ul className="list-disc pl-5">
-                    {message.databaseResults.map((item: any, index: number) => (
-                      <li key={index}>
-                        {item.title || JSON.stringify(item)}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No results found.</p>
-                )
-              ) : (
-                <p>{JSON.stringify(message.databaseResults)}</p>
-              )}
+// Parse Markdown table into headers and rows
+const parseMarkdownTable = (markdown: string) => {
+  const lines = markdown.trim().split("\n").filter((line) => line.trim());
+  if (lines.length < 2) return { headers: [], rows: [] };
+
+  // Extract headers (first line, split by |)
+  const headers = lines[0]
+    .split("|")
+    .map((header) => header.trim())
+    .filter((header) => header);
+
+  // Skip separator line (e.g., |---|---|)
+  const rows = lines.slice(2).map((line) =>
+    line
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter((cell) => cell)
+  );
+
+  return { headers, rows };
+};
+
+// Message component with memoization
+const MessageItem = memo(({ message }: { message: Message }) => {
+  const { headers, rows } = message.databaseResults
+    ? parseMarkdownTable(message.databaseResults)
+    : { headers: [], rows: [] };
+
+  return (
+    <div
+      className={`flex mb-4 animate-fade-in ${
+        message.role === "user" ? "justify-end" : "justify-start"
+      }`}
+    >
+      <div className="flex items-start space-x-3 max-w-[85%]">
+        {message.role === "assistant" && (
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-muted text-muted-foreground">
+              AI
+            </AvatarFallback>
+          </Avatar>
+        )}
+        <Card
+          className={`p-4 rounded-2xl shadow-sm ${
+            message.role === "user"
+              ? "bg-primary text-primary-foreground"
+              : "bg-background border border-muted"
+          }`}
+        >
+          <CardContent className="p-0 text-sm whitespace-pre-wrap">
+            <p className="leading-relaxed">{message.content}</p>
+            <div className="flex items-center gap-1 text-xs opacity-60 mt-2">
+              <Clock className="h-3 w-3" />
+              <span>{message.timestamp}</span>
             </div>
-          )}
-        </CardContent>
-      </Card>
-      {message.role === "user" && (
-        <Avatar>
-          <AvatarFallback>U</AvatarFallback>
-        </Avatar>
-      )}
+            {message.databaseResults && headers.length > 0 && (
+              <div className="mt-4">
+                <p className="font-medium text-sm mb-2">Database Results:</p>
+                <Table className="text-sm">
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      {headers.map((header, index) => (
+                        <TableHead key={index} className="font-medium">
+                          {header}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.length > 0 ? (
+                      rows.map((row, rowIndex) => (
+                        <TableRow key={rowIndex}>
+                          {row.map((cell, cellIndex) => (
+                            <TableCell key={cellIndex}>{cell}</TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={headers.length} className="text-center">
+                          No results found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        {message.role === "user" && (
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-primary/10 text-primary">
+              U
+            </AvatarFallback>
+          </Avatar>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+});
+
+MessageItem.displayName = "MessageItem";
 
 export default function Chat({ initialMessages }: Props) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { flash } = usePage<{ flash?: FlashData }>().props;
 
-  // Inertia.js form
+  // Inertia.js form with debounced input
   const { data, setData, post, processing, errors, reset } = useForm<FormData>({
     message: "",
   });
@@ -136,7 +191,7 @@ export default function Chat({ initialMessages }: Props) {
           role: "assistant",
           content: data.aiMessage || "",
           timestamp,
-          databaseResults: data.databaseResults,
+          databaseResults: data.databaseResults || null,
         },
       ]);
     }
@@ -153,48 +208,62 @@ export default function Chat({ initialMessages }: Props) {
     }
   }, [flash]);
 
-  // Form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!data.message.trim() || processing) return;
+  // Debounced form submission
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!data.message.trim() || processing) return;
 
-    post(route("chat.index"), {
-      preserveState: true,
-      preserveScroll: true,
-      onSuccess: () => {
-        reset();
-        inputRef.current?.focus();
-      },
-      onError: () => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: prev.length + 1,
-            role: "assistant",
-            content: errors.message || "Failed to process request.",
-            timestamp: formatTimestamp(),
-          },
-        ]);
-      },
-    });
-  };
+      post(route("chat.index"), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+          reset();
+          inputRef.current?.focus();
+        },
+        onError: () => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: prev.length + 1,
+              role: "assistant",
+              content: errors.message || "Failed to process request.",
+              timestamp: formatTimestamp(),
+            },
+          ]);
+        },
+      });
+    },
+    [data.message, processing, post, reset, errors.message]
+  );
 
   // Enter key handling
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e as any);
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSubmit(e as any);
+      }
+    },
+    [handleSubmit]
+  );
+
+  // Debounced input change
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setData("message", e.target.value);
+    },
+    [setData]
+  );
 
   return (
     <AuthenticatedLayout header="Chat with AI & Database">
       <Head title="Chat with AI & Database" />
-      <div className="flex-1 rounded-xl bg-muted/50 h-full">
-        <Card className="flex-1 flex flex-col bg-background border-none shadow-lg">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-2xl flex flex-col h-[80vh] bg-background border-muted shadow-xl rounded-2xl">
           <ScrollArea className="flex-1 p-6" aria-label="Chat messages">
             {messages.length === 0 && (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
                 Ask about jobs or start a conversation with the AI! Try: "How many jobs in Kecamatan Naringgul in 2025?"
               </div>
             )}
@@ -204,10 +273,12 @@ export default function Chat({ initialMessages }: Props) {
             {processing && (
               <div className="flex justify-start mb-4">
                 <div className="flex items-start space-x-3">
-                  <Avatar>
-                    <AvatarFallback>AI</AvatarFallback>
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-muted text-muted-foreground">
+                      AI
+                    </AvatarFallback>
                   </Avatar>
-                  <Card className="p-3 bg-secondary">
+                  <Card className="p-4 bg-background border border-muted rounded-2xl">
                     <CardContent className="p-0 text-sm flex items-center space-x-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <span>Processing...</span>
@@ -220,20 +291,20 @@ export default function Chat({ initialMessages }: Props) {
           </ScrollArea>
           <form
             onSubmit={handleSubmit}
-            className="p-4 border-t bg-background"
+            className="p-4 border-t border-muted bg-background"
             aria-label="Message input form"
           >
-            <div className="relative flex items-center gap-2">
-              <Textarea
+            <div className="relative flex items-center gap-3">
+              <Input
                 value={data.message}
-                onChange={(e) => setData("message", e.target.value)}
+                onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about jobs (e.g., 'How many jobs in Kecamatan Naringgul in 2025?') or chat with the AI..."
-                className="flex-1 resize-none rounded-lg bg-muted/50 focus:ring-2 focus:ring-primary"
-                rows={3}
+                placeholder="Ask about jobs or chat with the AI..."
+                className="flex-1 rounded-full bg-muted/50 border-muted focus:ring-2 focus:ring-primary py-6 text-sm"
                 aria-label="Message input"
                 disabled={processing}
                 ref={inputRef}
+                autoFocus
               />
               <Button
                 type="submit"
@@ -244,24 +315,12 @@ export default function Chat({ initialMessages }: Props) {
                 {processing ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-5 w-5"
-                  >
-                    <path d="M22 2L11 13" />
-                    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-                  </svg>
+                  <Send className="h-5 w-5" />
                 )}
               </Button>
             </div>
             {errors.message && (
-              <p className="text-destructive text-sm mt-2">{errors.message}</p>
+              <p className="text-destructive text-xs mt-2">{errors.message}</p>
             )}
           </form>
         </Card>
@@ -273,6 +332,9 @@ export default function Chat({ initialMessages }: Props) {
         }
         .animate-fade-in {
           animation: fade-in 0.3s ease-out;
+        }
+        .max-w-2xl {
+          max-width: 672px;
         }
       `}</style>
     </AuthenticatedLayout>
