@@ -3,19 +3,62 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kontrak;
+use App\Models\Pekerjaan;
+use App\Models\Penyedia;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class KontrakController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $kontrak = Kontrak::with(['penyedia', 'pekerjaan'])->get();
+        $tahun = $request->query('tahun', session('tahun', now()->year));
+        $search = $request->query('search', '');
+        $perPage = $request->query('per_page', 10);
+
+        $query = Kontrak::with(['penyedia', 'pekerjaan'])->whereHas('pekerjaan.kegiatan', function ($query) use ($tahun) {
+            $query->where('tahun_anggaran', $tahun);
+        });
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('kode_rup', 'like', '%' . $search . '%')
+                    ->orWhere('kode_paket', 'like', '%' . $search . '%')
+                    ->orWhere('nomor_penawaran', 'like', '%' . $search . '%')
+                    ->orWhereHas('pekerjaan', function ($q2) use ($search) {
+                        $q2->where('nama_paket', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('penyedia', function ($q2) use ($search) {
+                        $q2->where('nama', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $kontrak = $query->paginate($perPage)->withQueryString();
+
         return Inertia::render('kontrak/index', [
-            'kontrak' => $kontrak,
+            'kontrak' => $kontrak->items(),
+            'meta' => [
+                'current_page' => $kontrak->currentPage(),
+                'from' => $kontrak->firstItem(),
+                'to' => $kontrak->lastItem(),
+                'total' => $kontrak->total(),
+                'per_page' => $kontrak->perPage(),
+                'last_page' => $kontrak->lastPage(),
+                'links' => collect($kontrak->linkCollection())->map(function ($link) {
+                    return [
+                        'url' => $link['url'],
+                        'label' => strip_tags($link['label']),
+                        'active' => $link['active'],
+                    ];
+                }),
+            ],
+            'search' => $search,
+            'tahun' => $tahun,
         ]);
     }
 
@@ -24,35 +67,58 @@ class KontrakController extends Controller
      */
     public function create()
     {
-        // Not needed for this context, as the form is in PekerjaanDetail
-        return redirect()->back();
+        $tahun = session('tahun', now()->year);
+        $pekerjaanList = Pekerjaan::whereDoesntHave('kontrak')
+            ->whereHas('kegiatan', function ($query) use ($tahun) {
+                $query->where('tahun_anggaran', $tahun);
+            })
+            ->select('id', 'nama_paket', 'pagu')->get();
+        $penyediaList = Penyedia::select('id', 'nama')->get();
+
+        return Inertia::render('kontrak/create', [
+            'pekerjaanList' => $pekerjaanList,
+            'penyediaList' => $penyediaList,
+            'tahun' => $tahun,
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function storeOrUpdate(Request $request)
     {
-        $request->validate([
-            'id_kegiatan' => 'required|integer',
-            'id_pekerjaan' => 'required|integer',
-            'id_penyedia' => 'required|integer',
-            'kode_rup' => 'required|string|max:255',
-            'kode_paket' => 'required|string|max:255',
-            'nomor_penawaran' => 'required|string|max:255',
-            'tanggal_penawaran' => 'required|date',
-            'nilai_kontrak' => 'required|numeric',
-            'tgl_sppbj' => 'required|date',
-            'tgl_spk' => 'required|date',
-            'tgl_spmk' => 'required|date',
-            'sppbj' => 'required|string|max:255',
-            'spk' => 'required|string|max:255',
-            'spmk' => 'required|string|max:255',
+        $validatedData = $request->validate([
+            'id_pekerjaan' => 'required|exists:tbl_pekerjaan,id',
+            'id_penyedia' => 'nullable|exists:tbl_penyedia,id',
+            'kode_rup' => 'nullable|string|max:255',
+            'kode_paket' => 'nullable|string|max:255',
+            'nomor_penawaran' => 'nullable|string|max:255',
+            'tanggal_penawaran' => 'nullable|date',
+            'nilai_kontrak' => 'nullable|numeric',
+            'tgl_sppbj' => 'nullable|date',
+            'tgl_spk' => 'nullable|date',
+            'tgl_spmk' => 'nullable|date',
+            'tgl_selesai' => 'nullable|date',
+            'sppbj' => 'nullable|string|max:255',
+            'spk' => 'nullable|string|max:255',
+            'spmk' => 'nullable|string|max:255',
         ]);
 
-        Kontrak::create($request->all());
+        $pekerjaan = Pekerjaan::find($validatedData['id_pekerjaan']);
 
-        return redirect()->back()->with('success', 'Kontrak berhasil dibuat.');
+        if ($request->nilai_kontrak > $pekerjaan->pagu) {
+            return redirect()->back()->withErrors(['nilai_kontrak' => 'Nilai kontrak tidak boleh melebihi pagu pekerjaan.'])->withInput();
+        }
+
+        // id_kegiatan is derived from the pekerjaan
+        $validatedData['id_kegiatan'] = $pekerjaan->kegiatan_id;
+
+        Kontrak::updateOrCreate(
+            ['id_pekerjaan' => $validatedData['id_pekerjaan']],
+            $validatedData
+        );
+
+        return redirect()->route('pekerjaan.show', ['pekerjaan' => $pekerjaan->id])->with('success', 'Data kontrak berhasil disimpan.');
     }
 
     /**
@@ -114,5 +180,13 @@ class KontrakController extends Controller
         $kontrak->delete();
         \Log::info('Kontrak deleted', ['id' => $kontrak->id]);
         return redirect()->back()->with('success', 'Kontrak berhasil dihapus!');
+    }
+
+    public function generateCoverPdf(Kontrak $kontrak)
+    {
+        $kontrak->load(['pekerjaan.kegiatan', 'penyedia']);
+
+        $pdf = \PDF::loadView('pdf.contract_cover', compact('kontrak'));
+        return $pdf->stream('cover_kontrak_' . $kontrak->nomor_penawaran . '.pdf');
     }
 }

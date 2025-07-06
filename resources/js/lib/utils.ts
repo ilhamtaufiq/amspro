@@ -26,3 +26,15 @@ export function formatDate(dateString: string | null | undefined): string {
     const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
+
+export function formatRupiah(amount: number | null | undefined): string {
+    if (amount === null || amount === undefined) {
+        return "Rp 0";
+    }
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(amount);
+}

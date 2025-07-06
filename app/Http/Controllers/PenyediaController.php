@@ -8,12 +8,41 @@ use Inertia\Inertia;
 
 class PenyediaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        \Log::info('Fetching penyedia list');
-        $penyedia = Penyedia::all();
+        $search = $request->query('search', '');
+        $perPage = $request->query('per_page', 10);
+
+        $query = Penyedia::query();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', '%' . $search . '%')
+                    ->orWhere('direktur', 'like', '%' . $search . '%')
+                    ->orWhere('no_akta', 'like', '%' . $search . '%');
+            });
+        }
+
+        $penyedia = $query->paginate($perPage)->withQueryString();
+
         return Inertia::render('penyedia/index', [
-            'penyedia' => $penyedia,
+            'penyedia' => $penyedia->items(),
+            'meta' => [
+                'current_page' => $penyedia->currentPage(),
+                'from' => $penyedia->firstItem(),
+                'to' => $penyedia->lastItem(),
+                'total' => $penyedia->total(),
+                'per_page' => $penyedia->perPage(),
+                'last_page' => $penyedia->lastPage(),
+                'links' => collect($penyedia->linkCollection())->map(function ($link) {
+                    return [
+                        'url' => $link['url'],
+                        'label' => strip_tags($link['label']),
+                        'active' => $link['active'],
+                    ];
+                }),
+            ],
+            'search' => $search,
         ]);
     }
 
@@ -50,16 +79,18 @@ class PenyediaController extends Controller
         ]);
     }
 
-    public function edit(Penyedia $penyedia)
+    public function edit($id)
     {
+        $penyedia = Penyedia::findOrFail($id);
         \Log::info('Showing penyedia edit form', ['id' => $penyedia->id]);
         return Inertia::render('penyedia/edit', [
             'penyedia' => $penyedia,
         ]);
     }
 
-    public function update(Request $request, Penyedia $penyedia)
+    public function update(Request $request, $id)
     {
+        $penyedia = Penyedia::findOrFail($id);
         \Log::info('Updating penyedia', ['id' => $penyedia->id, 'data' => $request->all()]);
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
@@ -77,8 +108,9 @@ class PenyediaController extends Controller
         return redirect()->route('penyedia.index')->with('success', 'Penyedia updated successfully.');
     }
 
-    public function destroy(Penyedia $penyedia)
+    public function destroy($id)
     {
+        $penyedia = Penyedia::findOrFail($id);
         \Log::info('Deleting penyedia', ['id' => $penyedia->id]);
         $penyedia->delete();
         \Log::info('Penyedia deleted', ['id' => $penyedia->id]);

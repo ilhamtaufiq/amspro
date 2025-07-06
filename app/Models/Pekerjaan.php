@@ -51,7 +51,7 @@ class Pekerjaan extends Model
     /**
      * Get all of the foto for the Pekerjaan
      */
-    public function foto()
+    public function fotos()
     {
         return $this->hasMany(Foto::class);
     }

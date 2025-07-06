@@ -1,4 +1,4 @@
-import { useForm, router } from "@inertiajs/react";
+import { useForm, router, Link } from "@inertiajs/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -443,6 +443,9 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
                 <p className="text-sm">{penyediaList.find(p => p.id === kontrak.id_penyedia)?.nama || "N/A"}</p>
               </div>
             </div>
+            <a href={route('kontrak.coverPdf', kontrak.id)} target="_blank" rel="noopener noreferrer">
+                <Button className="mt-4">Cetak Cover PDF</Button>
+            </a>
           </div>
         )}
       </CardContent>

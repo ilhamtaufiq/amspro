@@ -57,13 +57,7 @@ export function DataTable<TData, TValue>({
     const [search, setSearch] = useState(initialSearch);
     const [isSearching, setIsSearching] = useState(false);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-        // Default hidden columns for Penyedia
-        no_akta: false,
-        notaris: false,
-        tanggal_akta: false,
-        alamat: false,
-        bank: false,
-        norek: false,
+        // Default hidden columns for Todo
     });
 
     useEffect(() => {
@@ -85,7 +79,7 @@ export function DataTable<TData, TValue>({
     const performSearch = (value: string) => {
         setIsSearching(true);
         router.get(
-            "/penyedia",
+            "/todos",
             { search: value, page: 1 },
             { preserveState: true, preserveScroll: true }
         );
@@ -110,7 +104,7 @@ export function DataTable<TData, TValue>({
 
     const handlePageChange = (page: number) => {
         router.get(
-            "/penyedia",
+            "/todos",
             { search, page },
             { preserveState: true, preserveScroll: true }
         );
@@ -135,7 +129,7 @@ export function DataTable<TData, TValue>({
             <div className="flex items-center justify-between">
                 <div className="relative">
                     <Input
-                        placeholder="Cari nama, direktur, atau no. akta..."
+                        placeholder="Cari judul atau deskripsi..."
                         value={search}
                         onChange={handleSearch}
                         onKeyDown={handleKeyDown}

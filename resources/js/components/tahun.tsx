@@ -99,7 +99,8 @@ export function PilihTahun() {
             "desaList",
             "statuses",
             "stats",
-            "kontrakStats"
+            "kontrakStats",
+            "kontrak"
         ],
         onSuccess: (page: any) => {
         //   console.log("Year change response:", page); // Debug

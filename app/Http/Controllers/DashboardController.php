@@ -9,6 +9,7 @@ use App\Models\Keuangan;
 use App\Models\Kontrak;
 use App\Models\Progress;
 use App\Models\Foto;
+use App\Models\Todo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -110,12 +111,16 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Data Todo Terbaru (5 terbaru)
+        $recentTodos = Todo::latest()->take(5)->get();
+
         return Inertia::render('dashboard', [
             'stats' => $stats,
             'recentPekerjaan' => $recentPekerjaan,
             'progressData' => $progressData,
             'kontrakStats' => $kontrakStats,
             'fotoData' => $fotoData,
+            'recentTodos' => $recentTodos,
             'tahun_aktif' => (int) $tahun,
         ]);
     }

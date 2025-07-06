@@ -1,13 +1,12 @@
 import { Head } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { DataTable } from './data-table';
-import { columns, Penyedia } from './columns';
+import { columns, Kontrak } from './columns';
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
-import { Button } from '@/components/ui/button';
-import { Link } from '@inertiajs/react';
 
-interface PenyediaIndexProps extends PageProps {
-    penyedia: Penyedia[];
+
+interface KontrakIndexProps extends PageProps {
+    kontrak: Kontrak[];
     meta: {
         current_page: number;
         from: number;
@@ -18,28 +17,28 @@ interface PenyediaIndexProps extends PageProps {
         links: Array<{ url: string | null; label: string; active: boolean }>;
     };
     search: string;
+    tahun: number;
 }
 
-export default function PenyediaIndex({ auth, penyedia, meta, search }: PenyediaIndexProps) {
+export default function KontrakIndex({ auth, kontrak, meta, search, tahun }: KontrakIndexProps) {
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">Daftar Penyedia</h2>
-                    {auth.user?.permissions?.includes('create penyedia') && (
-                        <Link href={route('penyedia.create')}>
-                            <Button>Tambah Penyedia</Button>
-                        </Link>
-                    )}
+                    <h2 className="">Daftar Kontrak</h2>
+                    <div className="flex items-center space-x-4">
+
+                    </div>
                 </div>
             }
         >
-            <Head title="Daftar Penyedia" />
+            <Head title="Daftar Kontrak" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="container mx-auto py-10">
-                        <DataTable columns={columns} data={penyedia} meta={meta} search={search} />
+
+                        <DataTable columns={columns} data={kontrak} meta={meta} search={search} tahun={tahun} />
                     </div>
                 </div>
             </div>

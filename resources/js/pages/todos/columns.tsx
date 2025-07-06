@@ -5,65 +5,49 @@ import { Link, router } from "@inertiajs/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 
-export type Penyedia = {
+export type Todo = {
     id: number;
-    nama: string;
-    direktur: string;
-    no_akta: string;
-    notaris: string;
-    tanggal_akta: string;
-    alamat: string;
-    bank: string;
-    norek: string;
+    title: string;
+    description: string;
+    completed: boolean;
+    created_at: string;
+    updated_at: string;
 };
 
-export const columns: ColumnDef<Penyedia>[] = [
+export const columns: ColumnDef<Todo>[] = [
     {
-        accessorKey: "nama",
+        accessorKey: "title",
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Nama Perusahaan
+                    Judul
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             );
         },
     },
     {
-        accessorKey: "direktur",
-        header: "Direktur",
+        accessorKey: "description",
+        header: "Deskripsi",
     },
     {
-        accessorKey: "no_akta",
-        header: "No. Akta",
+        accessorKey: "completed",
+        header: "Selesai",
+        cell: ({ row }) => {
+            return row.original.completed ? "Ya" : "Tidak";
+        },
     },
     {
-        accessorKey: "notaris",
-        header: "Notaris",
-    },
-    {
-        accessorKey: "tanggal_akta",
-        header: "Tanggal Akta",
-    },
-    {
-        accessorKey: "alamat",
-        header: "Alamat",
-    },
-    {
-        accessorKey: "bank",
-        header: "Bank",
-    },
-    {
-        accessorKey: "norek",
-        header: "No. Rekening",
+        accessorKey: "created_at",
+        header: "Dibuat Pada",
     },
     {
         id: "actions",
         cell: ({ row }) => {
-            const penyedia = row.original;
+            const todo = row.original;
 
             return (
                 <DropdownMenu>
@@ -76,31 +60,27 @@ export const columns: ColumnDef<Penyedia>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(penyedia.nama)}
+                            onClick={() => navigator.clipboard.writeText(todo.title)}
                         >
-                            Copy Nama Perusahaan
+                            Copy Judul
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
-                            <Link href={route('penyedia.edit', penyedia.id)} className="w-full">
+                            <Link href={route('todos.edit', todo.id)} className="w-full">
                                 Edit
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                            <Link
-                                href={route('penyedia.destroy', penyedia.id)}
-                                method="delete"
-                                as="button"
-                                className="w-full text-left text-red-600"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    if (confirm('Apakah Anda yakin ingin menghapus penyedia ini?')) {
-                                        router.delete(route('penyedia.destroy', penyedia.id));
+                            <button
+                                onClick={() => {
+                                    if (confirm('Apakah Anda yakin ingin menghapus todo ini?')) {
+                                        router.delete(route('todos.destroy', todo.id));
                                     }
                                 }}
+                                className="w-full text-left text-red-600"
                             >
                                 Delete
-                            </Link>
+                            </button>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

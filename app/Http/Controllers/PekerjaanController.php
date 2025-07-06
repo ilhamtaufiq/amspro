@@ -35,6 +35,9 @@ class PekerjaanController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
+        $isSuperAdmin = $user->hasRole('Super Admin');
+
         $tahun = $request->query('tahun', session('tahun', now()->year));
         $search = $request->query('search', '');
         $perPage = $request->query('per_page', 10);
@@ -46,6 +49,22 @@ class PekerjaanController extends Controller
             ->whereHas('kegiatan', function ($query) use ($tahun) {
                 $query->where('tahun_anggaran', $tahun);
             });
+
+        // Apply role-based filtering if the user is not a Super Admin
+        if (!$isSuperAdmin) {
+            $roleId = $user->roles->first()->id ?? null;
+            if ($roleId) {
+                $query->whereExists(function ($subQuery) use ($roleId) {
+                    $subQuery->select(DB::raw(1))
+                             ->from('kegiatan_role')
+                             ->whereColumn('kegiatan_role.kegiatan_id', 'tbl_pekerjaan.kegiatan_id')
+                             ->where('kegiatan_role.role_id', $roleId);
+                });
+            } else {
+                // If user has no role, they see nothing.
+                $query->whereRaw('1 = 0');
+            }
+        }
 
         // Apply search filter
         if ($search) {
@@ -161,13 +180,14 @@ class PekerjaanController extends Controller
         $roleId = Auth::user()->roles->first()->id ?? null;
 
         $query = Pekerjaan::with([
-            'desa',
-            'kecamatan',
-            'kegiatan',
+            'kegiatan', 'kecamatan', 'desa',
+            'kontrak',
+            'keuangan',
             'progresses.output',
             'outputs',
-            'keuangan',
             'penerimas',
+            'fotos.media', 'fotos.penerima', 'fotos.output',
+            'berkas.media'
         ])->where('id', $id);
 
         if ($roleId) {
@@ -181,8 +201,6 @@ class PekerjaanController extends Controller
 
         $pekerjaan = $query->firstOrFail();
 
-        $kontrak = Kontrak::where('id_pekerjaan', $pekerjaan->id)->first();
-
         $penyediaList = Penyedia::all()->map(function ($penyedia) {
             return [
                 'id' => $penyedia->id,
@@ -190,23 +208,20 @@ class PekerjaanController extends Controller
             ];
         })->toArray();
 
-        $fotos = Foto::where('pekerjaan_id', $pekerjaan->id)
-            ->with(['media', 'penerima', 'output'])
-            ->get()
-            ->map(function ($foto) {
-                return [
-                    'id' => $foto->id,
-                    'pekerjaan_id' => $foto->pekerjaan_id,
-                    'komponen_id' => $foto->komponen_id,
-                    'penerima_id' => $foto->penerima_id,
-                    'keterangan' => $foto->keterangan,
-                    'koordinat' => $foto->koordinat,
-                    'created_at' => $foto->created_at->toDateTimeString(),
-                    'photo_url' => $foto->getFirstMediaUrl('foto/pekerjaan'),
-                    'komponen_nama' => $foto->output ? $foto->output->komponen : null,
-                    'penerima_nama' => $foto->penerima ? $foto->penerima->nama : null,
-                ];
-            })->toArray();
+        $fotos = $pekerjaan->fotos->map(function ($foto) {
+            return [
+                'id' => $foto->id,
+                'pekerjaan_id' => $foto->pekerjaan_id,
+                'komponen_id' => $foto->komponen_id,
+                'penerima_id' => $foto->penerima_id,
+                'keterangan' => $foto->keterangan,
+                'koordinat' => $foto->koordinat,
+                'created_at' => $foto->created_at->toDateTimeString(),
+                'photo_url' => $foto->getFirstMediaUrl('foto/pekerjaan'),
+                'komponen_nama' => $foto->output ? $foto->output->komponen : null,
+                'penerima_nama' => $foto->penerima ? $foto->penerima->nama : null,
+            ];
+        })->toArray();
 
         $progresses = $pekerjaan->progresses->map(function ($progress) {
             return [
@@ -244,10 +259,7 @@ class PekerjaanController extends Controller
             ];
         })->toArray();
 
-        $berkasList = Berkas::where('pekerjaan_id', $pekerjaan->id)
-        ->with('media')
-        ->get()
-        ->map(function ($berkas) {
+        $berkasList = $pekerjaan->berkas->map(function ($berkas) {
             return [
                 'id' => $berkas->id,
                 'pekerjaan_id' => $berkas->pekerjaan_id,
@@ -281,23 +293,23 @@ class PekerjaanController extends Controller
                 'updated_at' => $pekerjaan->updated_at ? $pekerjaan->updated_at->toDateTimeString() : null,
                 'tahun_anggaran' => $pekerjaan->kegiatan ? $pekerjaan->kegiatan->tahun_anggaran : null,
             ],
-            'kontrak' => $kontrak ? [
-                'id' => $kontrak->id,
-                'id_kegiatan' => $kontrak->id_kegiatan,
-                'id_pekerjaan' => $kontrak->id_pekerjaan,
-                'id_penyedia' => $kontrak->id_penyedia,
-                'kode_rup' => $kontrak->kode_rup,
-                'kode_paket' => $kontrak->kode_paket,
-                'nomor_penawaran' => $kontrak->nomor_penawaran,
-                'tanggal_penawaran' => $kontrak->tanggal_penawaran,
-                'nilai_kontrak' => $kontrak->nilai_kontrak,
-                'tgl_sppbj' => $kontrak->tgl_sppbj,
-                'tgl_spk' => $kontrak->tgl_spk,
-                'tgl_spmk' => $kontrak->tgl_spmk,
-                'tgl_selesai' => $kontrak->tgl_selesai,
-                'sppbj' => $kontrak->sppbj,
-                'spk' => $kontrak->spk,
-                'spmk' => $kontrak->spmk,
+            'kontrak' => $pekerjaan->kontrak ? [
+                'id' => $pekerjaan->kontrak->id,
+                'id_kegiatan' => $pekerjaan->kontrak->id_kegiatan,
+                'id_pekerjaan' => $pekerjaan->kontrak->id_pekerjaan,
+                'id_penyedia' => $pekerjaan->kontrak->id_penyedia,
+                'kode_rup' => $pekerjaan->kontrak->kode_rup,
+                'kode_paket' => $pekerjaan->kontrak->kode_paket,
+                'nomor_penawaran' => $pekerjaan->kontrak->nomor_penawaran,
+                'tanggal_penawaran' => $pekerjaan->kontrak->tanggal_penawaran,
+                'nilai_kontrak' => $pekerjaan->kontrak->nilai_kontrak,
+                'tgl_sppbj' => $pekerjaan->kontrak->tgl_sppbj,
+                'tgl_spk' => $pekerjaan->kontrak->tgl_spk,
+                'tgl_spmk' => $pekerjaan->kontrak->tgl_spmk,
+                'tgl_selesai' => $pekerjaan->kontrak->tgl_selesai,
+                'sppbj' => $pekerjaan->kontrak->sppbj,
+                'spk' => $pekerjaan->kontrak->spk,
+                'spmk' => $pekerjaan->kontrak->spmk,
             ] : null,
             'keuangan' => $keuangan,
             'penyediaList' => $penyediaList,

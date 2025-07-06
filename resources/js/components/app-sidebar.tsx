@@ -69,6 +69,11 @@ const data = {
       url: "/pekerjaan",
       icon: BriefcaseBusiness,
     },
+    {
+      title: "Kontrak",
+      url: "/kontrak",
+      icon: FileCheck2,
+    },
      {
       title: "Checklist",
       url: "/status",
@@ -133,6 +138,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (item.title === "Pekerjaan") {
       // Requires any user-related permission
       return hasPermission(['view pekerjaan']);
+  }
+
+    if (item.title === "Kontrak") {
+      // Requires any user-related permission
+      return hasPermission(['view kontrak']);
   }
 
     // if (item.title === "Project") {

@@ -101,6 +101,21 @@ yarn build
 -   Antarmuka pengguna modern dengan Tailwind CSS dan Radix UI
 -   Integrasi peta dengan Leaflet
 -   Chat feature
+-   Dukungan lokalisasi tanggal dan angka (Bahasa Indonesia)
+-   Pencetakan PDF cover kontrak dengan format khusus (logo, terbilang, masa pelaksanaan)
+
+## Custom Helpers
+
+### `terbilang()` Function
+
+Fungsi `terbilang()` tersedia untuk mengonversi nilai numerik menjadi representasi teks dalam Bahasa Indonesia. Fungsi ini didefinisikan di `app/Helpers/GlobalHelper.php` dan dimuat secara otomatis melalui `composer.json`.
+
+**Penggunaan:**
+
+```php
+terbilang(1234567);
+// Output: satu juta dua ratus tiga puluh empat ribu lima ratus enam puluh tujuh
+```
 
 ## Struktur Proyek
 

@@ -16,11 +16,10 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/table"; import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { router } from "@inertiajs/react";
+import { router, usePage, Link } from "@inertiajs/react";
 import { Loader2, ChevronDown } from "lucide-react";
 import {
     DropdownMenu,
@@ -28,6 +27,7 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PageProps } from "@/types";
 
 interface Meta {
     current_page: number;
@@ -44,6 +44,7 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
     meta: Meta;
     search: string;
+    tahun: number;
 }
 
 export function DataTable<TData, TValue>({
@@ -51,25 +52,29 @@ export function DataTable<TData, TValue>({
     data: initialData,
     meta,
     search: initialSearch,
+    tahun,
 }: DataTableProps<TData, TValue>) {
+    const { auth } = usePage<PageProps>().props;
+    const userPermissions = auth?.user?.permissions || [];
     const [data, setData] = useState<TData[]>(initialData);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [search, setSearch] = useState(initialSearch);
     const [isSearching, setIsSearching] = useState(false);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-        // Default hidden columns for Penyedia
-        no_akta: false,
-        notaris: false,
-        tanggal_akta: false,
-        alamat: false,
-        bank: false,
-        norek: false,
+        kode_rup: false,
+        kode_paket: false,
+        nomor_penawaran: false,
+        tanggal_penawaran: false,
+        tgl_sppbj: false,
+        tgl_spmk: false,
+        sppbj: false,
+        spmk: false,
     });
 
     useEffect(() => {
         setData(initialData);
         setIsSearching(false);
-    }, [initialData]);
+    }, [initialData, tahun]);
 
     const debounce = <T extends (...args: any[]) => void>(
         func: T,
@@ -85,8 +90,8 @@ export function DataTable<TData, TValue>({
     const performSearch = (value: string) => {
         setIsSearching(true);
         router.get(
-            "/penyedia",
-            { search: value, page: 1 },
+            "/kontrak",
+            { search: value, page: 1, tahun },
             { preserveState: true, preserveScroll: true }
         );
     };
@@ -110,8 +115,8 @@ export function DataTable<TData, TValue>({
 
     const handlePageChange = (page: number) => {
         router.get(
-            "/penyedia",
-            { search, page },
+            "/kontrak",
+            { search, page, tahun },
             { preserveState: true, preserveScroll: true }
         );
     };
@@ -133,17 +138,28 @@ export function DataTable<TData, TValue>({
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <div className="relative">
-                    <Input
-                        placeholder="Cari nama, direktur, atau no. akta..."
-                        value={search}
-                        onChange={handleSearch}
-                        onKeyDown={handleKeyDown}
-                        className="max-w-sm pr-8"
-                    />
-                    {isSearching && (
-                        <Loader2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
+                <div className="flex items-center space-x-4">
+                    <div className="relative">
+                        <Input
+                            placeholder="Cari nama paket, penyedia, atau kode..."
+                            value={search}
+                            onChange={handleSearch}
+                            onKeyDown={handleKeyDown}
+                            className="max-w-sm pr-8"
+                        />
+                        {isSearching && (
+                            <Loader2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                    </div>
+                    <div className="flex space-x-2">
+                        {userPermissions.includes("create pekerjaan") && (
+                            <Link href={route('kontrak.create')}>
+                                <Button>
+                                    Tambah Kontrak
+                                </Button>
+                            </Link>
+                        )}
+                    </div>
                 </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -182,9 +198,9 @@ export function DataTable<TData, TValue>({
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
-                                                  header.column.columnDef.header,
-                                                  header.getContext()
-                                              )}
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
                                     </TableHead>
                                 ))}
                             </TableRow>
@@ -261,3 +277,4 @@ export function DataTable<TData, TValue>({
         </div>
     );
 }
+

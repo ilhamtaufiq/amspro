@@ -43,17 +43,4 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-
-    public function kegiatan()
-    {
-        return $this->roles()
-            ->whereNotNull('kegiatan_id')
-            ->join('tbl_kegiatan', 'roles.kegiatan_id', '=', 'tbl_kegiatan.id')
-            ->select('tbl_kegiatan.*');
-    }
-
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class);
-    }
 }
