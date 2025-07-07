@@ -36,7 +36,10 @@ class PekerjaanController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $isSuperAdmin = $user->hasRole('Super Admin');
+        $isSuperAdmin = false;
+        if ($user) {
+            $isSuperAdmin = $user->roles->contains('name', 'Super Admin');
+        }
 
         $tahun = $request->query('tahun', session('tahun', now()->year));
         $search = $request->query('search', '');
@@ -177,7 +180,8 @@ class PekerjaanController extends Controller
      */
     public function show($id)
     {
-        $roleId = Auth::user()->roles->first()->id ?? null;
+        $user = Auth::user();
+        $roleId = ($user && method_exists($user, 'roles')) ? $user->roles->first()->id ?? null : null;
 
         $query = Pekerjaan::with([
             'kegiatan', 'kecamatan', 'desa',
@@ -322,8 +326,8 @@ class PekerjaanController extends Controller
                 'user' => Auth::user() ? [
                     'name' => Auth::user()->name,
                     'email' => Auth::user()->email,
-                    'roles' => Auth::user()->roles->pluck('name'),
-                    'permissions' => Auth::user()->getAllPermissions()->pluck('name'),
+                    'roles' => method_exists(Auth::user(), 'roles') ? Auth::user()->roles->pluck('name') : [],
+                    'permissions' => Auth::user() ? Auth::user()->permissions->pluck('name')->merge(Auth::user()->roles->flatMap->permissions->pluck('name'))->unique() : [],
                 ] : null,
             ],
             'flash' => [

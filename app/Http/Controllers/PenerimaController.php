@@ -119,5 +119,84 @@ class PenerimaController extends Controller
         }
     }
 
-    // Other methods (store, update, destroy) remain unchanged
+    /**
+     * Display a listing of the resource.
+     */
+    public function index($pekerjaanId)
+    {
+        $penerimas = Penerima::where('pekerjaan_id', $pekerjaanId)->get();
+        return response()->json($penerimas);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request, $pekerjaanId)
+    {
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'nik' => 'required|string|max:16|unique:tbl_penerima,nik',
+            'jumlah_jiwa' => 'required|integer|min:1',
+            'alamat' => 'required|string|max:255',
+        ]);
+
+        Penerima::create([
+            'pekerjaan_id' => $pekerjaanId,
+            'nama' => $validated['nama'],
+            'nik' => $validated['nik'],
+            'jumlah_jiwa' => $validated['jumlah_jiwa'],
+            'alamat' => $validated['alamat'],
+        ]);
+
+        return redirect()->back()->with('success', 'Penerima berhasil ditambahkan.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($pekerjaanId, Penerima $penerima)
+    {
+        if ($penerima->pekerjaan_id != $pekerjaanId) {
+            return redirect()->back()->with('error', 'Penerima tidak ditemukan.');
+        }
+        return response()->json($penerima);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $pekerjaanId, Penerima $penerima)
+    {
+        if ($penerima->pekerjaan_id != $pekerjaanId) {
+            return redirect()->back()->with('error', 'Penerima tidak ditemukan.');
+        }
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'nik' => 'required|string|max:16|unique:tbl_penerima,nik,' . $penerima->id,
+            'jumlah_jiwa' => 'required|integer|min:1',
+            'alamat' => 'required|string|max:255',
+        ]);
+
+        $penerima->update([
+            'nama' => $validated['nama'],
+            'nik' => $validated['nik'],
+            'jumlah_jiwa' => $validated['jumlah_jiwa'],
+            'alamat' => $validated['alamat'],
+        ]);
+
+        return redirect()->back()->with('success', 'Penerima berhasil diperbarui.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($pekerjaanId, Penerima $penerima)
+    {
+        if ($penerima->pekerjaan_id != $pekerjaanId) {
+            return redirect()->back()->with('error', 'Penerima tidak ditemukan.');
+        }
+        $penerima->delete();
+        return redirect()->back()->with('success', 'Penerima berhasil dihapus.');
+    }
 }

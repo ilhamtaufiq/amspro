@@ -7,6 +7,7 @@ use App\Models\Pekerjaan;
 use App\Models\Penyedia;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class KontrakController extends Controller
@@ -126,11 +127,11 @@ class KontrakController extends Controller
      */
     public function show(Kontrak $kontrak)
     {
-        \Log::info('Showing kontrak', ['id' => $kontrak->id]);
+        Log::info('Showing kontrak', ['id' => $kontrak->id]);
         return Inertia::render('PekerjaanDetail', [
             'pekerjaan' => $kontrak->pekerjaan,
             'kontrak' => $kontrak,
-            'penyediaList' => \App\Models\Penyedia::all(), // Fetch all penyedia for the form
+            'penyediaList' => \App\Models\Penyedia::all(),
         ]);
     }
 
@@ -176,17 +177,16 @@ class KontrakController extends Controller
      */
     public function destroy(Kontrak $kontrak)
     {
-        \Log::info('Deleting kontrak', ['id' => $kontrak->id]);
+        Log::info('Deleting kontrak', ['id' => $kontrak->id]);
         $kontrak->delete();
-        \Log::info('Kontrak deleted', ['id' => $kontrak->id]);
+        Log::info('Kontrak deleted', ['id' => $kontrak->id]);
         return redirect()->back()->with('success', 'Kontrak berhasil dihapus!');
     }
 
     public function generateCoverPdf(Kontrak $kontrak)
     {
         $kontrak->load(['pekerjaan.kegiatan', 'penyedia']);
-
-        $pdf = \PDF::loadView('pdf.contract_cover', compact('kontrak'));
+        $pdf = Pdf::loadView('pdf.contract_cover', compact('kontrak'));
         return $pdf->stream('cover_kontrak_' . $kontrak->nomor_penawaran . '.pdf');
     }
 }
