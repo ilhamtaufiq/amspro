@@ -36,6 +36,7 @@ class KegiatanController extends Controller
             'nama' => 'required|string|max:225',
             'bidang' => 'required|string|max:50',
             'tahun_anggaran' => 'required|string|max:50',
+            'sumber_dana' => 'nullable|string|max:255',
         ]);
 
         Kegiatan::create($request->all());
@@ -71,6 +72,7 @@ class KegiatanController extends Controller
             'nama' => 'required|string|max:225',
             'bidang' => 'required|string|max:50',
             'tahun_anggaran' => 'required|string|max:50',
+            'sumber_dana' => 'nullable|string|max:255',
         ]);
 
         $kegiatan->update($request->all());

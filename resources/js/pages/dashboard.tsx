@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Users, Package, Activity } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import Tahun from '@/components/tahun';
 import { Button } from '@/components/ui/button';
 
 interface DashboardProps extends PageProps {
@@ -56,7 +55,6 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>
-                    <Tahun />
                 </div>
             }
         >

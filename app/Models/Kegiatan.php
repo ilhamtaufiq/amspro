@@ -9,6 +9,7 @@ class Kegiatan extends Model
 {
     use HasFactory;
     protected $table = 'tbl_kegiatan';
+    protected $fillable = ['nama', 'bidang', 'tahun_anggaran', 'sumber_dana'];
 
     /**
      * Get all of the comments for the Kegiatan

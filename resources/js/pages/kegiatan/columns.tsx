@@ -7,6 +7,7 @@ export interface Kegiatan {
     nama: string;
     bidang: string;
     tahun_anggaran: string;
+    sumber_dana: string;
     created_at: string;
     updated_at: string;
 }
@@ -31,6 +32,11 @@ export const columns: ColumnDef<Kegiatan, unknown>[] = [
         accessorKey: "tahun_anggaran",
         header: "Tahun Anggaran",
         cell: ({ row }) => <div>{row.getValue("tahun_anggaran")}</div>,
+    },
+    {
+        accessorKey: "sumber_dana",
+        header: "Sumber Dana",
+        cell: ({ row }) => <div>{row.getValue("sumber_dana")}</div>,
     },
     {
         accessorKey: "created_at",

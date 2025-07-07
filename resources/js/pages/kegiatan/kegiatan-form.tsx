@@ -10,6 +10,7 @@ interface KegiatanFormProps {
         nama: string;
         bidang: string;
         tahun_anggaran: string;
+        sumber_dana?: string;
     };
 }
 
@@ -18,6 +19,7 @@ export default function KegiatanForm({ kegiatan }: KegiatanFormProps) {
         nama: kegiatan?.nama || "",
         bidang: kegiatan?.bidang || "",
         tahun_anggaran: kegiatan?.tahun_anggaran || "",
+        sumber_dana: kegiatan?.sumber_dana || "",
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -76,6 +78,18 @@ export default function KegiatanForm({ kegiatan }: KegiatanFormProps) {
                         />
                         {errors.tahun_anggaran && (
                             <p className="text-red-500 text-sm">{errors.tahun_anggaran}</p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="sumber_dana">Sumber Dana</Label>
+                        <Input
+                            id="sumber_dana"
+                            value={data.sumber_dana}
+                            onChange={(e) => setData("sumber_dana", e.target.value)}
+                        />
+                        {errors.sumber_dana && (
+                            <p className="text-red-500 text-sm">{errors.sumber_dana}</p>
                         )}
                     </div>
 
