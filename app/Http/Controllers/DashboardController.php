@@ -13,33 +13,81 @@ use App\Models\Todo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Get the tahun query parameter, default to current year if not provided
+        $user = Auth::user();
         $tahun = $request->query('tahun', date('Y'));
+
+        // Query dasar untuk pekerjaan
+        $pekerjaanQuery = Pekerjaan::query();
+
+        if (!$user->hasRole('Super Admin')) {
+            $roleId = $user->roles->first()->id ?? null;
+            if ($roleId) {
+                $pekerjaanQuery->whereExists(function ($subQuery) use ($roleId) {
+                    $subQuery->select(DB::raw(1))
+                             ->from('kegiatan_role')
+                             ->whereColumn('kegiatan_role.kegiatan_id', 'tbl_pekerjaan.kegiatan_id')
+                             ->where('kegiatan_role.role_id', $roleId);
+                });
+            } else {
+                $pekerjaanQuery->whereRaw('1 = 0'); // No role, no data
+            }
+        }
+
+        // Data Peta Lokasi
+        $locations = (clone $pekerjaanQuery)->with('latestFotoWithCoordinates')
+            ->whereHas('kegiatan', function ($query) use ($tahun) {
+                $query->where('tahun_anggaran', $tahun);
+            })
+            ->get()
+            ->map(function ($pekerjaan) {
+                if ($pekerjaan->latestFotoWithCoordinates) {
+                    $coordinates = explode(',', $pekerjaan->latestFotoWithCoordinates->koordinat);
+                    return [
+                        'id' => $pekerjaan->id,
+                        'nama_paket' => $pekerjaan->nama_paket,
+                        'lat' => $coordinates[0] ? floatval($coordinates[0]) : null,
+                        'lng' => $coordinates[1] ? floatval($coordinates[1]) : null,
+                    ];
+                }
+                return null;
+            })
+            ->filter();
+
+        if (!$user->hasRole('Super Admin')) {
+            return Inertia::render('dashboard', [
+                'locations' => $locations,
+                'tahun_aktif' => (int) $tahun,
+                'isSuperAdmin' => false,
+            ]);
+        }
 
         // Statistik Utama
         $stats = [
-            'totalPekerjaan' => Pekerjaan::whereHas('kegiatan', function ($query) use ($tahun) {
+            'totalPekerjaan' => (clone $pekerjaanQuery)->whereHas('kegiatan', function ($query) use ($tahun) {
                 $query->where('tahun_anggaran', $tahun);
             })->count(),
             'totalKegiatan' => Kegiatan::where('tahun_anggaran', $tahun)->count(),
-            'totalPenerima' => Penerima::whereHas('pekerjaan', function ($query) use ($tahun) {
+            'totalPenerima' => Penerima::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
                 $query->whereHas('kegiatan', function ($q) use ($tahun) {
                     $q->where('tahun_anggaran', $tahun);
                 });
             })->count(),
-            'realisasiKeuangan' => Keuangan::whereHas('pekerjaan', function ($query) use ($tahun) {
+            'realisasiKeuangan' => Keuangan::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
                 $query->whereHas('kegiatan', function ($q) use ($tahun) {
                     $q->where('tahun_anggaran', $tahun);
                 });
             })->sum('realisasi'),
         ];
 
-        // Pekerjaan Terbaru (5 terbaru)
-        $recentPekerjaan = Pekerjaan::with(['kegiatan', 'kecamatan', 'desa'])
+        // Pekerjaan Terbaru
+        $recentPekerjaan = (clone $pekerjaanQuery)->with(['kegiatan', 'kecamatan', 'desa'])
             ->whereHas('kegiatan', function ($query) use ($tahun) {
                 $query->where('tahun_anggaran', $tahun);
             })
@@ -58,12 +106,11 @@ class DashboardController extends Controller
             });
 
         // Data Progres untuk Grafik
-        $progressData = Progress::with('pekerjaan')
-            ->whereHas('pekerjaan', function ($query) use ($tahun) {
-                $query->whereHas('kegiatan', function ($q) use ($tahun) {
-                    $q->where('tahun_anggaran', $tahun);
-                });
-            })
+        $progressData = Progress::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
+            $query->whereHas('kegiatan', function ($q) use ($tahun) {
+                $q->where('tahun_anggaran', $tahun);
+            });
+        })
             ->get()
             ->map(function ($progress) {
                 return [
@@ -75,43 +122,19 @@ class DashboardController extends Controller
 
         // Ringkasan Kontrak
         $kontrakStats = [
-            'totalKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($tahun) {
+            'totalKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
                 $query->whereHas('kegiatan', function ($q) use ($tahun) {
                     $q->where('tahun_anggaran', $tahun);
                 });
             })->count(),
-            'nilaiKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($tahun) {
+            'nilaiKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
                 $query->whereHas('kegiatan', function ($q) use ($tahun) {
                     $q->where('tahun_anggaran', $tahun);
                 });
             })->sum('nilai_kontrak'),
         ];
 
-        // Data Foto untuk Peta dan Galeri
-        $fotoData = Foto::with('pekerjaan')
-            ->whereHas('pekerjaan', function ($query) use ($tahun) {
-                $query->whereHas('kegiatan', function ($q) use ($tahun) {
-                    $q->where('tahun_anggaran', $tahun);
-                });
-            })
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($foto) {
-                $media = $foto->getFirstMedia('foto/pekerjaan');
-                $coordinates = $foto->koordinat ? explode(',', $foto->koordinat) : [null, null];
-                return [
-                    'id' => $foto->id,
-                    'pekerjaan_id' => $foto->pekerjaan_id,
-                    'nama_paket' => $foto->pekerjaan ? $foto->pekerjaan->nama_paket : 'N/A',
-                    'keterangan' => $foto->keterangan ?? 'Tidak ada keterangan',
-                    'foto_url' => $media ? $media->getUrl() : null,
-                    'lat' => $coordinates[0] ? floatval($coordinates[0]) : null,
-                    'lng' => $coordinates[1] ? floatval($coordinates[1]) : null,
-                ];
-            });
-
-        // Data Todo Terbaru (5 terbaru)
+        // Data Todo Terbaru
         $recentTodos = Todo::latest()->take(5)->get();
 
         return Inertia::render('dashboard', [
@@ -119,9 +142,10 @@ class DashboardController extends Controller
             'recentPekerjaan' => $recentPekerjaan,
             'progressData' => $progressData,
             'kontrakStats' => $kontrakStats,
-            'fotoData' => $fotoData,
+            'locations' => $locations,
             'recentTodos' => $recentTodos,
             'tahun_aktif' => (int) $tahun,
+            'isSuperAdmin' => true,
         ]);
     }
 }

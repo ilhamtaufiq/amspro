@@ -128,6 +128,11 @@ class Pekerjaan extends Model
         return $this->hasMany(Penerima::class);
     }
 
+    public function latestFotoWithCoordinates()
+    {
+        return $this->hasOne(Foto::class)->whereNotNull('koordinat')->latest();
+    }
+
     public function toSearchableArray()
     {
         return [

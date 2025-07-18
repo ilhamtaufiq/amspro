@@ -5,7 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
-
+use Illuminate\Support\Facades\URL;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -24,5 +24,8 @@ class AppServiceProvider extends ServiceProvider
         Inertia::share([
             'tahun_aktif' => fn () => session('tahun', now()->year),
         ]);
+          if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
