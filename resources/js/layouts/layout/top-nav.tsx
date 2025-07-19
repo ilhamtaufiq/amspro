@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+// import { Link } from '@tanstack/react-router'
 import { IconMenu } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -31,13 +31,13 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
           <DropdownMenuContent side='bottom' align='start'>
             {links.map(({ title, href, isActive, disabled }) => (
               <DropdownMenuItem key={`${title}-${href}`} asChild>
-                <Link
-                  to={href}
-                  className={!isActive ? 'text-muted-foreground' : ''}
-                  disabled={disabled}
-                >
-                  {title}
-                </Link>
+                {/* <Link */}
+                {/*  to={href} */}
+                {/*  className={!isActive ? 'text-muted-foreground' : ''} */}
+                {/*  disabled={disabled} */}
+                {/* > */}
+                  <span>{title}</span>
+                {/* </Link> */}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -52,14 +52,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
         {...props}
       >
         {links.map(({ title, href, isActive, disabled }) => (
-          <Link
-            key={`${title}-${href}`}
-            to={href}
-            disabled={disabled}
-            className={`hover:text-primary text-sm font-medium transition-colors ${isActive ? '' : 'text-muted-foreground'}`}
-          >
-            {title}
-          </Link>
+          <span key={`${title}-${href}`}>{title}</span>
         ))}
       </nav>
     </>

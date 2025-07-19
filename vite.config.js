@@ -14,13 +14,13 @@ export default defineConfig({
       jsxRuntime: "automatic", // Sudah default tapi eksplisitkan untuk future-proofing
       include: "**/*.{tsx,jsx}", // Tambahan jika ada ekstensi campuran
     }),
-    visualizer({
-      filename: "stats.,json", // bisa juga json
-      template: "treemap", // atau "sunburst", "network"
-      gzipSize: true,
-      brotliSize: true,
-      open: true,
-    }),
+    // visualizer({
+    //   filename: "stats.json", // bisa juga json
+    //   template: "treemap", // atau "sunburst", "network"
+    //   gzipSize: true,
+    //   brotliSize: true,
+    //   open: true,
+    // }),
   ],
   resolve: {
     alias: {

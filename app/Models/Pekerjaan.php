@@ -21,16 +21,16 @@ class Pekerjaan extends Model
         'desa_id',
     ];
 
-    /**
-     * Configure the Meilisearch index settings.
-     */
-    public function configureSearchableIndex()
-    {
-        $engine = $this->searchableUsing();
-        $engine->updateIndexSettings($this->searchableAs(), [
-            'filterableAttributes' => ['tahun_anggaran', 'n_kec', 'n_desa'],
-        ]);
-    }
+    // /**
+    //  * Configure the Meilisearch index settings.
+    //  */
+    // public function configureSearchableIndex()
+    // {
+    //     $engine = $this->searchableUsing();
+    //     $engine->updateIndexSettings($this->searchableAs(), [
+    //         'filterableAttributes' => ['tahun_anggaran', 'n_kec', 'n_desa'],
+    //     ]);
+    // }
 
     /**
      * Get the index name for the model.
@@ -133,13 +133,13 @@ class Pekerjaan extends Model
         return $this->hasOne(Foto::class)->whereNotNull('koordinat')->latest();
     }
 
-    public function toSearchableArray()
-    {
-        return [
-            'nama_paket' => $this->nama_paket,
-            'tahun_anggaran' => $this->kegiatan->tahun_anggaran ?? null,
-            'n_kec' => $this->kecamatan->n_kec ?? null,
-            'n_desa' => $this->desa->n_desa ?? null,
-        ];
-    }
+    // public function toSearchableArray()
+    // {
+    //     return [
+    //         'nama_paket' => $this->nama_paket,
+    //         'tahun_anggaran' => $this->kegiatan->tahun_anggaran ?? null,
+    //         'n_kec' => $this->kecamatan->n_kec ?? null,
+    //         'n_desa' => $this->desa->n_desa ?? null,
+    //     ];
+    // }
 }

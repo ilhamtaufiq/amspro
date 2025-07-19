@@ -1,10 +1,10 @@
 import Cookies from 'js-cookie'
-import { Outlet } from '@tanstack/react-router'
+// import { Outlet } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { SearchProvider } from '@/context/search-context'
+// import { SearchProvider } from '@/context/search-context'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/layout/app-sidebar'
-import SkipToMain from '@/components/skip-to-main'
+// import { AppSidebar } from '@/components/layout/app-sidebar'
+// import SkipToMain from '@/components/skip-to-main'
 
 interface Props {
   children?: React.ReactNode
@@ -13,10 +13,10 @@ interface Props {
 export function AuthenticatedLayout({ children }: Props) {
   const defaultOpen = Cookies.get('sidebar_state') !== 'false'
   return (
-    <SearchProvider>
+    // <SearchProvider>
       <SidebarProvider defaultOpen={defaultOpen}>
-        <SkipToMain />
-        <AppSidebar />
+        {/* <SkipToMain /> */}
+        {/* <AppSidebar /> */}
         <div
           id='content'
           className={cn(
@@ -29,9 +29,9 @@ export function AuthenticatedLayout({ children }: Props) {
             'has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh'
           )}
         >
-          {children ? children : <Outlet />}
+          {children ? children : <div />}
         </div>
       </SidebarProvider>
-    </SearchProvider>
+    // </SearchProvider>
   )
 }
