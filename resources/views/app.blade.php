@@ -18,8 +18,6 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
-        <!-- Cloudflare Web Analytics -->
-        <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "56af73e195a3433495a17937f5bdfbbb"}'></script>
-        <!-- End Cloudflare Web Analytics -->
+        
     </body>
 </html>
