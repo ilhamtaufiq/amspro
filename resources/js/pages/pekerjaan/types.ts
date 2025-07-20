@@ -30,6 +30,17 @@ export interface Desa {
   kecamatan_id: number;
 }
 
+export interface Foto {
+  id: number;
+  photo_url: string;
+  keterangan: string;
+  komponen_nama: string | null;
+  penerima_nama: string | null;
+  koordinat: string;
+  validasi_koordinat: boolean;
+  validasi_koordinat_message?: string;
+}
+
 export interface Meta {
   current_page: number;
   last_page: number;

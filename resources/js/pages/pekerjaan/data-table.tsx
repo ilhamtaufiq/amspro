@@ -24,6 +24,7 @@ import { Pekerjaan, Kegiatan, Kecamatan, Desa, Meta } from "./types";
 
 interface AuthUser {
   permissions: string[];
+  roles: { id: number; name: string }[];
 }
 
 interface PageProps {
@@ -158,7 +159,18 @@ export function DataTable<TData extends Pekerjaan, TValue>({
 
   const table = useReactTable({
     data,
-    columns,
+    columns: React.useMemo(() => {
+      const isSuperAdmin = auth?.user?.roles?.some((role: { name: string }) => role.name === "Super Admin");
+      if (!isSuperAdmin) {
+        return columns.filter(column => {
+          if ('accessorKey' in column && typeof column.accessorKey === 'string') {
+            return column.accessorKey !== "pagu";
+          }
+          return true;
+        });
+      }
+      return columns;
+    }, [columns, auth?.user?.roles]),
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/Spinner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { PageProps } from "./types";
 import { useState } from "react";
 
@@ -14,17 +15,14 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
     jumlah_jiwa: number;
     nik: string;
     alamat: string;
-    ktp?: File | null;
   }>({
     nama: "",
     jumlah_jiwa: 0,
     nik: "",
     alamat: "",
-    ktp: null,
   });
 
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrError, setOcrError] = useState<string | null>(null);
+  
 
   // Defensive permission checks
   const permissions = auth?.user?.permissions ?? [];
@@ -49,72 +47,7 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
     );
   }
 
-  const handleOcrPreview = async () => {
-    if (!data.ktp) {
-      alert("Silakan unggah file KTP terlebih dahulu.");
-      return;
-    }
-
-    setOcrLoading(true);
-    setOcrError(null);
-    const formData = new FormData();
-    formData.append("ktp", data.ktp);
-
-    try {
-      // Get CSRF token from meta tag
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      if (!csrfToken) {
-        throw new Error('CSRF token not found');
-      }
-
-      const response = await fetch(route("penerima.ocr", pekerjaan.id), {
-        method: "POST",
-        body: formData,
-        headers: {
-          'X-CSRF-TOKEN': csrfToken,
-        },
-      });
-
-      // Log raw response for debugging
-      const rawResponse = await response.text();
-      // console.log('Raw OCR response:', rawResponse);
-
-      // Attempt to parse JSON
-      let ocrData;
-      try {
-        ocrData = JSON.parse(rawResponse);
-      } catch (e) {
-        console.error('Failed to parse JSON:', e);
-        throw new Error('Invalid JSON response from server: ' + rawResponse.substring(0, 100));
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      if (ocrData.error) {
-        setOcrError(ocrData.error);
-        setData({
-          ...data,
-          nama: ocrData.nama || data.nama,
-          nik: ocrData.nik || data.nik,
-          alamat: ocrData.alamat || data.alamat,
-        });
-      } else {
-        setData({
-          ...data,
-          nama: ocrData.nama || data.nama,
-          nik: ocrData.nik || data.nik,
-          alamat: ocrData.alamat || data.alamat,
-        });
-      }
-    } catch (err) {
-      console.error("OCR preview error:", err);
-      setOcrError(`Gagal mengekstrak data KTP: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setOcrLoading(false);
-    }
-  };
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,9 +56,6 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
     formData.append("jumlah_jiwa", data.jumlah_jiwa.toString());
     formData.append("nik", data.nik);
     formData.append("alamat", data.alamat);
-    if (data.ktp) {
-      formData.append("ktp", data.ktp);
-    }
 
     if (data.id && canEditPenerima) {
       put(route("penerima.update", [pekerjaan.id, data.id]), {
@@ -174,7 +104,6 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
         jumlah_jiwa: penerima.jumlah_jiwa,
         nik: penerima.nik,
         alamat: penerima.alamat || "",
-        ktp: null,
       });
     }
   };
@@ -249,97 +178,67 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
                 />
                 {penerimaErrors.alamat && <span className="text-red-500 text-sm">{penerimaErrors.alamat}</span>}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="ktp">Upload KTP</Label>
-                <Input
-                  id="ktp"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setData("ktp", e.target.files?.[0] || null)}
-                />
-                {penerimaErrors.ktp && <span className="text-red-500 text-sm">{penerimaErrors.ktp}</span>}
-              </div>
+              
             </div>
-            {ocrError && <p className="text-red-500 text-sm">{ocrError}</p>}
-            <div className="flex gap-2 items-center">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleOcrPreview}
-                disabled={ocrLoading || !data.ktp}
-              >
-                {ocrLoading ? (
-                  <span className="flex items-center gap-2">
-                    <Spinner className="h-4 w-4" />
-                    Memproses OCR...
-                  </span>
-                ) : (
-                  "Pratinjau OCR"
-                )}
-              </Button>
+            
               <Button
                 type="submit"
                 disabled={processing || (!canCreatePenerima && !Boolean(data.id)) || (!canEditPenerima && Boolean(data.id))}
               >
                 {processing ? "Memproses..." : data.id ? "Perbarui Penerima" : "Tambah Penerima"}
               </Button>
-            </div>
           </form>
         ) : null}
 
         {penerimas.length > 0 ? (
           <div className="space-y-4">
             <p className="text-sm font-medium">Daftar Penerima</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {penerimas.map((penerima) => (
-                <Card key={penerima.id}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{penerima.nama}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <p className="text-sm">Jumlah Jiwa</p>
-                        <p className="text-sm">{penerima.jumlah_jiwa}</p>
-                      </div>
-                      <div className="flex justify-between">
-                        <p className="text-sm">NIK</p>
-                        <p className="text-sm">{penerima.nik}</p>
-                      </div>
-                      <div className="flex justify-between">
-                        <p className="text-sm">Alamat</p>
-                        <p className="text-sm">{penerima.alamat || "N/A"}</p>
-                      </div>
-                      <div className="flex justify-between">
-                        <p className="text-sm">KTP</p>
-                        <p className="text-sm">{penerima.ktp_path ? "Uploaded" : "N/A"}</p>
-                      </div>
-                      {(canEditPenerima || canDeletePenerima) && (
-                        <div className="flex gap-2">
-                          {canEditPenerima && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(penerima)}
-                            >
-                              Edit
-                            </Button>
-                          )}
-                          {canDeletePenerima && (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(penerima.id)}
-                            >
-                              Hapus
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nama</TableHead>
+                    <TableHead>Jumlah Jiwa</TableHead>
+                    <TableHead>NIK</TableHead>
+                    <TableHead>Alamat</TableHead>
+                    <TableHead>Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {penerimas.map((penerima) => (
+                    <TableRow key={penerima.id}>
+                      <TableCell>{penerima.nama}</TableCell>
+                      <TableCell>{penerima.jumlah_jiwa}</TableCell>
+                      <TableCell>{penerima.nik}</TableCell>
+                      <TableCell>{penerima.alamat || "N/A"}</TableCell>
+                      <TableCell>
+                        {(canEditPenerima || canDeletePenerima) && (
+                          <div className="flex gap-2">
+                            {canEditPenerima && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(penerima)}
+                              >
+                                Edit
+                              </Button>
+                            )}
+                            {canDeletePenerima && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDelete(penerima.id)}
+                              >
+                                Hapus
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </div>
         ) : (
