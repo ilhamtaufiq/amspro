@@ -27,18 +27,14 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
     const [desaName, setDesaName] = useState<string | null>(null);
     const [kecamatanName, setKecamatanName] = useState<string | null>(null);
     const [isGeocodingLoading, setIsGeocodingLoading] = useState(false);
-    const { data, setData, post, processing, reset, errors: formErrors } = useForm<{
-        photo: File | null;
-        keterangan: string;
-        komponen_id: string;
-        penerima_id: string | null;
-        koordinat: string;
-    }>({
-        photo: null,
+    const { data, setData, post, processing, reset, errors: formErrors, setError, clearErrors } = useForm({
+        photo: null as File | null,
         keterangan: "0%",
         komponen_id: "",
-        penerima_id: null,
+        penerima_id: null as string | null,
         koordinat: "",
+        validasi_koordinat: "1",
+        validasi_koordinat_message: "",
     });
 
     // State for Combobox open/closed
@@ -73,15 +69,15 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                     const response = await fetch(
                         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
                     );
-                    const data = await response.json();
+                    const geocodingData = await response.json();
 
                     let foundDesa = null;
                     let foundKecamatan = null;
 
-                    if (data.address) {
+                    if (geocodingData.address) {
                         // Prioritize village/suburb for desa, then city_district for kecamatan
-                        foundDesa = data.address.village || data.address.suburb || data.address.hamlet || data.address.town || data.address.city;
-                        foundKecamatan = data.address.city_district || data.address.county;
+                        foundDesa = geocodingData.address.village || geocodingData.address.suburb || geocodingData.address.hamlet || geocodingData.address.town || geocodingData.address.city;
+                        foundKecamatan = geocodingData.address.city_district || geocodingData.address.county;
                     }
 
                     setDesaName(foundDesa || "Tidak ditemukan");
@@ -115,14 +111,15 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append("photo", data.photo || "");
-        formData.append("keterangan", data.keterangan);
-        formData.append("komponen_id", data.komponen_id);
-        formData.append("penerima_id", data.penerima_id || "");
-        formData.append("koordinat", data.koordinat);
-        formData.append("validasi_koordinat", hasValidationErrors ? "0" : "1"); // 0 for invalid, 1 for valid
-        formData.append("validasi_koordinat_message", hasValidationErrors ? (formErrors.koordinat || "Koordinat tidak valid") : "");
+        const hasValidationErrors = !!formErrors.koordinat;
+
+        setData({
+            ...data,
+            validasi_koordinat: hasValidationErrors ? "0" : "1",
+            validasi_koordinat_message: hasValidationErrors
+                ? formErrors.koordinat || "Koordinat tidak valid"
+                : "",
+        });
 
         post(route("fotos.store", pekerjaan.id), {
             preserveState: true,
@@ -422,9 +419,14 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                                                 <span className="text-red-600">{foto.validasi_koordinat_message || "Tidak Sesuai"}</span>
                                             )}
                                         </TableCell>
-                                        <TableCell>Aksi</TableCell>
+                                        <TableCell>
+                                            <Button variant="destructive" size="sm" onClick={() => handleDelete(foto.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
-                                ))}
+                                ))
+                                }
                             </TableBody>
                         </Table>
                     </div>

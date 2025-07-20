@@ -57,6 +57,8 @@ export interface Foto {
   photo_url: string;
   komponen_nama: string | null;
   penerima_nama: string | null;
+  validasi_koordinat: boolean | undefined;
+  validasi_koordinat_message: string | null;
 }
 
 export interface Progress {

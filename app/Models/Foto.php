@@ -18,10 +18,13 @@ class Foto extends Model implements HasMedia
         'penerima_id',
         'koordinat',
         'keterangan',
+        'validasi_koordinat',
+        'validasi_koordinat_message',
     ];
 
     protected $casts = [
         'keterangan' => 'string', // Ensure keterangan is treated as a string
+        'validasi_koordinat' => 'boolean',
     ];
 
     public function pekerjaan()

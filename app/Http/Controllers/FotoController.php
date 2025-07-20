@@ -21,6 +21,8 @@ class FotoController extends Controller
             'komponen_id' => 'required|exists:tbl_output,id',
             'penerima_id' => 'nullable|exists:tbl_penerima,id',
             'koordinat' => 'required|string|max:255',
+            'validasi_koordinat' => 'required|boolean',
+            'validasi_koordinat_message' => 'nullable|string',
         ]);
 
         try {
@@ -32,6 +34,8 @@ class FotoController extends Controller
                 'penerima_id' => $request->penerima_id,
                 'keterangan' => $request->keterangan,
                 'koordinat' => $request->koordinat,
+                'validasi_koordinat' => $request->validasi_koordinat,
+                'validasi_koordinat_message' => $request->validasi_koordinat_message,
             ]);
 
             if ($request->hasFile('photo')) {
