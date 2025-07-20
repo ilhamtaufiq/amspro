@@ -220,6 +220,8 @@ class PekerjaanController extends Controller
                 'penerima_id' => $foto->penerima_id,
                 'keterangan' => $foto->keterangan,
                 'koordinat' => $foto->koordinat,
+                'validasi_koordinat' => $foto->validasi_koordinat,
+                'validasi_koordinat_message' => $foto->validasi_koordinat_message,
                 'created_at' => $foto->created_at->toDateTimeString(),
                 'photo_url' => $foto->getFirstMediaUrl('foto/pekerjaan'),
                 'komponen_nama' => $foto->output ? $foto->output->komponen : null,

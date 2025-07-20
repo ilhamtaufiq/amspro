@@ -33,7 +33,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
         komponen_id: "",
         penerima_id: null as string | null,
         koordinat: "",
-        validasi_koordinat: "1",
+        validasi_koordinat: true,
         validasi_koordinat_message: "",
     });
 
@@ -47,6 +47,22 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
         { value: "50%", label: "50%" },
         { value: "100%", label: "100%" },
     ];
+
+    // Komponen yang membuat penerima opsional
+    const komponenOpsional = [
+      'IPAL',
+      'Tangki Septik Komunal',
+      'Broncaptering',
+      'Reservoir',
+      'Pompa',
+      'Sumur Bor',
+    ];
+
+    // Cek apakah penerima opsional
+    const isPenerimaOptional = () => {
+      const selectedKomponen = outputs.find((output) => output.id.toString() === data.komponen_id)?.komponen || '';
+      return komponenOpsional.some((nama) => selectedKomponen.toLowerCase().includes(nama.toLowerCase()));
+    };
 
     const handleGetCoordinates = () => {
         if (!navigator.geolocation) {
@@ -67,30 +83,33 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                 setIsGeocodingLoading(true);
                 try {
                     const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+                        `/reverse-geocode?lat=${latitude}&lon=${longitude}`
                     );
                     const geocodingData = await response.json();
 
-                    let foundDesa = null;
-                    let foundKecamatan = null;
-
-                    if (geocodingData.address) {
-                        // Prioritize village/suburb for desa, then city_district for kecamatan
-                        foundDesa = geocodingData.address.village || geocodingData.address.suburb || geocodingData.address.hamlet || geocodingData.address.town || geocodingData.address.city;
-                        foundKecamatan = geocodingData.address.city_district || geocodingData.address.county;
-                    }
+                    let foundDesa = geocodingData.desa;
+                    let foundKecamatan = geocodingData.kecamatan;
 
                     setDesaName(foundDesa || "Tidak ditemukan");
                     setKecamatanName(foundKecamatan || "Tidak ditemukan");
 
-                    // Add validation for desa and kecamatan match
+                    // Validasi kecocokan desa dan kecamatan
+                    let validasiSesuai = true;
+                    let validationError = '';
                     if (pekerjaan.desa && foundDesa && pekerjaan.desa.toLowerCase() !== foundDesa.toLowerCase()) {
-                        setError('koordinat', `Desa yang terdeteksi (${foundDesa}) tidak sesuai dengan desa pekerjaan (${pekerjaan.desa}).`);
-                    } else if (pekerjaan.kecamatan && foundKecamatan && pekerjaan.kecamatan.toLowerCase() !== foundKecamatan.toLowerCase()) {
-                        setError('koordinat', `Kecamatan yang terdeteksi (${foundKecamatan}) tidak sesuai dengan kecamatan pekerjaan (${pekerjaan.kecamatan}).`);
-                    } else {
-                        clearErrors('koordinat'); // Clear any previous coordinate errors if match
+                      validasiSesuai = false;
+                      validationError += `Desa yang terdeteksi (${foundDesa}) tidak sesuai dengan desa pekerjaan (${pekerjaan.desa}).`;
                     }
+                    if (pekerjaan.kecamatan && foundKecamatan && pekerjaan.kecamatan.toLowerCase() !== foundKecamatan.toLowerCase()) {
+                      validasiSesuai = false;
+                      if (validationError) validationError += ' ';
+                      validationError += `Kecamatan yang terdeteksi (${foundKecamatan}) tidak sesuai dengan kecamatan pekerjaan (${pekerjaan.kecamatan}).`;
+                    }
+                    setData(data => ({
+                      ...data,
+                      validasi_koordinat: validasiSesuai,
+                      validasi_koordinat_message: validasiSesuai ? 'Sesuai' : validationError
+                    }));
                 } catch (error) {
                     console.error("Error during reverse geocoding:", error);
                     setDesaName("Gagal mendapatkan");
@@ -111,16 +130,11 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const hasValidationErrors = !!formErrors.koordinat;
-
-        setData({
-            ...data,
-            validasi_koordinat: hasValidationErrors ? "0" : "1",
-            validasi_koordinat_message: hasValidationErrors
-                ? formErrors.koordinat || "Koordinat tidak valid"
-                : "",
-        });
-
+        // Validasi penerima jika diperlukan
+        if (!isPenerimaOptional() && !data.penerima_id) {
+          setError('penerima_id', 'Penerima harus dipilih untuk komponen ini.');
+          return;
+        }
         post(route("fotos.store", pekerjaan.id), {
             preserveState: true,
             preserveScroll: true,
@@ -270,7 +284,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                             {formErrors.komponen_id && <span className="text-red-500 text-sm">{formErrors.komponen_id}</span>}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="penerima_id">Penerima (Opsional)</Label>
+                            <Label htmlFor="penerima_id">Penerima {isPenerimaOptional() ? '(Opsional)' : '(Wajib)'}</Label>
                             <Popover open={penerimaOpen} onOpenChange={setPenerimaOpen}>
                                 <PopoverTrigger asChild>
                                     <Button
@@ -365,6 +379,57 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                                 </Button>
                             </div>
                             {formErrors.koordinat && <span className="text-red-500 text-sm">{formErrors.koordinat}</span>}
+                            {/* Hapus validasi lokasi global (hijau/merah) yang lama, hanya tampilkan validasi per field */}
+                            {(desaName || kecamatanName) && (
+                              <>
+                                {/* Pesan validasi jika ada yang tidak sesuai */}
+                                {(
+                                  (pekerjaan.desa && desaName && pekerjaan.desa.toLowerCase() !== desaName.toLowerCase()) ||
+                                  (pekerjaan.kecamatan && kecamatanName && pekerjaan.kecamatan.toLowerCase() !== kecamatanName.toLowerCase())
+                                ) && (
+                                  <div className="text-red-600 flex items-center gap-2 mt-2">
+                                    <span>❌</span>
+                                    <span>
+                                      {pekerjaan.desa && desaName && pekerjaan.desa.toLowerCase() !== desaName.toLowerCase() && (
+                                        <>Desa yang terdeteksi (<b>{desaName}</b>) tidak sesuai dengan desa pekerjaan (<b>{pekerjaan.desa}</b>).</>
+                                      )}
+                                      {pekerjaan.kecamatan && kecamatanName && pekerjaan.kecamatan.toLowerCase() !== kecamatanName.toLowerCase() && (
+                                        <>
+                                          {pekerjaan.desa && desaName && pekerjaan.desa.toLowerCase() !== desaName.toLowerCase() && <br />}
+                                          Kecamatan yang terdeteksi (<b>{kecamatanName}</b>) tidak sesuai dengan kecamatan pekerjaan (<b>{pekerjaan.kecamatan}</b>).
+                                        </>
+                                      )}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Validasi per field */}
+                                <div className="mt-2 space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span>Desa/Kelurahan:</span>
+                                    <span className="font-semibold">{desaName || '-'}</span>
+                                    {pekerjaan.desa && desaName ? (
+                                      pekerjaan.desa.toLowerCase() === desaName.toLowerCase() ? (
+                                        <span className="text-green-600">✔</span>
+                                      ) : (
+                                        <span className="text-red-600">❌</span>
+                                      )
+                                    ) : null}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span>Kecamatan:</span>
+                                    <span className="font-semibold">{kecamatanName || '-'}</span>
+                                    {pekerjaan.kecamatan && kecamatanName ? (
+                                      pekerjaan.kecamatan.toLowerCase() === kecamatanName.toLowerCase() ? (
+                                        <span className="text-green-600">✔</span>
+                                      ) : (
+                                        <span className="text-red-600">❌</span>
+                                      )
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </>
+                            )}
                             {(desaName || kecamatanName) && (
                                 <div className="text-sm text-muted-foreground mt-2">
                                     {isGeocodingLoading ? (
@@ -374,8 +439,8 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                                         </span>
                                     ) : (
                                         <>
-                                            {desaName && <p>Desa: {desaName}</p>}
-                                            {kecamatanName && <p>Kecamatan: {kecamatanName}</p>}
+                                            {/* {desaName && <p>Desa: {desaName}</p>}
+                                            {kecamatanName && <p>Kecamatan: {kecamatanName}</p>} */}
                                         </>
                                     )}
                                 </div>

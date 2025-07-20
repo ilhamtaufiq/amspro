@@ -15,6 +15,8 @@ class FotoController extends Controller
      */
     public function store(Request $request, Pekerjaan $pekerjaan)
     {
+        $request->merge(['validasi_koordinat' => filter_var($request->validasi_koordinat, FILTER_VALIDATE_BOOLEAN)]);
+
         $request->validate([
             'photo' => 'required|image|mimes:jpeg,png,gif|max:2048',
             'keterangan' => 'required|in:0%,50%,100%',
@@ -35,7 +37,7 @@ class FotoController extends Controller
                 'keterangan' => $request->keterangan,
                 'koordinat' => $request->koordinat,
                 'validasi_koordinat' => $request->validasi_koordinat,
-                'validasi_koordinat_message' => $request->validasi_koordinat_message,
+                'validasi_koordinat_message' => $request->validasi_koordinat_message ?? '',
             ]);
 
             if ($request->hasFile('photo')) {

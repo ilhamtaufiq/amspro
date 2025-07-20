@@ -98,3 +98,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+use App\Http\Controllers\ReverseGeocodeController;
+
+Route::get('/reverse-geocode', [ReverseGeocodeController::class, 'reverseGeocode']);
