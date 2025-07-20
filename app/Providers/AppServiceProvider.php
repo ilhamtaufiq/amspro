@@ -24,8 +24,6 @@ class AppServiceProvider extends ServiceProvider
         Inertia::share([
             'tahun_aktif' => fn () => session('tahun', now()->year),
         ]);
-          if (app()->environment('production')) {
-            URL::forceScheme('https');
-        }
+          
     }
 }
