@@ -65,6 +65,7 @@ export function DataTable<TData extends Pekerjaan, TValue>({
   const [createOpen, setCreateOpen] = React.useState(false);
   const [isSearching, setIsSearching] = React.useState(false);
   const [isExporting, setIsExporting] = React.useState(false);
+  const isSuperAdmin = auth?.user?.roles?.some((role: { name: string }) => role.name === "Super Admin");
 
   React.useEffect(() => {
     setData(initialData);
@@ -211,7 +212,7 @@ export function DataTable<TData extends Pekerjaan, TValue>({
                 Tambah Pekerjaan
               </Button>
             )}
-            {userPermissions.includes("view pekerjaan") && (
+            {userPermissions.includes("view pekerjaan") && isSuperAdmin && (
               <Button
                 onClick={handleExport}
                 disabled={isExporting}

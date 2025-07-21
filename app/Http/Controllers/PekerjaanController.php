@@ -405,6 +405,11 @@ class PekerjaanController extends Controller
     }
     public function export(Request $request)
     {
+        $user = Auth::user();
+        if (!$user || !$user->roles->contains('name', 'Super Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $tahun = $request->query('tahun', now()->year);
         $search = $request->query('search', '');
 
