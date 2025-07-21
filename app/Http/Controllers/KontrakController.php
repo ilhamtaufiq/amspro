@@ -34,7 +34,7 @@ class KontrakController extends Controller
                         $q2->where('nama_paket', 'like', '%' . $search . '%');
                     })
                     ->orWhereHas('penyedia', function ($q2) use ($search) {
-                        $q2->where('nama', 'like', '%' . $search . '%');
+                        $q2->whereRaw('LOWER(nama) LIKE ?', ['%' . strtolower($search) . '%']);
                     });
             });
         }

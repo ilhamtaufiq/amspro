@@ -200,7 +200,7 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
                                 <CardTitle>Peta Lokasi Pekerjaan</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <MapComponent photos={locations.map(l => ({ ...l, pekerjaan_id: l.id, keterangan: '' }))} />
+                                <MapComponent photos={Array.isArray(locations) ? locations.map(l => ({ ...l, pekerjaan_id: l.id, keterangan: '' })) : []} />
                             </CardContent>
                         </Card>
                     </div>
