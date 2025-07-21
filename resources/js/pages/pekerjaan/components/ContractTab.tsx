@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2, File, FileText, Image, FileSpreadsheet } from "lucide-react";
+import { Combobox } from "@/components/ui/combobox";
 import { useState } from "react";
 import type { PageProps } from "./types";
 
@@ -181,22 +182,12 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="id_penyedia">Penyedia</Label>
-              <Select
+              <Combobox
+                items={penyediaList.map(p => ({ value: p.id.toString(), label: p.nama }))}
                 value={contractData.id_penyedia.toString()}
-                onValueChange={(value) => setContractData("id_penyedia", value)}
-                required
-              >
-                <SelectTrigger id="id_penyedia">
-                  <SelectValue placeholder="Pilih Penyedia" />
-                </SelectTrigger>
-                <SelectContent>
-                  {penyediaList.map((penyedia) => (
-                    <SelectItem key={penyedia.id} value={penyedia.id.toString()}>
-                      {penyedia.nama}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setContractData("id_penyedia", value)}
+                placeholder="Cari Penyedia..."
+              />
               {contractErrors.id_penyedia && <span className="text-red-500 text-sm">{contractErrors.id_penyedia}</span>}
             </div>
             <div className="space-y-2">
