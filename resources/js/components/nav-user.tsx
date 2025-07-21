@@ -27,6 +27,9 @@ import {
 } from "@/components/ui/sidebar"
 import {User} from "@/types";
 import {Link} from "@inertiajs/react";
+import { PilihTahun } from "@/components/tahun";
+import AppearanceDropdown from "@/components/appearance-dropdown";
+import { useTheme } from "next-themes";
 
 export function NavUser({
   user,
@@ -73,7 +76,23 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
+            <div className="px-2 py-2 flex flex-col gap-2">
+              <PilihTahun />
+            </div>
             <DropdownMenuSeparator />
+            <div className="px-2 py-2 flex items-center gap-2">
+              <AppearanceDropdown />
+              <span className="text-sm">
+                {(() => {
+                  const { theme } = useTheme();
+                  if (theme === 'light') return 'Light Mode';
+                  if (theme === 'dark') return 'Dark Mode';
+                  return 'System';
+                })()}
+              </span>
+            </div>
+            <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <Link href={route('profile.edit')}>

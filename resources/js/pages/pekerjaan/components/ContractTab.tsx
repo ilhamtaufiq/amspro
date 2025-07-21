@@ -41,7 +41,8 @@ interface Berkas {
   file_url: string;
 }
 
-export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, errors, flash }: PageProps) {
+export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, errors, flash, auth }: PageProps) {
+  const isSuperAdmin = auth.user?.roles.includes("Super Admin");
   const { data: contractData, setData: setContractData, post, put, processing: contractProcessing, errors: contractErrors, reset: resetContract } = useForm<KontrakFormData>({
     id_kegiatan: kontrak?.id_kegiatan || 0,
     id_pekerjaan: pekerjaan.id,
@@ -175,8 +176,8 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
         <CardDescription>Input dan informasi kontrak serta dokumen proyek</CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Contract Form */}
-        <form onSubmit={handleContractSubmit} className="space-y-4 mb-8">
+        {isSuperAdmin && (
+          <form onSubmit={handleContractSubmit} className="space-y-4 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="id_penyedia">Penyedia</Label>
@@ -329,6 +330,7 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
             {kontrak ? "Perbarui Kontrak" : "Simpan Kontrak"}
           </Button>
         </form>
+        )}
 
         {/* Document Upload Form */}
         <div className="mt-8">

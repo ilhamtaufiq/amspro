@@ -22,28 +22,28 @@ export function TabsWrapper(props: PageProps) {
 
   return (
     <Tabs defaultValue="status" value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
-        <TabsTrigger value="status" className="flex items-center gap-2">
+      <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-6 gap-1">
+        <TabsTrigger value="status" className="flex items-center gap-2 min-w-0 flex-shrink px-2">
           <CheckCircle className="h-4 w-4" />
           <span className="hidden md:inline">Status</span>
         </TabsTrigger>
-        <TabsTrigger value="contract" className="flex items-center gap-2">
+        <TabsTrigger value="contract" className="flex items-center gap-2 min-w-0 flex-shrink px-2">
           <FileText className="h-4 w-4" />
           <span className="hidden md:inline">Data Kontrak</span>
         </TabsTrigger>
-        <TabsTrigger value="output" className="flex items-center gap-2">
+        <TabsTrigger value="output" className="flex items-center gap-2 min-w-0 flex-shrink px-2">
           <CheckCircle className="h-4 w-4" />
           <span className="hidden md:inline">Komponen Pekerjaan</span>
         </TabsTrigger>
-        <TabsTrigger value="progress" className="flex items-center gap-2">
+        <TabsTrigger value="progress" className="flex items-center gap-2 min-w-0 flex-shrink px-2">
           <BarChart3 className="h-4 w-4" />
           <span className="hidden md:inline">Data Progress</span>
         </TabsTrigger>
-        <TabsTrigger value="outcome" className="flex items-center gap-2">
+        <TabsTrigger value="outcome" className="flex items-center gap-2 min-w-0 flex-shrink px-2">
           <TrendingUp className="h-4 w-4" />
           <span className="hidden md:inline">Immediate Outcome</span>
         </TabsTrigger>
-        <TabsTrigger value="photos" className="flex items-center gap-2">
+        <TabsTrigger value="photos" className="flex items-center gap-2 min-w-0 flex-shrink px-2">
           <ImageIcon className="h-4 w-4" />
           <span className="hidden md:inline">Foto Kegiatan</span>
         </TabsTrigger>

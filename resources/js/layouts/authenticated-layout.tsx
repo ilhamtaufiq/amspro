@@ -19,8 +19,8 @@ export default function AuthenticatedLayout({
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <header className="top-0 bg-background flex h-16 shrink-0 items-center gap-2 justify-between p-4 border-b md:border-none md:rounded-xl">
-                    <div className="flex items-center gap-2">
+                <header className="top-0 bg-background flex h-auto min-h-16 shrink-0 items-center gap-2 justify-between p-4 border-b md:border-none md:rounded-xl flex-col md:flex-row">
+                    <div className="flex items-center gap-2 w-full md:w-auto">
                         <SidebarTrigger className="-ml-1" />
                         <Separator orientation="vertical" className="mr-2 h-4" />
                         <Breadcrumb>
@@ -30,10 +30,6 @@ export default function AuthenticatedLayout({
                                 </BreadcrumbItem>
                             </BreadcrumbList>
                         </Breadcrumb>
-                    </div>
-                    <div>
-                        <PilihTahun />
-                        <AppearanceDropdown />
                     </div>
                 </header>
                 <main className="p-4 md:pt-0 h-full">
