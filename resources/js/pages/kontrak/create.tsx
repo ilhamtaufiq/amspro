@@ -58,7 +58,7 @@ export default function Create({ auth, pekerjaanList, penyediaList }: KontrakCre
     const sisaPagu = selectedPekerjaan ? selectedPekerjaan.pagu - parseFloat(data.nilai_kontrak || '0') : null;
 
     return (
-        <AuthenticatedLayout
+        <AuthenticatedLayout user={auth.user}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Tambah Kontrak</h2>}
         >
             <Head title="Tambah Kontrak" />

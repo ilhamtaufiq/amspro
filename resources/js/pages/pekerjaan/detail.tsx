@@ -6,9 +6,9 @@ import type { PageProps } from "./components/types";
 
 export default function PekerjaanDetail() {
   const { pekerjaan, auth, penyediaList, kontrak, keuangan, fotos, progresses, outputs, penerimas, berkasList, flash, errors } = usePage<PageProps>().props;
-
+  const user = auth.user;
   return (
-    <AuthenticatedLayout header="Detail Pekerjaan">
+    <AuthenticatedLayout user={user} header="Detail Pekerjaan">
       <Head title="Detail Pekerjaan" />
       <div className="flex flex-1 flex-col gap-4 h-full">
         <div className="flex justify-between items-center">

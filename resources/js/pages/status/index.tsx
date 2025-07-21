@@ -12,10 +12,10 @@ interface StatusPageProps {
 }
 
 export default function StatusPage({ statuses, meta, tahun, search = "" }: StatusPageProps) {
-//   console.log('Statuses received in StatusPage:', statuses);
-
+  const { auth } = usePage<any>().props;
+  const user = auth.user;
   return (
-    <AuthenticatedLayout header="Checklist">
+    <AuthenticatedLayout user={user} header="Checklist">
       <Head title="Checklist" />
 
       <div className="container mx-auto py-10">

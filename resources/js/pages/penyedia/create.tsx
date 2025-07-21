@@ -24,7 +24,7 @@ export default function Create({ auth }: PageProps) {
     };
 
     return (
-        <AuthenticatedLayout
+        <AuthenticatedLayout user={auth.user}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Tambah Penyedia</h2>}
         >
             <Head title="Tambah Penyedia" />

@@ -5,6 +5,7 @@ import { columns, Penyedia } from './columns';
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 
 interface PenyediaIndexProps extends PageProps {
     penyedia: Penyedia[];
@@ -21,8 +22,11 @@ interface PenyediaIndexProps extends PageProps {
 }
 
 export default function PenyediaIndex({ auth, penyedia, meta, search }: PenyediaIndexProps) {
+    const { auth: pageAuth } = usePage<any>().props;
+    const user = pageAuth.user;
+
     return (
-        <AuthenticatedLayout
+        <AuthenticatedLayout user={user}
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="font-semibold text-xl text-gray-800 leading-tight">Daftar Penyedia</h2>

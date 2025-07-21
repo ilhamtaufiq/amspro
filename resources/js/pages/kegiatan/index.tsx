@@ -6,6 +6,7 @@ import type { Kegiatan } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import type { PageProps } from '@/types';
 
 interface CustomPageProps {
     kegiatan: Kegiatan[];
@@ -13,7 +14,8 @@ interface CustomPageProps {
 }
 
 export default function Kegiatan() {
-    const { kegiatan } = usePage<CustomPageProps>().props;
+    const { kegiatan, auth } = usePage<any>().props;
+    const user = auth.user;
     const [search, setSearch] = useState("");
     const filteredKegiatan = kegiatan.filter(
         (item: Kegiatan) =>
@@ -23,7 +25,7 @@ export default function Kegiatan() {
     );
 
     return (
-        <AuthenticatedLayout header="Kegiatan">
+        <AuthenticatedLayout user={user} header="Kegiatan">
             <Head title="Kegiatan" />
 
             <div className="container mx-auto py-10">

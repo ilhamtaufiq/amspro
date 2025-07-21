@@ -49,7 +49,7 @@ interface DashboardProps extends PageProps {
 
 export default function Dashboard({ auth, stats, recentPekerjaan, progressData, kontrakStats, locations, recentTodos, tahun_aktif, isSuperAdmin }: DashboardProps) {
     return (
-        <AuthenticatedLayout
+        <AuthenticatedLayout user={auth.user}
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>

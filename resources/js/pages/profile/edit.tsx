@@ -2,7 +2,7 @@ import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import DeleteUserForm from "@/pages/profile/partials/delete-user-form";
 import UpdatePasswordForm from "@/pages/profile/partials/update-password-form";
 import UpdateProfileInformationForm from "@/pages/profile/partials/update-profile-information-form";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import {
     Card,
     CardContent,
@@ -15,8 +15,10 @@ export default function Edit({
     mustVerifyEmail,
     status,
 }: { mustVerifyEmail: boolean; status?: string }) {
+    const { auth } = usePage<any>().props;
+    const user = auth.user;
     return (
-        <AuthenticatedLayout
+        <AuthenticatedLayout user={user}
             header={'Edit Profile'}
         >
             <Head title="Profile" />

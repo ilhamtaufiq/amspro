@@ -27,16 +27,17 @@ interface CustomPageProps {
 }
 
 export default function Users() {
-  const { users, auth } = usePage<CustomPageProps>().props;
+  const { users, auth } = usePage<any>().props;
+  const user = auth.user;
   const [search, setSearch] = useState("");
   const filteredUsers = users.filter(
-    (user) =>
+    (user: User) =>
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <AuthenticatedLayout header="Users">
+    <AuthenticatedLayout user={user} header="Users">
       <Head title="Users" />
 
       <div className="container mx-auto py-10">

@@ -1,4 +1,5 @@
 import { Head, useForm, usePage } from "@inertiajs/react";
+import type { PageProps } from '@/types';
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -158,6 +159,8 @@ const MessageItem = memo(({ message }: { message: Message }) => {
 MessageItem.displayName = "MessageItem";
 
 export default function Chat({ initialMessages }: Props) {
+  const { auth } = usePage<PageProps>().props;
+  const user = auth.user;
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -257,7 +260,7 @@ export default function Chat({ initialMessages }: Props) {
   );
 
   return (
-    <AuthenticatedLayout header="Chat with AI & Database">
+    <AuthenticatedLayout user={user} header="Chat with AI & Database">
       <Head title="Chat with AI & Database" />
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-2xl flex flex-col h-[80vh] bg-background border-muted shadow-xl rounded-2xl">

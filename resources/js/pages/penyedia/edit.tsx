@@ -38,7 +38,7 @@ export default function Edit({ auth, penyedia }: PenyediaEditProps) {
     };
 
     return (
-        <AuthenticatedLayout
+        <AuthenticatedLayout user={auth.user}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Edit Penyedia</h2>}
         >
             <Head title="Edit Penyedia" />

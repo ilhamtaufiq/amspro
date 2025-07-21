@@ -14,7 +14,7 @@ interface CreateUserProps {
 
 export default function CreateUser({ roles, auth }: CreateUserProps) {
   return (
-    <AuthenticatedLayout header="Create User">
+    <AuthenticatedLayout user={auth.user} header="Create User">
       <Head title="Create User" />
 
       <div className="container mx-auto py-10">

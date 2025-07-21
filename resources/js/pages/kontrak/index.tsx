@@ -22,7 +22,7 @@ interface KontrakIndexProps extends PageProps {
 
 export default function KontrakIndex({ auth, kontrak, meta, search, tahun }: KontrakIndexProps) {
     return (
-        <AuthenticatedLayout
+        <AuthenticatedLayout user={auth.user}
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="">Daftar Kontrak</h2>

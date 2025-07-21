@@ -57,7 +57,8 @@ interface RolesPageProps {
 
 export default function RolesIndex({ auth, roles, permissions, kegiatanList, flash }: RolesPageProps) {
     const { props } = usePage<RolesPageProps>();
-    const userPermissions = props.auth?.user?.permissions || [];
+    const user = props.auth.user;
+    const userPermissions = user?.permissions || [];
 
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -154,7 +155,7 @@ export default function RolesIndex({ auth, roles, permissions, kegiatanList, fla
     }));
 
     return (
-        <AuthenticatedLayout
+        <AuthenticatedLayout user={user}
             header={<h2 className="font-semibold text-xl text-foreground leading-tight">Role Management</h2>}
         >
             <Head title="Role Management" />

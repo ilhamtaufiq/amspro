@@ -20,7 +20,7 @@ interface EditUserProps {
 
 export default function EditUser({ user, roles, auth }: EditUserProps) {
   return (
-    <AuthenticatedLayout header="Edit User">
+    <AuthenticatedLayout user={auth.user} header="Edit User">
       <Head title="Edit User" />
 
       <div className="container mx-auto py-10">

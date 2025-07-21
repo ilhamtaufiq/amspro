@@ -1,5 +1,6 @@
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { Head } from "@inertiajs/react";
+import { usePage } from "@inertiajs/react";
 import KegiatanForm from "./kegiatan-form";
 
 interface EditKegiatanProps {
@@ -12,8 +13,10 @@ interface EditKegiatanProps {
 }
 
 export default function EditKegiatan({ kegiatan }: EditKegiatanProps) {
+    const { auth } = usePage<any>().props;
+    const user = auth.user;
     return (
-        <AuthenticatedLayout header="Edit Kegiatan">
+        <AuthenticatedLayout user={user} header="Edit Kegiatan">
             <Head title="Edit Kegiatan" />
 
             <div className="container mx-auto py-10">

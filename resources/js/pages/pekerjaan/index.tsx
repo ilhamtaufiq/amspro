@@ -46,9 +46,10 @@ export default function PekerjaanIndex({
     kegiatanList,
     kecamatanList,
     desaList,
+    auth
 }: PekerjaanIndexProps) {
     return (
-        <AuthenticatedLayout header="Dashboard">
+        <AuthenticatedLayout user={auth.user} header="Dashboard">
             <Head title="Pekerjaan" />
             <div className="container mx-auto py-10">
                 <h1 className="text-2xl font-bold mb-4">Daftar Pekerjaan</h1>

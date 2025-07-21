@@ -22,7 +22,7 @@ interface TodoIndexProps extends PageProps {
 
 export default function TodoIndex({ auth, todos, meta, search }: TodoIndexProps) {
     return (
-        <AuthenticatedLayout
+        <AuthenticatedLayout user={auth.user}
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="font-semibold text-xl text-gray-800 leading-tight">Daftar Todo</h2>
