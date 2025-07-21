@@ -625,6 +625,30 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
     },
   },
   {
+    accessorKey: "jumlah_foto",
+    header: "Jumlah Foto",
+    cell: ({ row }) => {
+      const jumlahFoto = row.original.jumlah_foto;
+      return jumlahFoto !== undefined ? jumlahFoto : "-";
+    },
+  },
+  {
+    accessorKey: "progress_fisik_persen",
+    header: "Progress Fisik (%)",
+    cell: ({ row }) => {
+      const progressFisik = row.original.progress_fisik_persen;
+      return progressFisik !== undefined ? `${progressFisik.toFixed(2)}%` : "-";
+    },
+  },
+  {
+    accessorKey: "progress_keuangan_persen",
+    header: "Progress Keuangan (%)",
+    cell: ({ row }) => {
+      const progressKeuangan = row.original.progress_keuangan_persen;
+      return progressKeuangan !== undefined ? `${progressKeuangan.toFixed(2)}%` : "-";
+    },
+  },
+  {
     id: "actions",
     header: "",
     cell: ({ row, table }) => {

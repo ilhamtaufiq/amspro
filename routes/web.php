@@ -17,6 +17,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StatusController;
 use App\Http\Controllers\TodoController;
+use App\Http\Controllers\PermissionController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -71,6 +72,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
     });
 
+    Route::middleware(['permission:view roles|create roles|edit roles|delete roles'])->group(function () {
+        Route::resource('permissions', PermissionController::class);
+    });
+
     Route::middleware(['permission:view penyedia|create penyedia|edit penyedia|delete penyedia'])->group(function () {
         Route::resource('penyedia', PenyediaController::class);
     });
@@ -91,9 +96,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Progress Routes (Restricted by permissions) - these permissions are already handled by the parent group
         Route::get('/progress', [ProgressController::class, 'index'])->name('progress.index')->middleware('permission:view pekerjaan');
-        Route::post('/progress', [ProgressController::class, 'store'])->name('progress.store')->middleware('permission:create pekerjaan');
-        Route::put('/progress/{progress}', [ProgressController::class, 'update'])->name('progress.update')->middleware('permission:edit pekerjaan');
-        Route::delete('/progress/{progress}', [ProgressController::class, 'destroy'])->name('progress.destroy')->middleware('permission:delete pekerjaan');
+        Route::post('/progress', [ProgressController::class, 'store'])->name('progress.store')->middleware('permission:create pekerjaan|tfl');
+        Route::put('/progress/{progress}', [ProgressController::class, 'update'])->name('progress.update')->middleware('permission:edit pekerjaan|tfl');
+        Route::delete('/progress/{progress}', [ProgressController::class, 'destroy'])->name('progress.destroy')->middleware('permission:delete pekerjaan|tfl');
     });
 });
 

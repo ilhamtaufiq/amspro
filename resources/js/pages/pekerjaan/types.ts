@@ -12,6 +12,9 @@ export interface Pekerjaan {
   updated_at: string | null;
   kode_rekening?: string;
   tahun_anggaran?: number;
+  jumlah_foto?: number;
+  progress_fisik_persen?: number;
+  progress_keuangan_persen?: number;
 }
 
 export interface Kegiatan {

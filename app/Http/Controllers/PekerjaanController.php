@@ -48,7 +48,8 @@ class PekerjaanController extends Controller
         $sortDirection = $request->query('sort_direction', 'desc');
 
         // Build the query for pekerjaan
-        $query = Pekerjaan::with(['kegiatan', 'kecamatan', 'desa'])
+        $query = Pekerjaan::with(['kegiatan', 'kecamatan', 'desa', 'progresses', 'keuangan'])
+            ->withCount('fotos')
             ->whereHas('kegiatan', function ($query) use ($tahun) {
                 $query->where('tahun_anggaran', $tahun);
             });
@@ -115,6 +116,9 @@ class PekerjaanController extends Controller
                     'created_at' => $item->created_at ? $item->created_at->toDateTimeString() : null,
                     'updated_at' => $item->updated_at ? $item->updated_at->toDateTimeString() : null,
                     'tahun_anggaran' => $item->kegiatan ? $item->kegiatan->tahun_anggaran : null,
+                    'jumlah_foto' => $item->fotos_count,
+                    'progress_fisik_persen' => $item->progresses->avg('realisasi_fisik') ?? 0,
+                    'progress_keuangan_persen' => ($item->keuangan && $item->pagu > 0) ? ($item->keuangan->realisasi / $item->pagu) * 100 : 0,
                 ];
             });
 

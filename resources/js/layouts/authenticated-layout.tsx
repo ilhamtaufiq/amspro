@@ -10,9 +10,11 @@ import {
 import AppearanceDropdown from "@/components/appearance-dropdown";
 import PilihTahun from "@/components/tahun";
 export default function AuthenticatedLayout({
+    user,
     header,
     children
 }: PropsWithChildren<{
+    user: any; // Define the user prop
     header?: ReactNode;
 }>) {
     return (
