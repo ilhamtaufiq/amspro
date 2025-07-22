@@ -17,6 +17,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ photos }) => {
     const mapInstance = useRef<L.Map | null>(null);
 
     useEffect(() => {
+        // console.log("MapComponent received photos:", photos);
         if (mapRef.current && !mapInstance.current) {
             mapInstance.current = L.map(mapRef.current).setView([-6.8106, 107.1439], 13); // Default to Cianjur coordinates
 
@@ -40,12 +41,18 @@ const MapComponent: React.FC<MapComponentProps> = ({ photos }) => {
                 return acc;
             }, {} as Record<number, typeof photos[0]>);
 
+            // console.log("Unique Pekerjaan Photos for markers:", uniquePekerjaanPhotos);
+
             // Add new markers
             Object.values(uniquePekerjaanPhotos).forEach(photo => {
                 if (photo.lat !== null && photo.lng !== null) {
+                    // console.log(`Adding marker for ${photo.nama_paket} at [${photo.lat}, ${photo.lng}]`);
                     const marker = L.marker([photo.lat, photo.lng]).addTo(mapInstance.current!);
+                    // console.log("Marker added:", marker);
                     const popupContent = `<b>${photo.nama_paket}</b><br>${photo.keterangan}<br><a href="/pekerjaan/${photo.pekerjaan_id}" target="_blank">Lihat Detail Pekerjaan</a>`;
                     marker.bindPopup(popupContent).openPopup();
+                } else {
+                    // console.log(`Skipping marker for ${photo.nama_paket} due to null coordinates: lat=${photo.lat}, lng=${photo.lng}`);
                 }
             });
 

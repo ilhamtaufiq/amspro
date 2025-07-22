@@ -60,6 +60,8 @@ class DashboardController extends Controller
             })
             ->filter();
 
+        
+
         if (!$user->hasRole('Super Admin')) {
             return Inertia::render('dashboard', [
                 'locations' => $locations,
