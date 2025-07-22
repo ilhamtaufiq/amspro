@@ -24,7 +24,7 @@ import { useState } from "react";
 import MapSelector from "@/components/MapSelector";
 import type { PageProps } from "./types";
 
-export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash }: PageProps) {
+export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash, initialLat, initialLng }: PageProps & { initialLat?: number; initialLng?: number; }) {
     const [isGettingCoordinates, setIsGettingCoordinates] = useState(false);
     const [desaName, setDesaName] = useState<string | null>(null);
     const [kecamatanName, setKecamatanName] = useState<string | null>(null);
@@ -70,6 +70,46 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
       return komponenOpsional.some((nama) => selectedKomponen.toLowerCase().includes(nama.toLowerCase()));
     };
 
+    const performGeocodingAndValidation = async (latitude: number, longitude: number) => {
+        setIsGeocodingLoading(true);
+        try {
+            const response = await fetch(
+                `/reverse-geocode?lat=${latitude}&lon=${longitude}`
+            );
+            const geocodingData = await response.json();
+
+            let foundDesa = geocodingData.desa;
+            let foundKecamatan = geocodingData.kecamatan;
+
+            setDesaName(foundDesa || "Tidak ditemukan");
+            setKecamatanName(foundKecamatan || "Tidak ditemukan");
+
+            // Validasi kecocokan desa dan kecamatan
+            let validasiSesuai = true;
+            let validationError = '';
+            if (pekerjaan.desa && foundDesa && pekerjaan.desa.toLowerCase() !== foundDesa.toLowerCase()) {
+              validasiSesuai = false;
+              validationError += `Desa yang terdeteksi (${foundDesa}) tidak sesuai dengan desa pekerjaan (${pekerjaan.desa}).`;
+            }
+            if (pekerjaan.kecamatan && foundKecamatan && pekerjaan.kecamatan.toLowerCase() !== foundKecamatan.toLowerCase()) {
+              validasiSesuai = false;
+              if (validationError) validationError += ' ';
+              validationError += `Kecamatan yang terdeteksi (${foundKecamatan}) tidak sesuai dengan kecamatan pekerjaan (${pekerjaan.kecamatan}).`;
+            }
+            setData(data => ({
+              ...data,
+              validasi_koordinat: validasiSesuai,
+              validasi_koordinat_message: validasiSesuai ? 'Sesuai' : validationError
+            }));
+        } catch (error) {
+            console.error("Error during reverse geocoding:", error);
+            setDesaName("Gagal mendapatkan");
+            setKecamatanName("Gagal mendapatkan");
+        } finally {
+            setIsGeocodingLoading(false);
+        }
+    };
+
     const handleGetCoordinates = () => {
         if (!navigator.geolocation) {
             alert("Geolocation tidak didukung oleh browser Anda.");
@@ -84,45 +124,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                 setData("koordinat", coordsString);
                 clearErrors('koordinat'); // Clear any previous coordinate errors
                 setIsGettingCoordinates(false);
-
-                // Perform reverse geocoding
-                setIsGeocodingLoading(true);
-                try {
-                    const response = await fetch(
-                        `/reverse-geocode?lat=${latitude}&lon=${longitude}`
-                    );
-                    const geocodingData = await response.json();
-
-                    let foundDesa = geocodingData.desa;
-                    let foundKecamatan = geocodingData.kecamatan;
-
-                    setDesaName(foundDesa || "Tidak ditemukan");
-                    setKecamatanName(foundKecamatan || "Tidak ditemukan");
-
-                    // Validasi kecocokan desa dan kecamatan
-                    let validasiSesuai = true;
-                    let validationError = '';
-                    if (pekerjaan.desa && foundDesa && pekerjaan.desa.toLowerCase() !== foundDesa.toLowerCase()) {
-                      validasiSesuai = false;
-                      validationError += `Desa yang terdeteksi (${foundDesa}) tidak sesuai dengan desa pekerjaan (${pekerjaan.desa}).`;
-                    }
-                    if (pekerjaan.kecamatan && foundKecamatan && pekerjaan.kecamatan.toLowerCase() !== foundKecamatan.toLowerCase()) {
-                      validasiSesuai = false;
-                      if (validationError) validationError += ' ';
-                      validationError += `Kecamatan yang terdeteksi (${foundKecamatan}) tidak sesuai dengan kecamatan pekerjaan (${pekerjaan.kecamatan}).`;
-                    }
-                    setData(data => ({
-                      ...data,
-                      validasi_koordinat: validasiSesuai,
-                      validasi_koordinat_message: validasiSesuai ? 'Sesuai' : validationError
-                    }));
-                } catch (error) {
-                    console.error("Error during reverse geocoding:", error);
-                    setDesaName("Gagal mendapatkan");
-                    setKecamatanName("Gagal mendapatkan");
-                } finally {
-                    setIsGeocodingLoading(false);
-                }
+                performGeocodingAndValidation(latitude, longitude);
             },
             (error) => {
                 console.error("Error getting coordinates:", error);
@@ -540,10 +542,10 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                                 setData("koordinat", coordsString);
                                 clearErrors('koordinat');
                                 setIsMapSelectionOpen(false);
-                                // Optionally, perform reverse geocoding here as well
+                                performGeocodingAndValidation(lat, lng);
                             }}
-                            initialLat={pekerjaan.lat || -6.8106} // Use existing pekerjaan lat/lng or default
-                            initialLng={pekerjaan.lng || 107.1439} // Use existing pekerjaan lat/lng or default
+                            initialLat={initialLat || -6.8106} // Use existing pekerjaan lat/lng or default
+                            initialLng={initialLng || 107.1439} // Use existing pekerjaan lat/lng or default
                         />
                     </div>
                 </DialogContent>

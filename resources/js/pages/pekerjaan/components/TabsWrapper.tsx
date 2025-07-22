@@ -17,7 +17,12 @@ import { OutcomeTab } from "./OutcomeTab";
 import { PhotosTab } from "./PhotosTab";
 import type { PageProps } from "./types";
 
-export function TabsWrapper(props: PageProps) {
+interface TabsWrapperProps extends PageProps {
+    initialLat?: number;
+    initialLng?: number;
+}
+
+export function TabsWrapper(props: TabsWrapperProps) {
     const [activeTab, setActiveTab] = useState("status");
 
     return (
@@ -65,7 +70,7 @@ export function TabsWrapper(props: PageProps) {
                 <OutcomeTab {...props} />
             </TabsContent>
             <TabsContent value="photos" className="space-y-4">
-                <PhotosTab {...props} />
+                <PhotosTab {...props} initialLat={props.initialLat} initialLng={props.initialLng} />
             </TabsContent>
         </Tabs>
     );

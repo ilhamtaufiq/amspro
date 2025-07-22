@@ -7,6 +7,9 @@ import type { PageProps } from "./components/types";
 export default function PekerjaanDetail() {
   const { pekerjaan, auth, penyediaList, kontrak, keuangan, fotos, progresses, outputs, penerimas, berkasList, flash, errors } = usePage<PageProps>().props;
   const user = auth.user;
+
+  const initialLat = fotos.length > 0 && fotos[0].koordinat ? parseFloat(fotos[0].koordinat.split(',')[0]) : undefined;
+  const initialLng = fotos.length > 0 && fotos[0].koordinat ? parseFloat(fotos[0].koordinat.split(',')[1]) : undefined;
   return (
     <AuthenticatedLayout user={user} header="Detail Pekerjaan">
       <Head title="Detail Pekerjaan" />
@@ -27,6 +30,8 @@ export default function PekerjaanDetail() {
               berkasList={berkasList}
               flash={flash}
               errors={errors}
+              initialLat={initialLat}
+              initialLng={initialLng}
             />
           </div>
         </div>
