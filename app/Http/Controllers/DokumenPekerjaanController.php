@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use Illuminate\Http\Request;
+use Illuminate\Http\Request as HttpRequest;
 use Inertia\Inertia;
 use App\Models\Pekerjaan;
 
 class DokumenPekerjaanController extends Controller
 {
-    public function index(Request $request)
+    public function index(HttpRequest $request)
     {
         $search = $request->query('search', '');
         $perPage = $request->query('per_page', 10);

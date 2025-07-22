@@ -37,6 +37,17 @@ class BerkasController extends Controller
         return redirect()->back()->with('success', 'Dokumen berhasil diunggah.');
     }
 
+    public function download($pekerjaanId, $berkasId)
+    {
+        $berkas = Berkas::where('pekerjaan_id', $pekerjaanId)->findOrFail($berkasId);
+
+        if ($berkas->hasMedia('berkas/dokumen')) {
+            return $berkas->getFirstMedia('berkas/dokumen');
+        }
+
+        return redirect()->back()->withErrors(['file' => 'Dokumen tidak ditemukan.']);
+    }
+
     public function destroy($pekerjaanId, $berkasId)
     {
         $berkas = Berkas::where('pekerjaan_id', $pekerjaanId)->findOrFail($berkasId);

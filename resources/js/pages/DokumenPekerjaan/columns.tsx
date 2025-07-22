@@ -38,7 +38,7 @@ export const columns: ColumnDef<Pekerjaan>[] = [
                         pekerjaan.berkas.map((berkas: Berkas) => (
                             <div key={berkas.id} className="flex items-center gap-2">
                                 <a
-                                    href={berkas.file_url}
+                                    href={route('berkas.download', [pekerjaan.id, berkas.id])}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:underline"

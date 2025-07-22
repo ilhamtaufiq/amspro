@@ -19,8 +19,9 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogOverlay, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
+import MapSelector from "@/components/MapSelector";
 import type { PageProps } from "./types";
 
 export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash }: PageProps) {
@@ -29,6 +30,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
     const [kecamatanName, setKecamatanName] = useState<string | null>(null);
     const [isGeocodingLoading, setIsGeocodingLoading] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null); // State for image preview
+    const [isMapSelectionOpen, setIsMapSelectionOpen] = useState(false); // State for map selection dialog
     const { data, setData, post, processing, reset, errors: formErrors, setError, clearErrors } = useForm({
         photo: null as File | null,
         keterangan: "0%",
@@ -381,6 +383,13 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                                         "Dapatkan Koordinat"
                                     )}
                                 </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setIsMapSelectionOpen(true)}
+                                >
+                                    Pilih di Peta
+                                </Button>
                             </div>
                             {formErrors.koordinat && <span className="text-red-500 text-sm">{formErrors.koordinat}</span>}
                             {/* Hapus validasi lokasi global (hijau/merah) yang lama, hanya tampilkan validasi per field */}
@@ -515,6 +524,28 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                     {previewImage && (
                         <img src={previewImage} alt="Preview" className="w-full h-auto object-contain" />
                     )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Map Selection Dialog */}
+            <Dialog open={isMapSelectionOpen} onOpenChange={setIsMapSelectionOpen}>
+                <DialogContent className="max-w-4xl p-0">
+                    <DialogHeader className="p-4">
+                        <DialogTitle>Pilih Lokasi di Peta</DialogTitle>
+                    </DialogHeader>
+                    <div className="h-[500px] w-full">
+                        <MapSelector
+                            onSelectLocation={(lat, lng) => {
+                                const coordsString = `${lat}, ${lng}`;
+                                setData("koordinat", coordsString);
+                                clearErrors('koordinat');
+                                setIsMapSelectionOpen(false);
+                                // Optionally, perform reverse geocoding here as well
+                            }}
+                            initialLat={pekerjaan.lat || -6.8106} // Use existing pekerjaan lat/lng or default
+                            initialLng={pekerjaan.lng || 107.1439} // Use existing pekerjaan lat/lng or default
+                        />
+                    </div>
                 </DialogContent>
             </Dialog>
         </Card>
