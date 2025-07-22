@@ -19,6 +19,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog";
 import { useState } from "react";
 import type { PageProps } from "./types";
 
@@ -27,6 +28,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
     const [desaName, setDesaName] = useState<string | null>(null);
     const [kecamatanName, setKecamatanName] = useState<string | null>(null);
     const [isGeocodingLoading, setIsGeocodingLoading] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string | null>(null); // State for image preview
     const { data, setData, post, processing, reset, errors: formErrors, setError, clearErrors } = useForm({
         photo: null as File | null,
         keterangan: "0%",
@@ -471,7 +473,12 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                                 {fotos.map((foto) => (
                                     <TableRow key={foto.id}>
                                         <TableCell>
-                                            <img src={foto.photo_url} alt={foto.keterangan} className="w-20 h-20 object-cover rounded-md" />
+                                            <img
+                                                src={foto.photo_url}
+                                                alt={foto.keterangan}
+                                                className="w-20 h-20 object-cover rounded-md cursor-pointer"
+                                                onClick={() => setPreviewImage(foto.photo_url)}
+                                            />
                                         </TableCell>
                                         <TableCell>{foto.keterangan}</TableCell>
                                         <TableCell>{foto.komponen_nama || "N/A"}</TableCell>
@@ -501,6 +508,15 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash 
                     <p className="text-center text-muted-foreground">Belum ada foto yang diunggah.</p>
                 )}
             </CardContent>
+
+            {/* Image Preview Dialog */}
+            <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+                <DialogContent className="max-w-3xl p-0">
+                    {previewImage && (
+                        <img src={previewImage} alt="Preview" className="w-full h-auto object-contain" />
+                    )}
+                </DialogContent>
+            </Dialog>
         </Card>
     );
 }
