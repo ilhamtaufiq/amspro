@@ -34,10 +34,14 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson, sele
 
             // Add new GeoJSON layers
             geojson.forEach(geo => {
-                const getFeatureStyle = (feature: GeoJSON.Feature) => {
-                    const isFeatureVillage = feature.properties && feature.properties.village_code;
-                    const featureKecamatanName = feature.properties?.district ? feature.properties.district.toLowerCase().trim() : '';
-                    const featureDesaName = feature.properties?.village ? feature.properties.village.toLowerCase().trim() : '';
+                const getFeatureStyle = (feature: GeoJSON.Feature | undefined) => {
+                    if (!feature || !feature.properties) {
+                        return {}; // Return empty style for undefined features
+                    }
+
+                    const isFeatureVillage = feature.properties.village_code;
+                    const featureKecamatanName = feature.properties.district ? feature.properties.district.toLowerCase().trim() : '';
+                    const featureDesaName = feature.properties.village ? feature.properties.village.toLowerCase().trim() : '';
 
                     // console.log("--- Feature:", feature.properties?.district || feature.properties?.village || feature.properties?.NAME_3);
                     // console.log("selectedKecamatanId:", selectedKecamatanId, "selectedDesaId:", selectedDesaId);
@@ -110,17 +114,14 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson, sele
             });
 
             // Adjust map view to fit GeoJSON bounds
-            const bounds = L.latLngBounds([]);
+            const allGeoJsonBounds = L.latLngBounds([]);
             geojson.forEach(geo => {
-                L.geoJSON(geo).eachLayer(layer => {
-                    if (layer instanceof L.Path) {
-                        bounds.extend(layer.getBounds());
-                    }
-                });
+                const geoJsonLayer = L.geoJSON(geo);
+                allGeoJsonBounds.extend(geoJsonLayer.getBounds());
             });
 
-            if (bounds.isValid()) {
-                mapInstance.current.fitBounds(bounds);
+            if (allGeoJsonBounds.isValid()) {
+                mapInstance.current.fitBounds(allGeoJsonBounds);
             }
         }
 
