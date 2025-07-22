@@ -8,6 +8,7 @@ interface MapPageProps {
     geojson: GeoJSON.FeatureCollection[];
     kecamatanList: { id: number; name: string; geojson: GeoJSON.Feature | null }[];
     desaList: { id: number; name: string; kecamatan_id: number; geojson: GeoJSON.Feature | null }[];
+    pekerjaanList: { id: number; nama_paket: string; kecamatan_id: number; desa_id: number; kecamatan_name: string | null; desa_name: string | null; lat: number | null; lng: number | null; }[];
     auth: {
         user: {
             name: string;
@@ -18,10 +19,11 @@ interface MapPageProps {
     };
 }
 
-export default function MapIndex({ auth, geojson, kecamatanList, desaList }: MapPageProps) {
+export default function MapIndex({ auth, geojson, kecamatanList, desaList, pekerjaanList }: MapPageProps) {
     const [selectedKecamatan, setSelectedKecamatan] = useState<{ id: number; name: string; geojson: GeoJSON.Feature | null } | null>(null);
     const [selectedDesa, setSelectedDesa] = useState<{ id: number; name: string; kecamatan_id: number; geojson: GeoJSON.Feature | null } | null>(null);
     const [filteredDesaList, setFilteredDesaList] = useState(desaList);
+    const [showPekerjaan, setShowPekerjaan] = useState(false);
 
     useEffect(() => {
         if (selectedKecamatan) {
@@ -82,7 +84,7 @@ export default function MapIndex({ auth, geojson, kecamatanList, desaList }: Map
                     </Select>
                 </div>
                 <div className="h-[600px] w-full rounded-md overflow-hidden">
-                    <MapComponentGeoJSON geojson={geojson} selectedFeatureGeoJSON={selectedFeatureGeoJSON} selectedKecamatanId={selectedKecamatan?.id.toString() || ""} selectedDesaId={selectedDesa?.id.toString() || ""} kecamatanList={kecamatanList} desaList={desaList} />
+                    <MapComponentGeoJSON geojson={geojson} selectedFeatureGeoJSON={selectedFeatureGeoJSON} selectedKecamatanId={selectedKecamatan?.id.toString() || ""} selectedDesaId={selectedDesa?.id.toString() || ""} kecamatanList={kecamatanList} desaList={desaList} pekerjaanList={showPekerjaan ? pekerjaanList : []} />
                 </div>
             </div>
         </AuthenticatedLayout>

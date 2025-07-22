@@ -2,6 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+declare module 'leaflet' {
+  interface MarkerOptions {
+    _isPekerjaanMarker?: boolean;
+  }
+}
+
 interface MapComponentGeoJSONProps {
     geojson: GeoJSON.FeatureCollection[];
     selectedFeatureGeoJSON: GeoJSON.Feature | null;
@@ -36,7 +42,7 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson, sele
             // Clear existing Pekerjaan markers
             mapInstance.current.eachLayer((layer: any) => {
                 if (layer instanceof L.Marker) {
-                    if (layer.options.icon?.options.className === 'pekerjaan-marker') {
+                    if (layer.options._isPekerjaanMarker) {
                         mapInstance.current?.removeLayer(layer);
                     }
                 }
@@ -138,7 +144,7 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson, sele
 
                     const marker = L.marker([pekerjaan.lat, pekerjaan.lng], {
                         icon: defaultIcon,
-                        className: 'pekerjaan-marker' // Add a class for clearing later
+                        _isPekerjaanMarker: true // Custom property for clearing later
                     }).addTo(mapInstance.current!);
                     const popupContent = `<b>${pekerjaan.nama_paket}</b><br/>Kecamatan: ${pekerjaan.kecamatan_name}<br/>Desa: ${pekerjaan.desa_name}<br/><a href="/pekerjaan/${pekerjaan.id}" target="_blank">Lihat Detail</a>`;
                     marker.bindPopup(popupContent);
