@@ -2,7 +2,8 @@ import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { Head, usePage } from "@inertiajs/react";
-import { Status, Meta, Kegiatan } from "./types";
+import { Status, Meta } from "./types";
+import { Kegiatan } from "../pekerjaan/types";
 
 interface StatusPageProps {
   statuses: { data: Status[]; current_page: number; last_page: number; total: number; from: number; to: number; per_page: number; links: Array<{ url: string | null; label: string; active: boolean }> };

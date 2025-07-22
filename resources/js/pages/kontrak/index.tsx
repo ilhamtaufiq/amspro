@@ -1,7 +1,8 @@
 import { Head } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { DataTable } from './data-table';
-import { columns, Kontrak, Kegiatan } from './columns';
+import { columns, Kontrak } from './columns';
+import { Kegiatan } from "../pekerjaan/types";
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 
 

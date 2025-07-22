@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageProps } from "@/types";
-import { Kegiatan } from "./columns";
+import { Kegiatan } from "../pekerjaan/types";
 
 interface Meta {
     current_page: number;

@@ -20,7 +20,8 @@ import { Input } from "@/components/ui/input"; // Tambahkan Input
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react"; // Tambahkan Loader2 untuk indikator loading
 import { router, usePage } from "@inertiajs/react";
-import { Status, Meta, Kegiatan } from "./types";
+import { Status, Meta } from "./types";
+import { Kegiatan } from "../pekerjaan/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DataTableProps<TData, TValue> {
