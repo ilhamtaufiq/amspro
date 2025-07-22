@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Kontrak;
 use App\Models\Pekerjaan;
 use App\Models\Penyedia;
+use App\Models\Kegiatan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,7 @@ class KontrakController extends Controller
         $tahun = $request->query('tahun', session('tahun', now()->year));
         $search = $request->query('search', '');
         $perPage = $request->query('per_page', 10);
+        $kegiatanId = $request->query('kegiatan_id');
 
         $query = Kontrak::with(['penyedia', 'pekerjaan'])->whereHas('pekerjaan.kegiatan', function ($query) use ($tahun) {
             $query->where('tahun_anggaran', $tahun);
@@ -36,6 +38,12 @@ class KontrakController extends Controller
                     ->orWhereHas('penyedia', function ($q2) use ($search) {
                         $q2->whereRaw('LOWER(nama) LIKE ?', ['%' . strtolower($search) . '%']);
                     });
+            });
+        }
+
+        if ($kegiatanId) {
+            $query->whereHas('pekerjaan', function ($q) use ($kegiatanId) {
+                $q->where('kegiatan_id', $kegiatanId);
             });
         }
 
@@ -60,6 +68,8 @@ class KontrakController extends Controller
             ],
             'search' => $search,
             'tahun' => $tahun,
+            'kegiatanList' => Kegiatan::where('tahun_anggaran', $tahun)->get(),
+            'kegiatan_id' => $kegiatanId,
         ]);
     }
 

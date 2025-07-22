@@ -19,7 +19,7 @@ class FotoController extends Controller
 
         $request->validate([
             'photo' => 'required|image|mimes:jpeg,png,gif|max:2048',
-            'keterangan' => 'required|in:0%,50%,100%',
+            'keterangan' => 'required|in:0%,25%,50%,75%,100%',
             'komponen_id' => 'required|exists:tbl_output,id',
             'penerima_id' => 'nullable|exists:tbl_penerima,id',
             'koordinat' => 'required|string|max:255',

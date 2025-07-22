@@ -43,6 +43,7 @@ class PekerjaanController extends Controller
 
         $tahun = $request->query('tahun', session('tahun', now()->year));
         $search = $request->query('search', '');
+        $kegiatanId = $request->query('kegiatan_id', '');
         $perPage = $request->query('per_page', 10);
         $sortField = $request->query('sort_field', 'created_at');
         $sortDirection = $request->query('sort_direction', 'desc');
@@ -81,6 +82,11 @@ class PekerjaanController extends Controller
                         $q->where('n_desa', 'like', '%' . $search . '%');
                     });
             });
+        }
+
+        // Apply kegiatan filter
+        if ($kegiatanId) {
+            $query->where('kegiatan_id', $kegiatanId);
         }
 
         // Apply sorting
@@ -141,6 +147,7 @@ class PekerjaanController extends Controller
             ],
             'tahun' => (int) $tahun,
             'search' => $search,
+            'kegiatan_id' => $kegiatanId,
             'kegiatanList' => $kegiatanList,
             'kecamatanList' => $kecamatanList,
             'desaList' => $desaList,

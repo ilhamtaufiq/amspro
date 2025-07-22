@@ -19,8 +19,9 @@ import {
 import { Input } from "@/components/ui/input"; // Tambahkan Input
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react"; // Tambahkan Loader2 untuk indikator loading
-import { router } from "@inertiajs/react";
-import { Status, Meta } from "./types";
+import { router, usePage } from "@inertiajs/react";
+import { Status, Meta, Kegiatan } from "./types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -28,6 +29,8 @@ interface DataTableProps<TData, TValue> {
   meta: Meta;
   tahun: number;
   search?: string;
+  kegiatanList: Kegiatan[];
+  kegiatan_id: string;
 }
 
 export function DataTable<TData extends Status, TValue>({
@@ -36,12 +39,17 @@ export function DataTable<TData extends Status, TValue>({
   meta,
   tahun,
   search,
+  kegiatanList,
+  kegiatan_id,
 }: DataTableProps<TData, TValue>) {
+  const { auth } = usePage<any>().props;
+  const isSuperAdmin = auth.user.roles.some((role: any) => role.name === 'Super Admin');
   const [data, setData] = React.useState<TData[]>(initialData);
   const [sorting, setSorting] = React.useState<
     { id: string; desc: boolean }[]
   >([]);
   const [searchState, setSearchState] = React.useState(search || ""); // State untuk input pencarian
+  const [kegiatanId, setKegiatanId] = React.useState(kegiatan_id || "");
   const [isSearching, setIsSearching] = React.useState(false); // State untuk indikator loading
 
   React.useEffect(() => {
@@ -62,11 +70,11 @@ export function DataTable<TData extends Status, TValue>({
     };
   };
 
-  const performSearch = (value: string) => {
+  const performSearch = (value: string, newKegiatanId?: string) => {
     setIsSearching(true);
     router.get(
       "/status",
-      { search: value, tahun, page: 1 },
+      { search: value, tahun, page: 1, kegiatan_id: newKegiatanId ?? kegiatanId },
       { preserveState: true, preserveScroll: true }
     );
   };
@@ -81,6 +89,12 @@ export function DataTable<TData extends Status, TValue>({
     debouncedSearch(value);
   };
 
+  const handleKegiatanChange = (newKegiatanId: string) => {
+    const effectiveKegiatanId = newKegiatanId === "all" ? "" : newKegiatanId;
+    setKegiatanId(effectiveKegiatanId);
+    performSearch(searchState, effectiveKegiatanId);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -91,7 +105,7 @@ export function DataTable<TData extends Status, TValue>({
   const handlePageChange = (page: number) => {
     router.get(
       "/status",
-      { search: searchState, tahun, page },
+      { search: searchState, tahun, page, kegiatan_id: kegiatanId },
       { preserveState: true, preserveScroll: true }
     );
   };
@@ -111,16 +125,33 @@ export function DataTable<TData extends Status, TValue>({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="relative">
-          <Input
-            placeholder="Cari nama pekerjaan, penyedia..."
-            value={searchState}
-            onChange={handleSearch}
-            onKeyDown={handleKeyDown}
-            className="max-w-sm pr-8"
-          />
-          {isSearching && (
-            <Loader2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <Input
+              placeholder="Cari nama pekerjaan, penyedia..."
+              value={searchState}
+              onChange={handleSearch}
+              onKeyDown={handleKeyDown}
+              className="max-w-sm pr-8"
+            />
+            {isSearching && (
+              <Loader2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+          </div>
+          {isSuperAdmin && (
+              <Select value={kegiatanId} onValueChange={handleKegiatanChange}>
+                  <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Semua Kegiatan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="all">Semua Kegiatan</SelectItem>
+                      {kegiatanList.map((kegiatan) => (
+                          <SelectItem key={kegiatan.id} value={kegiatan.id.toString()}>
+                              {kegiatan.nama}
+                          </SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
           )}
         </div>
       </div>

@@ -27,7 +27,9 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageProps } from "@/types";
+import { Kegiatan } from "./columns";
 
 interface Meta {
     current_page: number;
@@ -45,6 +47,8 @@ interface DataTableProps<TData, TValue> {
     meta: Meta;
     search: string;
     tahun: number;
+    kegiatanList: Kegiatan[];
+    kegiatan_id: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -53,12 +57,16 @@ export function DataTable<TData, TValue>({
     meta,
     search: initialSearch,
     tahun,
+    kegiatanList,
+    kegiatan_id: initialKegiatanId,
 }: DataTableProps<TData, TValue>) {
     const { auth } = usePage<PageProps>().props;
     const userPermissions = auth?.user?.permissions || [];
+    const isSuperAdmin = auth?.user?.roles?.some((role: { name: string }) => role.name === "Super Admin");
     const [data, setData] = useState<TData[]>(initialData);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [search, setSearch] = useState(initialSearch);
+    const [kegiatanId, setKegiatanId] = useState(initialKegiatanId);
     const [isSearching, setIsSearching] = useState(false);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
         kode_rup: false,
@@ -87,11 +95,11 @@ export function DataTable<TData, TValue>({
         };
     };
 
-    const performSearch = (value: string) => {
+    const performSearch = (value: string, newKegiatanId?: string) => {
         setIsSearching(true);
         router.get(
             "/kontrak",
-            { search: value, page: 1, tahun },
+            { search: value, page: 1, tahun, kegiatan_id: newKegiatanId ?? kegiatanId },
             { preserveState: true, preserveScroll: true }
         );
     };
@@ -113,10 +121,16 @@ export function DataTable<TData, TValue>({
         }
     };
 
+    const handleKegiatanChange = (newKegiatanId: string) => {
+        const effectiveKegiatanId = newKegiatanId === "all" ? "" : newKegiatanId;
+        setKegiatanId(effectiveKegiatanId);
+        performSearch(search, effectiveKegiatanId);
+    };
+
     const handlePageChange = (page: number) => {
         router.get(
             "/kontrak",
-            { search, page, tahun },
+            { search, page, tahun, kegiatan_id: kegiatanId },
             { preserveState: true, preserveScroll: true }
         );
     };
@@ -151,6 +165,21 @@ export function DataTable<TData, TValue>({
                             <Loader2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
                         )}
                     </div>
+                    {isSuperAdmin && (
+                        <Select value={kegiatanId} onValueChange={handleKegiatanChange}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Semua Kegiatan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Semua Kegiatan</SelectItem>
+                                {kegiatanList.map((kegiatan) => (
+                                    <SelectItem key={kegiatan.id} value={kegiatan.id.toString()}>
+                                        {kegiatan.nama}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
                     <div className="flex space-x-2">
                         {userPermissions.includes("create pekerjaan") && (
                             <Link href={route('kontrak.create')}>

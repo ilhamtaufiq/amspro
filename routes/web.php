@@ -35,7 +35,7 @@ Route::post('/set-tahun', function (Request $request) {
 })->middleware('auth')->name('set-tahun');
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
-Route::match(['get', 'post'], '/chat', [ChatController::class, 'index'])->name('chat.index');
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Profile Routes (Accessible to all authenticated users)

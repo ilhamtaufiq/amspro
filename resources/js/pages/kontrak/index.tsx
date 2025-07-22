@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { DataTable } from './data-table';
-import { columns, Kontrak } from './columns';
+import { columns, Kontrak, Kegiatan } from './columns';
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 
 
@@ -18,9 +18,11 @@ interface KontrakIndexProps extends PageProps {
     };
     search: string;
     tahun: number;
+    kegiatanList: Kegiatan[];
+    kegiatan_id: string;
 }
 
-export default function KontrakIndex({ auth, kontrak, meta, search, tahun }: KontrakIndexProps) {
+export default function KontrakIndex({ auth, kontrak, meta, search, tahun, kegiatanList, kegiatan_id }: KontrakIndexProps) {
     return (
         <AuthenticatedLayout user={auth.user}
             header={
@@ -38,7 +40,7 @@ export default function KontrakIndex({ auth, kontrak, meta, search, tahun }: Kon
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="container mx-auto py-10">
 
-                        <DataTable columns={columns} data={kontrak} meta={meta} search={search} tahun={tahun} />
+                        <DataTable columns={columns} data={kontrak} meta={meta} search={search} tahun={tahun} kegiatanList={kegiatanList} kegiatan_id={kegiatan_id} />
                     </div>
                 </div>
             </div>

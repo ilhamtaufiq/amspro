@@ -17,6 +17,7 @@ interface PageProps {
     meta: Meta;
     tahun: number;
     search: string;
+    kegiatan_id: string;
     [key: string]: any;
 }
 
@@ -25,6 +26,7 @@ interface PekerjaanIndexProps extends PageProps {
     meta: Meta;
     tahun: number;
     search: string;
+    kegiatan_id: string;
     kegiatanList: Kegiatan[];
     kecamatanList: Kecamatan[];
     desaList: Desa[];
@@ -43,6 +45,7 @@ export default function PekerjaanIndex({
     meta,
     tahun,
     search,
+    kegiatan_id,
     kegiatanList,
     kecamatanList,
     desaList,
@@ -59,6 +62,7 @@ export default function PekerjaanIndex({
                     meta={meta}
                     tahun={tahun}
                     search={search}
+                    kegiatan_id={kegiatan_id}
                     kegiatanList={kegiatanList}
                     kecamatanList={kecamatanList}
                     desaList={desaList}

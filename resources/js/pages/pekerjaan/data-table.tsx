@@ -16,6 +16,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { router, usePage } from "@inertiajs/react";
@@ -40,6 +47,7 @@ interface DataTableProps<TData, TValue> {
   meta: Meta;
   tahun: number;
   search: string;
+  kegiatan_id: string;
   kegiatanList: Kegiatan[];
   kecamatanList: Kecamatan[];
   desaList: Desa[];
@@ -51,6 +59,7 @@ export function DataTable<TData extends Pekerjaan, TValue>({
   meta,
   tahun,
   search: initialSearch,
+  kegiatan_id: initialKegiatanId,
   kegiatanList,
   kecamatanList,
   desaList,
@@ -62,6 +71,7 @@ export function DataTable<TData extends Pekerjaan, TValue>({
     { id: string; desc: boolean }[]
   >([]);
   const [search, setSearch] = React.useState(initialSearch);
+  const [kegiatanId, setKegiatanId] = React.useState(initialKegiatanId);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [isSearching, setIsSearching] = React.useState(false);
   const [isExporting, setIsExporting] = React.useState(false);
@@ -103,11 +113,11 @@ export function DataTable<TData extends Pekerjaan, TValue>({
     });
   };
 
-  const performSearch = (value: string) => {
+  const performSearch = (value: string, newKegiatanId?: string) => {
     setIsSearching(true);
     router.get(
       "/pekerjaan",
-      { search: value, tahun, page: 1 },
+      { search: value, tahun, page: 1, kegiatan_id: newKegiatanId ?? kegiatanId },
       { preserveState: true, preserveScroll: true }
     );
   };
@@ -122,6 +132,12 @@ export function DataTable<TData extends Pekerjaan, TValue>({
     debouncedSearch(value);
   };
 
+  const handleKegiatanChange = (newKegiatanId: string) => {
+      const effectiveKegiatanId = newKegiatanId === "all" ? "" : newKegiatanId;
+      setKegiatanId(effectiveKegiatanId);
+      performSearch(search, effectiveKegiatanId);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -132,7 +148,7 @@ export function DataTable<TData extends Pekerjaan, TValue>({
   const handlePageChange = (page: number) => {
     router.get(
       "/pekerjaan",
-      { search, tahun, page },
+      { search, tahun, page, kegiatan_id: kegiatanId },
       { preserveState: true, preserveScroll: true }
     );
   };
@@ -143,6 +159,9 @@ export function DataTable<TData extends Pekerjaan, TValue>({
     url.searchParams.append("tahun", tahun.toString());
     if (search) {
       url.searchParams.append("search", search);
+    }
+    if (kegiatanId) {
+        url.searchParams.append("kegiatan_id", kegiatanId);
     }
 
     const link = document.createElement("a");
@@ -206,6 +225,21 @@ export function DataTable<TData extends Pekerjaan, TValue>({
               <Loader2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
             )}
           </div>
+          {isSuperAdmin && (
+              <Select value={kegiatanId} onValueChange={handleKegiatanChange}>
+                  <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Semua Kegiatan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="all">Semua Kegiatan</SelectItem>
+                      {kegiatanList.map((kegiatan) => (
+                          <SelectItem key={kegiatan.id} value={kegiatan.id.toString()}>
+                              {kegiatan.nama}
+                          </SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+          )}
           <div className="flex space-x-2">
             {userPermissions.includes("create pekerjaan") && (
               <Button onClick={() => setCreateOpen(true)}>

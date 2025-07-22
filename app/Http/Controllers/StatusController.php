@@ -6,6 +6,7 @@ use App\Models\Status;
 use App\Models\Pekerjaan;
 use App\Models\Kontrak;
 use App\Models\Penyedia;
+use App\Models\Kegiatan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -16,6 +17,7 @@ class StatusController extends Controller
         $tahun = $request->session()->get('tahun', now()->year);
         $perPage = $request->query('per_page', 10);
         $search = $request->query('search'); // Ambil parameter search
+        $kegiatanId = $request->query('kegiatan_id');
 
         Log::info('Tahun aktif:', ['tahun' => $tahun]);
         if ($search) {
@@ -42,6 +44,10 @@ class StatusController extends Controller
                       $q->where('nama', 'like', "%{$search}%");
                   });
             });
+        }
+
+        if ($kegiatanId) {
+            $query->where('kegiatan_id', $kegiatanId);
         }
 
         $pekerjaan = $query->paginate($perPage)->withQueryString();
@@ -93,6 +99,8 @@ class StatusController extends Controller
         // Konversi data paginasi ke array
         $paginationData = $pekerjaan->toArray();
 
+        $kegiatanList = Kegiatan::where('tahun_anggaran', $tahun)->get();
+
         return inertia('status/index', [
             'statuses' => $statuses,
             'meta' => [
@@ -111,6 +119,8 @@ class StatusController extends Controller
                 }, $paginationData['links']),
             ],
             'tahun' => $tahun,
+            'kegiatanList' => $kegiatanList,
+            'kegiatan_id' => $kegiatanId,
         ]);
     }
 

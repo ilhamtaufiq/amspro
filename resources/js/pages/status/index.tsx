@@ -2,16 +2,18 @@ import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { Head, usePage } from "@inertiajs/react";
-import { Status, Meta } from "./types";
+import { Status, Meta, Kegiatan } from "./types";
 
 interface StatusPageProps {
   statuses: { data: Status[]; current_page: number; last_page: number; total: number; from: number; to: number; per_page: number; links: Array<{ url: string | null; label: string; active: boolean }> };
   meta: Meta;
   tahun: number;
   search?: string; // Tambahkan search sebagai prop
+  kegiatanList: Kegiatan[];
+  kegiatan_id: string;
 }
 
-export default function StatusPage({ statuses, meta, tahun, search = "" }: StatusPageProps) {
+export default function StatusPage({ statuses, meta, tahun, search = "", kegiatanList, kegiatan_id }: StatusPageProps) {
   const { auth } = usePage<any>().props;
   const user = auth.user;
   return (
@@ -26,6 +28,8 @@ export default function StatusPage({ statuses, meta, tahun, search = "" }: Statu
           meta={meta}
           tahun={tahun}
           search={search} // Kirimkan search ke DataTable
+          kegiatanList={kegiatanList}
+          kegiatan_id={kegiatan_id}
         />
       </div>
     </AuthenticatedLayout>
