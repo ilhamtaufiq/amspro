@@ -18,6 +18,7 @@ import {
   IconUserCog,
   IconUserOff,
   IconUsers,
+  IconFileText,
 } from '@tabler/icons-react'
 import { AudioWaveform, Command, GalleryVerticalEnd } from 'lucide-react'
 // import { ClerkLogo } from '@/assets/clerk-logo'
@@ -69,6 +70,11 @@ export const sidebarData: SidebarData = {
           title: 'Peta Interaktif',
           url: '/map',
           icon: IconLayoutDashboard,
+        },
+        {
+          title: 'Dokumen Pekerjaan',
+          url: '/dokumen-pekerjaan',
+          icon: IconFileText,
         },
         
         {
