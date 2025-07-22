@@ -6,6 +6,7 @@ use App\Models\Foto;
 use App\Models\Pekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
 
 class FotoController extends Controller
@@ -18,7 +19,7 @@ class FotoController extends Controller
         $request->merge(['validasi_koordinat' => filter_var($request->validasi_koordinat, FILTER_VALIDATE_BOOLEAN)]);
 
         $request->validate([
-            'photo' => 'required|image|mimes:jpeg,png,gif|max:2048',
+            'photo' => 'required|image|mimes:jpeg,png,gif|max:5120',
             'keterangan' => 'required|in:0%,25%,50%,75%,100%',
             'komponen_id' => 'required|exists:tbl_output,id',
             'penerima_id' => 'nullable|exists:tbl_penerima,id',
@@ -41,7 +42,12 @@ class FotoController extends Controller
             ]);
 
             if ($request->hasFile('photo')) {
+                $file = $request->file('photo');
+                $extension = $file->getClientOriginalExtension();
+                $fileName = $pekerjaan->id . '-' . Str::random(10) . '-' . now()->timestamp . '.' . $extension;
+
                 $foto->addMediaFromRequest('photo')
+                     ->usingFileName($fileName)
                      ->toMediaCollection('foto/pekerjaan');
             }
 

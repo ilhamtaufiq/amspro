@@ -4,9 +4,14 @@ import 'leaflet/dist/leaflet.css';
 
 interface MapComponentGeoJSONProps {
     geojson: GeoJSON.FeatureCollection[];
+    selectedFeatureGeoJSON: GeoJSON.Feature | null;
+    selectedKecamatanId: string;
+    selectedDesaId: string;
+    kecamatanList: { id: number; name: string; geojson: GeoJSON.Feature | null }[];
+    desaList: { id: number; name: string; kecamatan_id: number; geojson: GeoJSON.Feature | null }[];
 }
 
-const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson }) => {
+const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson, selectedFeatureGeoJSON, selectedKecamatanId, selectedDesaId, kecamatanList, desaList }) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<L.Map | null>(null);
 
@@ -30,7 +35,39 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson }) =>
             // Add new GeoJSON layers
             geojson.forEach(geo => {
                 const getFeatureStyle = (feature: GeoJSON.Feature) => {
-                    if (feature.properties && feature.properties.village_code) {
+                    const isFeatureVillage = feature.properties && feature.properties.village_code;
+                    const featureKecamatanName = feature.properties?.district ? feature.properties.district.toLowerCase().trim() : '';
+                    const featureDesaName = feature.properties?.village ? feature.properties.village.toLowerCase().trim() : '';
+
+                    // console.log("--- Feature:", feature.properties?.district || feature.properties?.village || feature.properties?.NAME_3);
+                    // console.log("selectedKecamatanId:", selectedKecamatanId, "selectedDesaId:", selectedDesaId);
+
+                    let isActive = true;
+
+                    if (selectedDesaId) {
+                        // If a specific desa is selected, only that desa is active
+                        isActive = isFeatureVillage && featureDesaName === (desaList.find(d => d.id.toString() === selectedDesaId)?.name.toLowerCase().trim() || '');
+                        // console.log("Mode Desa Selected. isActive:", isActive);
+                    } else if (selectedKecamatanId) {
+                        // If a kecamatan is selected, that kecamatan and its desas are active
+                        isActive = (feature.properties?.district && featureKecamatanName === (kecamatanList.find(k => k.id.toString() === selectedKecamatanId)?.name.toLowerCase().trim() || '')) ||
+                                   (isFeatureVillage && featureKecamatanName === (kecamatanList.find(k => k.id.toString() === selectedKecamatanId)?.name.toLowerCase().trim() || ''));
+                    // console.log("Mode Kecamatan Selected. isActive:", isActive);
+                    }
+
+                    // console.log("Final isActive:", isActive);
+
+                    if (!isActive) {
+                        return {
+                            color: '#888888', // Grey border
+                            weight: 0.5,
+                            opacity: 0.5,
+                            fillColor: '#DDDDDD', // Light grey fill
+                            fillOpacity: 0.2
+                        };
+                    }
+
+                    if (isFeatureVillage) {
                         // Style for villages
                         return {
                             color: '#0000FF', // Blue for villages
@@ -86,7 +123,20 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson }) =>
                 mapInstance.current.fitBounds(bounds);
             }
         }
-    }, [geojson]);
+
+        if (mapInstance.current && selectedFeatureGeoJSON) {
+            // console.log("selectedFeatureGeoJSON changed:", selectedFeatureGeoJSON);
+            // console.log("Attempting to get bounds from:", selectedFeatureGeoJSON);
+            const selectedBounds = L.geoJSON(selectedFeatureGeoJSON).getBounds();
+            // console.log("Calculated bounds:", selectedBounds);
+            if (selectedBounds.isValid()) {
+                mapInstance.current.fitBounds(selectedBounds);
+                // console.log("Map fitted to bounds.");
+            } else {
+                // console.log("Selected feature bounds are not valid.");
+            }
+        }
+    }, [geojson, selectedFeatureGeoJSON]);
 
     return <div ref={mapRef} style={{ height: '600px', width: '100%' }} className="rounded-md" />;
 };
