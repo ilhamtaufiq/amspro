@@ -9,9 +9,10 @@ interface MapComponentGeoJSONProps {
     selectedDesaId: string;
     kecamatanList: { id: number; name: string; geojson: GeoJSON.Feature | null }[];
     desaList: { id: number; name: string; kecamatan_id: number; geojson: GeoJSON.Feature | null }[];
+    pekerjaanList: { id: number; nama_paket: string; kecamatan_id: number; desa_id: number; kecamatan_name: string | null; desa_name: string | null; lat: number | null; lng: number | null; }[];
 }
 
-const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson, selectedFeatureGeoJSON, selectedKecamatanId, selectedDesaId, kecamatanList, desaList }) => {
+const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson, selectedFeatureGeoJSON, selectedKecamatanId, selectedDesaId, kecamatanList, desaList, pekerjaanList }) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<L.Map | null>(null);
 
@@ -29,6 +30,15 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson, sele
             mapInstance.current.eachLayer((layer: any) => {
                 if (layer instanceof L.GeoJSON) {
                     mapInstance.current?.removeLayer(layer);
+                }
+            });
+
+            // Clear existing Pekerjaan markers
+            mapInstance.current.eachLayer((layer: any) => {
+                if (layer instanceof L.Marker) {
+                    if (layer.options.icon?.options.className === 'pekerjaan-marker') {
+                        mapInstance.current?.removeLayer(layer);
+                    }
                 }
             });
 
@@ -111,6 +121,28 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({ geojson, sele
                         }
                     }
                 }).addTo(mapInstance.current!);
+            });
+
+            // Add Pekerjaan markers
+            pekerjaanList.forEach(pekerjaan => {
+                if (pekerjaan.lat !== null && pekerjaan.lng !== null) {
+                    const defaultIcon = L.icon({
+                        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    });
+
+                    const marker = L.marker([pekerjaan.lat, pekerjaan.lng], {
+                        icon: defaultIcon,
+                        className: 'pekerjaan-marker' // Add a class for clearing later
+                    }).addTo(mapInstance.current!);
+                    const popupContent = `<b>${pekerjaan.nama_paket}</b><br/>Kecamatan: ${pekerjaan.kecamatan_name}<br/>Desa: ${pekerjaan.desa_name}<br/><a href="/pekerjaan/${pekerjaan.id}" target="_blank">Lihat Detail</a>`;
+                    marker.bindPopup(popupContent);
+                }
             });
 
             // Adjust map view to fit GeoJSON bounds
