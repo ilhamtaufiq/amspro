@@ -354,18 +354,6 @@ export function ProgressTab({ pekerjaan, kontrak, keuangan, progresses, outputs,
             </div>
           )}
         </div>
-
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Laporan Bulanan</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            {progressDataPlaceholder.laporan.map((report, index) => (
-              <Button key={index} variant="outline" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                <span>Laporan {report}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
