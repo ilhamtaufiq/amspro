@@ -18,6 +18,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StatusController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\MapController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,7 @@ Route::post('/set-tahun', function (Request $request) {
 })->middleware('auth')->name('set-tahun');
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+Route::get('/map', [MapController::class, 'index'])->name('map.index')->middleware('auth');
 
 
 Route::middleware(['auth', 'verified'])->group(function () {

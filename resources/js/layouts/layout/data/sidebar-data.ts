@@ -65,6 +65,11 @@ export const sidebarData: SidebarData = {
           url: '/apps',
           icon: IconPackages,
         },
+        {
+          title: 'Peta Interaktif',
+          url: '/map',
+          icon: IconLayoutDashboard,
+        },
         
         {
           title: 'Users',
