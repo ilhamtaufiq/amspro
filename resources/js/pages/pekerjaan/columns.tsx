@@ -633,6 +633,14 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
     },
   },
   {
+    accessorKey: "jumlah_penerima",
+    header: "Jumlah Penerima",
+    cell: ({ row }) => {
+      const jumlahPenerima = row.original.jumlah_penerima;
+      return jumlahPenerima !== undefined ? jumlahPenerima : "-";
+    },
+  },
+  {
     accessorKey: "progress_fisik_persen",
     header: "Progress Fisik (%)",
     cell: ({ row }) => {

@@ -15,6 +15,7 @@ export interface Pekerjaan {
   jumlah_foto?: number;
   progress_fisik_persen?: number;
   progress_keuangan_persen?: number;
+  jumlah_penerima?: number;
 }
 
 export interface Kegiatan {

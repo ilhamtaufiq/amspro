@@ -50,7 +50,7 @@ class PekerjaanController extends Controller
 
         // Build the query for pekerjaan
         $query = Pekerjaan::with(['kegiatan', 'kecamatan', 'desa', 'progresses', 'keuangan'])
-            ->withCount('fotos')
+            ->withCount(['fotos', 'penerimas'])
             ->whereHas('kegiatan', function ($query) use ($tahun) {
                 $query->where('tahun_anggaran', $tahun);
             });
@@ -123,6 +123,7 @@ class PekerjaanController extends Controller
                     'updated_at' => $item->updated_at ? $item->updated_at->toDateTimeString() : null,
                     'tahun_anggaran' => $item->kegiatan ? $item->kegiatan->tahun_anggaran : null,
                     'jumlah_foto' => $item->fotos_count,
+                    'jumlah_penerima' => $item->penerimas_count,
                     'progress_fisik_persen' => $item->progresses->avg('realisasi_fisik') ?? 0,
                     'progress_keuangan_persen' => ($item->keuangan && $item->pagu > 0) ? ($item->keuangan->realisasi / $item->pagu) * 100 : 0,
                 ];
