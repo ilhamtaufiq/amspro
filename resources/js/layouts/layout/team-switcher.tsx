@@ -85,7 +85,7 @@ export function TeamSwitcher({
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            {/* <DropdownMenuItem 
               className='gap-2 p-2'
               onClick={handleAddTeam}
             >
@@ -93,7 +93,7 @@ export function TeamSwitcher({
                 <Plus className='size-4' />
               </div>
               <div className='text-muted-foreground font-medium'>Add team</div>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

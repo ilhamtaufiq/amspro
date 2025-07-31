@@ -41,15 +41,15 @@ export const sidebarData: SidebarData = {
     {
       name: 'AMSPRO System',
       logo: Command,
-      plan: 'Laravel + Inertia.js',
+      plan: 'Bidang Air Minum dan Sanitasi',
     },
     {
-      name: 'Cianjur Kabupaten',
+      name: 'Files',
       logo: GalleryVerticalEnd,
       plan: 'Government',
     },
     {
-      name: 'Development Team',
+      name: 'Images',
       logo: AudioWaveform,
       plan: 'Development',
     },

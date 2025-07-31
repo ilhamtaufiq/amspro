@@ -22,7 +22,7 @@ import {
 const tahunOptions = [
   { value: "2024", label: "2024" },
   { value: "2025", label: "2025" },
-]
+];
 
 interface PageProps {
   tahun_aktif: number;
@@ -43,19 +43,24 @@ export function PilihTahun() {
   const hasViewTahunPermission = userPermissions.includes("view tahun");
   const currentYear = new Date().getFullYear().toString(); // 2025 as of May 10, 2025
 
+  const allTahunOptions = React.useMemo(() => {
+    const options = [...tahunOptions];
+    const tahunAktifString = tahun_aktif.toString();
+    if (!options.some(option => option.value === tahunAktifString)) {
+      options.push({ value: tahunAktifString, label: tahunAktifString });
+    }
+    return options.sort((a, b) => parseInt(a.value) - parseInt(b.value));
+  }, [tahun_aktif]);
+
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState<string>(tahun_aktif.toString());
 
   React.useEffect(() => {
-    // For users without view tahun permission, always set the value to the current year
-    if (!hasViewTahunPermission) {
-      setValue(currentYear);
-    } else {
-      setValue(tahun_aktif.toString());
-    }
-  }, [tahun_aktif, hasViewTahunPermission, currentYear]);
+    setValue(tahun_aktif.toString());
+  }, [tahun_aktif]);
 
-  const handleSelect = async (selected: string) => {
+  const handleSelect = (selected: string) => {
+    console.log('Tahun dipilih (onSelect):', selected);
     if (selected === value) {
       setOpen(false);
       return;
@@ -63,59 +68,28 @@ export function PilihTahun() {
     setValue(selected);
     setOpen(false);
 
-    try {
-      const response = await fetch(route("set-tahun"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
+    const currentUrl = new URL(window.location.href);
+    const searchParams = new URLSearchParams(currentUrl.search);
+    searchParams.set("tahun", selected);
+
+    router.visit(
+      currentUrl.pathname + "?" + searchParams.toString(),
+      {
+        method: "get",
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+          // The page will reload, so no need to manually update state here
         },
-        body: JSON.stringify({ tahun: selected }),
-      });
-
-      if (!response.ok) {
-        console.error("Failed to set tahun:", await response.json());
-        return;
       }
-
-      const currentUrl = new URL(window.location.href);
-      const searchParams = new URLSearchParams(currentUrl.search);
-      searchParams.set("tahun", selected);
-
-      router.visit(
-        currentUrl.pathname + "?" + searchParams.toString(),
-        {
-          method: "get",
-          preserveState: true,
-          preserveScroll: true,
-          only: [
-            "pekerjaan",
-            "meta",
-            "tahun_aktif",
-            "kegiatanList",
-            "kecamatanList",
-            "desaList",
-            "statuses",
-            "stats",
-            "kontrakStats",
-            "kontrak"
-          ],
-          onSuccess: (page: any) => {
-            // console.log("Year change response:", page); // Debug
-          },
-        }
-      );
-    } catch (error) {
-      console.error("Error setting tahun:", error);
-    }
+    );
   };
 
   return (
     <>
       {hasViewTahunPermission ? (
         // Users with view tahun permission can select the year
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={(v) => { console.log('Popover open:', v); setOpen(v); }}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -123,7 +97,7 @@ export function PilihTahun() {
               aria-expanded={open}
               className="w-[100px] justify-between"
             >
-              {tahunOptions.find((ta) => ta.value === value)?.label ?? currentYear}
+              {allTahunOptions.find((ta) => ta.value === value)?.label ?? currentYear}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -132,7 +106,7 @@ export function PilihTahun() {
               <CommandList>
                 <CommandEmpty>Tidak ditemukan.</CommandEmpty>
                 <CommandGroup>
-                  {tahunOptions.map((ta) => (
+                  {allTahunOptions.map((ta) => (
                     <CommandItem
                       key={ta.value}
                       value={ta.value}
