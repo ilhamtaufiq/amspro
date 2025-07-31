@@ -110,7 +110,7 @@ class Pekerjaan extends Model
      */
     public function outputs()
     {
-        return $this->hasMany(Output::class, 'pekerjaan_id');
+        return $this->hasMany(Output::class, 'pekerjaan_id', 'id');
     }
 
     public function keuangan()

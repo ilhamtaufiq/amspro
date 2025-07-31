@@ -65,6 +65,8 @@ export interface Foto {
   koordinat: string;
   created_at: string;
   photo_url: string;
+  photo_thumb_url: string;
+  photo_medium_url: string;
   komponen_nama: string | null;
   penerima_nama: string | null;
   validasi_koordinat: boolean | undefined;

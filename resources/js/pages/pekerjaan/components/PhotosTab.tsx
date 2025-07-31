@@ -643,10 +643,10 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                     <TableRow key={foto.id}>
                                         <TableCell>
                                             <img
-                                                src={foto.photo_url}
+                                                src={foto.photo_thumb_url}
                                                 alt={foto.keterangan}
                                                 className="w-20 h-20 object-cover rounded-md cursor-pointer"
-                                                onClick={() => setPreviewImage(foto.photo_url)}
+                                                onClick={() => setPreviewImage(foto.photo_medium_url)}
                                             />
                                         </TableCell>
                                         <TableCell>{foto.keterangan}</TableCell>

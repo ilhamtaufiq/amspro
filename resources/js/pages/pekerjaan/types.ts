@@ -47,6 +47,8 @@ export interface Desa {
 export interface Foto {
   id: number;
   photo_url: string;
+  photo_thumb_url: string;
+  photo_medium_url: string;
   keterangan: string;
   komponen_nama: string | null;
   penerima_nama: string | null;

@@ -39,13 +39,26 @@ class Foto extends Model implements HasMedia
 
     public function output()
     {
-        return $this->belongsTo(Output::class, 'komponen_id');
+        return $this->belongsTo(Output::class, 'komponen_id', 'id');
     }
 
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('foto/pekerjaan')
              ->singleFile()
-             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif']);
+             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif'])
+             ->withResponsiveImages();
+    }
+
+    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(100)
+            ->height(100)
+            ->sharpen(10);
+
+        $this->addMediaConversion('medium')
+            ->width(800)
+            ->sharpen(10);
     }
 }
