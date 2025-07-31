@@ -166,7 +166,7 @@
                     <th class="photo-cell">0%</th>
                     <th class="photo-cell">25%</th>
                     <th class="photo-cell">50%</th>
-                    <th class="photo-cell">100%</th>
+                    <th class="photo-cell">75%</th>
                     <th class="photo-cell">100%</th>
                 </tr>
             </thead>

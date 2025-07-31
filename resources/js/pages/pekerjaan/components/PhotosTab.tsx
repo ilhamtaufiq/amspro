@@ -195,11 +195,23 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
     const [komponenFilter, setKomponenFilter] = useState<string | null>(null);
     const [isKomponenFilterOpen, setIsKomponenFilterOpen] = useState(false);
 
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // You can adjust this value
+
     const filteredFotos = fotos.filter((foto) => {
         const matchesKeterangan = keteranganFilter ? foto.keterangan === keteranganFilter : true;
         const matchesKomponen = komponenFilter ? foto.komponen_id.toString() === komponenFilter : true;
         return matchesKeterangan && matchesKomponen;
     });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(filteredFotos.length / itemsPerPage);
+
+    // Get current page photos
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentFotos = filteredFotos.slice(indexOfFirstItem, indexOfLastItem);
 
     const [isPrinting, setIsPrinting] = useState(false);
 
@@ -627,7 +639,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredFotos.map((foto) => (
+                                {currentFotos.map((foto) => (
                                     <TableRow key={foto.id}>
                                         <TableCell>
                                             <img
@@ -663,6 +675,27 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                     </div>
                 ) : (
                     <p className="text-center text-muted-foreground">Belum ada foto yang diunggah.</p>
+                )}
+
+                {/* Pagination Controls */}
+                {filteredFotos.length > itemsPerPage && (
+                    <div className="flex justify-center items-center space-x-2 mt-4">
+                        <Button
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            variant="outline"
+                        >
+                            Previous
+                        </Button>
+                        <span>Page {currentPage} of {totalPages}</span>
+                        <Button
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            variant="outline"
+                        >
+                            Next
+                        </Button>
+                    </div>
                 )}
             </CardContent>
 
