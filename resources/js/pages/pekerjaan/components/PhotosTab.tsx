@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, ChevronsUpDown, Trash2, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Trash2, Loader2, FileDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
     Command,
@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogOverlay, DialogHeader, DialogTitle } from 
 import { useState } from "react";
 import MapSelector from "@/components/MapSelector";
 import type { PageProps } from "./types";
+
 
 export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash, initialLat, initialLng }: PageProps & { initialLat?: number; initialLng?: number; }) {
     const [isGettingCoordinates, setIsGettingCoordinates] = useState(false);
@@ -188,6 +189,19 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
         setFotoToDeleteId(fotoId);
         setIsDeleteDialogOpen(true);
     };
+
+    const [keteranganFilter, setKeteranganFilter] = useState<string | null>(null);
+    const [isKeteranganFilterOpen, setIsKeteranganFilterOpen] = useState(false);
+    const [komponenFilter, setKomponenFilter] = useState<string | null>(null);
+    const [isKomponenFilterOpen, setIsKomponenFilterOpen] = useState(false);
+
+    const filteredFotos = fotos.filter((foto) => {
+        const matchesKeterangan = keteranganFilter ? foto.keterangan === keteranganFilter : true;
+        const matchesKomponen = komponenFilter ? foto.komponen_id.toString() === komponenFilter : true;
+        return matchesKeterangan && matchesKomponen;
+    });
+
+    const [isPrinting, setIsPrinting] = useState(false);
 
     return (
         <Card>
@@ -478,7 +492,127 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                         {processing ? "Mengunggah..." : "Unggah Foto"}
                     </Button>
                 </form>
-                {fotos.length > 0 ? (
+
+                {fotos.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="keterangan-filter" className="mb-0">Filter:</Label>
+                            <Popover open={isKeteranganFilterOpen} onOpenChange={setIsKeteranganFilterOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={isKeteranganFilterOpen}
+                                        className="w-full md:w-auto justify-between"
+                                    >
+                                        {keteranganFilter
+                                            ? keteranganOptions.find((opt) => opt.value === keteranganFilter)?.label
+                                            : "Semua Keterangan"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Cari keterangan..." />
+                                        <CommandList>
+                                            <CommandEmpty>Tidak ada keterangan ditemukan.</CommandEmpty>
+                                            <CommandGroup>
+                                                <CommandItem
+                                                    onSelect={() => {
+                                                        setKeteranganFilter(null);
+                                                        setIsKeteranganFilterOpen(false);
+                                                    }}
+                                                >
+                                                    Semua Keterangan
+                                                </CommandItem>
+                                                {keteranganOptions.map((opt) => (
+                                                    <CommandItem
+                                                        key={opt.value}
+                                                        value={opt.value}
+                                                        onSelect={(currentValue) => {
+                                                            setKeteranganFilter(currentValue);
+                                                            setIsKeteranganFilterOpen(false);
+                                                        }}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                keteranganFilter === opt.value ? "opacity-100" : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {opt.label}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="komponen-filter" className="mb-0">Komponen:</Label>
+                            <Popover open={isKomponenFilterOpen} onOpenChange={setIsKomponenFilterOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={isKomponenFilterOpen}
+                                        className="w-full md:w-auto justify-between"
+                                    >
+                                        {komponenFilter
+                                            ? outputs.find((output) => output.id.toString() === komponenFilter)?.komponen
+                                            : "Semua Komponen"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Cari komponen..." />
+                                        <CommandList>
+                                            <CommandEmpty>Tidak ada komponen ditemukan.</CommandEmpty>
+                                            <CommandGroup>
+                                                <CommandItem
+                                                    onSelect={() => {
+                                                        setKomponenFilter(null);
+                                                        setIsKomponenFilterOpen(false);
+                                                    }}
+                                                >
+                                                    Semua Komponen
+                                                </CommandItem>
+                                                {outputs.map((output) => (
+                                                    <CommandItem
+                                                        key={output.id}
+                                                        value={output.id.toString()}
+                                                        onSelect={(currentValue) => {
+                                                            setKomponenFilter(currentValue);
+                                                            setIsKomponenFilterOpen(false);
+                                                        }}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                komponenFilter === output.id.toString() ? "opacity-100" : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {output.komponen}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <a href={route('fotos.print', { pekerjaan: pekerjaan.id, keterangan: keteranganFilter || '', komponen: komponenFilter || '' })} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline">
+                                <FileDown className="h-4 w-4 mr-2" />
+                                Cetak Foto
+                            </Button>
+                        </a>
+                    </div>
+                )}
+
+                {filteredFotos.length > 0 ? (
                     <div className="rounded-md border">
                         <Table>
                             <TableHeader>
@@ -493,7 +627,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {fotos.map((foto) => (
+                                {filteredFotos.map((foto) => (
                                     <TableRow key={foto.id}>
                                         <TableCell>
                                             <img

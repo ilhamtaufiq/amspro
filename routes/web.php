@@ -109,6 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('penerima', PenerimaController::class)->except(['create', 'edit']);
         Route::resource('berkas', BerkasController::class)->except(['create', 'edit']);
         Route::get('berkas/{berkasId}/download', [BerkasController::class, 'download'])->name('berkas.download');
+        Route::get('print-photos', [FotoController::class, 'print'])->name('fotos.print');
 
         // Progress Routes (Restricted by permissions) - these permissions are already handled by the parent group
         Route::get('/progress', [ProgressController::class, 'index'])->name('progress.index')->middleware('permission:view pekerjaan');

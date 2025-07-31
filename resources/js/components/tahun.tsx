@@ -76,8 +76,6 @@ export function PilihTahun() {
       currentUrl.pathname + "?" + searchParams.toString(),
       {
         method: "get",
-        preserveState: true,
-        preserveScroll: true,
         onSuccess: () => {
           // The page will reload, so no need to manually update state here
         },

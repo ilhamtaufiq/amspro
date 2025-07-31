@@ -89,7 +89,7 @@ class DashboardController extends Controller
             })->whereHas('kegiatan', function ($query) use ($tahun) {
                 $query->where('tahun_anggaran', $tahun);
             })->count(),
-            'activeKontrak' => Kontrak::where('tgl_spmk', '<', now())->where('tgl_selesai', '>', now())->whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
+            'activeKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
                 $query->whereHas('kegiatan', function ($q) use ($tahun) {
                     $q->where('tahun_anggaran', $tahun);
                 });
