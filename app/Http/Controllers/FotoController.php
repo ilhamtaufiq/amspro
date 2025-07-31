@@ -39,7 +39,7 @@ class FotoController extends Controller
             'photo' => 'required|image|max:5120', // Max 5MB
             'keterangan' => 'required|string|in:0%,25%,50%,75%,100%',
             'komponen_id' => 'required|exists:tbl_output,id',
-            'penerima_id' => 'nullable|exists:penerimas,id',
+            'penerima_id' => 'nullable|exists:tbl_penerima,id',
             'koordinat' => 'required|string',
             'validasi_koordinat' => 'boolean',
             'validasi_koordinat_message' => 'nullable|string',
