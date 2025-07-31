@@ -24,6 +24,8 @@ interface DashboardProps extends PageProps {
         pendingPekerjaan: number;
         activeKontrak: number;
         totalPenyedia: number;
+        pekerjaanTanpaFoto: Array<{ id: number; nama_paket: string }>;
+        pekerjaanTanpaPenerima: Array<{ id: number; nama_paket: string }>;
     };
     recentPekerjaan: Array<{
         id: number;
@@ -91,19 +93,55 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
         { name: 'Pending', value: stats.pendingPekerjaan }
     ];
 
-    
-
     return (
-        <AuthenticatedLayout user={auth.user}header="Dashboard">
+        <AuthenticatedLayout user={auth.user} header="Dashboard">
             <Head title="Dashboard" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    {isSuperAdmin && stats && recentPekerjaan && progressData && kontrakStats && recentTodos && (
+                    {isSuperAdmin && recentPekerjaan && progressData && kontrakStats && recentTodos && (
                         <>
                             {/* Modern Stats Cards */}
                             <div className="mb-8">
                                 <DashboardStats stats={dashboardStats} />
+                            </div>
+
+                            {/* Warning Cards for 0 Photos and 0 Penerima */}
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 mb-8">
+                                <Card className="bg-yellow-100 border-yellow-400 text-yellow-800">
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Foto</CardTitle>
+                                        <Package className="h-4 w-4 text-yellow-800" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{stats.pekerjaanTanpaFoto.length}</div>
+                                        <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki foto</p>
+                                        {stats.pekerjaanTanpaFoto.length > 0 && (
+                                            <ul className="mt-2 text-sm text-yellow-800">
+                                                {stats.pekerjaanTanpaFoto.map((pekerjaan) => (
+                                                    <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                                <Card className="bg-yellow-100 border-yellow-400 text-yellow-800">
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Penerima</CardTitle>
+                                        <Users className="h-4 w-4 text-yellow-800" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{stats.pekerjaanTanpaPenerima.length}</div>
+                                        <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki penerima</p>
+                                        {stats.pekerjaanTanpaPenerima.length > 0 && (
+                                            <ul className="mt-2 text-sm text-yellow-800">
+                                                {stats.pekerjaanTanpaPenerima.map((pekerjaan) => (
+                                                    <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </CardContent>
+                                </Card>
                             </div>
 
                             {/* Charts Section */}
@@ -139,13 +177,48 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
                                     </Card>
                                 </div>
                             </div>
-
-                            
                         </>
                     )}
 
                     {/* Map for non-super admin users */}
-                    {!isSuperAdmin && (
+                    {!isSuperAdmin && stats && (
+                        <>
+                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 mb-8 mt-8">
+                         <Card className="bg-yellow-100 border-yellow-400 text-yellow-800">
+                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                 <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Foto</CardTitle>
+                                 <Package className="h-4 w-4 text-yellow-800" />
+                             </CardHeader>
+                             <CardContent>
+                                 <div className="text-2xl font-bold">{stats.pekerjaanTanpaFoto.length}</div>
+                                 <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki foto</p>
+                                 {stats.pekerjaanTanpaFoto.length > 0 && (
+                                     <ul className="mt-2 text-sm text-yellow-800">
+                                         {stats.pekerjaanTanpaFoto.map((pekerjaan) => (
+                                             <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
+                                         ))}
+                                     </ul>
+                                 )}
+                             </CardContent>
+                         </Card>
+                         <Card className="bg-yellow-100 border-yellow-400 text-yellow-800">
+                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                 <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Penerima</CardTitle>
+                                 <Users className="h-4 w-4 text-yellow-800" />
+                             </CardHeader>
+                             <CardContent>
+                                 <div className="text-2xl font-bold">{stats.pekerjaanTanpaPenerima.length}</div>
+                                 <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki penerima</p>
+                                 {stats.pekerjaanTanpaPenerima.length > 0 && (
+                                     <ul className="mt-2 text-sm text-yellow-800">
+                                         {stats.pekerjaanTanpaPenerima.map((pekerjaan) => (
+                                             <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
+                                         ))}
+                                     </ul>
+                                 )}
+                             </CardContent>
+                         </Card>
+                        </div>
                         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1 mt-8">
                             <Card className="col-span-1">
                                 <CardHeader>
@@ -156,6 +229,8 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
                                 </CardContent>
                             </Card>
                         </div>
+                        
+                     </>    
                     )}
                 </div>
             </div>

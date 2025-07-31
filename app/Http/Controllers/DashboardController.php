@@ -26,7 +26,10 @@ class DashboardController extends Controller
         $tahun = $request->query('tahun', date('Y'));
 
         // Query dasar untuk pekerjaan
-        $pekerjaanQuery = Pekerjaan::query();
+        $pekerjaanQuery = Pekerjaan::query()
+            ->whereHas('kegiatan', function ($query) use ($tahun) {
+                $query->where('tahun_anggaran', $tahun);
+            });
 
         if (!$user->hasRole('Super Admin')) {
             $roleId = $user->roles->first()->id ?? null;
@@ -44,9 +47,6 @@ class DashboardController extends Controller
 
         // Data Peta Lokasi
         $locations = (clone $pekerjaanQuery)->with('latestFotoWithCoordinates')
-            ->whereHas('kegiatan', function ($query) use ($tahun) {
-                $query->where('tahun_anggaran', $tahun);
-            })
             ->get()
             ->map(function ($pekerjaan) {
                 if ($pekerjaan->latestFotoWithCoordinates) {
@@ -64,37 +64,27 @@ class DashboardController extends Controller
 
         // Statistik Utama
         $stats = [
-            'totalPekerjaan' => (clone $pekerjaanQuery)->whereHas('kegiatan', function ($query) use ($tahun) {
-                $query->where('tahun_anggaran', $tahun);
-            })->count(),
+            'totalPekerjaan' => (clone $pekerjaanQuery)->count(),
             'totalKegiatan' => Kegiatan::where('tahun_anggaran', $tahun)->count(),
-            'totalPenerima' => Penerima::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
-                $query->whereHas('kegiatan', function ($q) use ($tahun) {
-                    $q->where('tahun_anggaran', $tahun);
-                });
+            'totalPenerima' => Penerima::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery) {
+                $query->whereIn('id', $pekerjaanQuery->pluck('id'));
             })->count(),
-            'realisasiKeuangan' => Keuangan::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
-                $query->whereHas('kegiatan', function ($q) use ($tahun) {
-                    $q->where('tahun_anggaran', $tahun);
-                });
+            'realisasiKeuangan' => Keuangan::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery) {
+                $query->whereIn('id', $pekerjaanQuery->pluck('id'));
             })->sum('realisasi'),
             'totalUsers' => User::count(),
             'completedPekerjaan' => (clone $pekerjaanQuery)->whereHas('progresses', function ($query) {
                 $query->where('realisasi_fisik', 100);
-            })->whereHas('kegiatan', function ($query) use ($tahun) {
-                $query->where('tahun_anggaran', $tahun);
             })->count(),
             'pendingPekerjaan' => (clone $pekerjaanQuery)->whereDoesntHave('progresses', function ($query) {
                 $query->where('realisasi_fisik', 100);
-            })->whereHas('kegiatan', function ($query) use ($tahun) {
-                $query->where('tahun_anggaran', $tahun);
             })->count(),
-            'activeKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
-                $query->whereHas('kegiatan', function ($q) use ($tahun) {
-                    $q->where('tahun_anggaran', $tahun);
-                });
+            'activeKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery) {
+                $query->whereIn('id', $pekerjaanQuery->pluck('id'));
             })->count(),
             'totalPenyedia' => Penyedia::count(),
+            'pekerjaanTanpaFoto' => (clone $pekerjaanQuery)->doesntHave('fotos')->get(['id', 'nama_paket']),
+            'pekerjaanTanpaPenerima' => (clone $pekerjaanQuery)->doesntHave('penerimas')->get(['id', 'nama_paket']),
         ];
 
         // Data Progres Bulanan
@@ -102,10 +92,8 @@ class DashboardController extends Controller
             DB::raw('YEAR(created_at) as year, MONTH(created_at) as month'),
             DB::raw('avg(realisasi_fisik) as completed')
         )
-        ->whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
-            $query->whereHas('kegiatan', function ($q) use ($tahun) {
-                $q->where('tahun_anggaran', $tahun);
-            });
+        ->whereHas('pekerjaan', function ($query) use ($pekerjaanQuery) {
+            $query->whereIn('id', $pekerjaanQuery->pluck('id'));
         })
         ->groupBy('year', 'month')
         ->orderBy('year', 'asc')
@@ -121,9 +109,6 @@ class DashboardController extends Controller
 
         // Pekerjaan Terbaru
         $recentPekerjaan = (clone $pekerjaanQuery)->with(['kegiatan', 'kecamatan', 'desa'])
-            ->whereHas('kegiatan', function ($query) use ($tahun) {
-                $query->where('tahun_anggaran', $tahun);
-            })
             ->latest()
             ->take(5)
             ->get(['id', 'nama_paket', 'pagu', 'kecamatan_id', 'desa_id', 'created_at'])
@@ -139,10 +124,8 @@ class DashboardController extends Controller
             });
 
         // Data Progres untuk Grafik
-        $progressData = Progress::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
-            $query->whereHas('kegiatan', function ($q) use ($tahun) {
-                $q->where('tahun_anggaran', $tahun);
-            });
+        $progressData = Progress::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery) {
+            $query->whereIn('id', $pekerjaanQuery->pluck('id'));
         })
             ->get()
             ->map(function ($progress) {
@@ -155,15 +138,11 @@ class DashboardController extends Controller
 
         // Ringkasan Kontrak
         $kontrakStats = [
-            'totalKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
-                $query->whereHas('kegiatan', function ($q) use ($tahun) {
-                    $q->where('tahun_anggaran', $tahun);
-                });
+            'totalKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery) {
+                $query->whereIn('id', $pekerjaanQuery->pluck('id'));
             })->count(),
-            'nilaiKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
-                $query->whereHas('kegiatan', function ($q) use ($tahun) {
-                    $q->where('tahun_anggaran', $tahun);
-                });
+            'nilaiKontrak' => Kontrak::whereHas('pekerjaan', function ($query) use ($pekerjaanQuery) {
+                $query->whereIn('id', $pekerjaanQuery->pluck('id'));
             })->sum('nilai_kontrak'),
         ];
 

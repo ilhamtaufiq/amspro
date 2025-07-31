@@ -102,7 +102,7 @@ class Pekerjaan extends Model
     }
     public function statuses()
     {
-        return $this->belongsTo(Status::class, 'pekerjaan_id');
+        return $this->hasOne(Status::class);
     }
 
     /**
