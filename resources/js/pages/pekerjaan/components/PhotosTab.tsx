@@ -31,6 +31,9 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
     const [isGeocodingLoading, setIsGeocodingLoading] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null); // State for image preview
     const [isMapSelectionOpen, setIsMapSelectionOpen] = useState(false); // State for map selection dialog
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // State for delete confirmation dialog
+    const [fotoToDeleteId, setFotoToDeleteId] = useState<number | null>(null); // State to store the ID of the photo to be deleted
+
     const { data, setData, post, processing, reset, errors: formErrors, setError, clearErrors } = useForm({
         photo: null as File | null,
         keterangan: "0%",
@@ -40,6 +43,28 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
         validasi_koordinat: true,
         validasi_koordinat_message: "",
     });
+
+    const handleConfirmDelete = () => {
+        if (fotoToDeleteId !== null) {
+            router.delete(route("fotos.destroy", [pekerjaan.id, fotoToDeleteId]), {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    if (flash?.success) {
+                        alert(flash.success);
+                    }
+                    setIsDeleteDialogOpen(false);
+                    setFotoToDeleteId(null);
+                },
+                onError: (err) => {
+                    console.error("Error deleting photo:", err);
+                    alert("Gagal menghapus foto: " + JSON.stringify(err));
+                    setIsDeleteDialogOpen(false);
+                    setFotoToDeleteId(null);
+                },
+            });
+        }
+    };
 
     // State for Combobox open/closed
     const [keteranganOpen, setKeteranganOpen] = useState(false);
@@ -87,14 +112,14 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
             // Validasi kecocokan desa dan kecamatan
             let validasiSesuai = true;
             let validationError = '';
-            if (pekerjaan.desa && foundDesa && pekerjaan.desa.toLowerCase() !== foundDesa.toLowerCase()) {
+            if (pekerjaan.desa && (!foundDesa || pekerjaan.desa.toLowerCase() !== foundDesa.toLowerCase())) {
               validasiSesuai = false;
-              validationError += `Desa yang terdeteksi (${foundDesa}) tidak sesuai dengan desa pekerjaan (${pekerjaan.desa}).`;
+              validationError += `Desa yang terdeteksi (${foundDesa || 'tidak ditemukan'}) tidak sesuai dengan desa pekerjaan (${pekerjaan.desa}).`;
             }
-            if (pekerjaan.kecamatan && foundKecamatan && pekerjaan.kecamatan.toLowerCase() !== foundKecamatan.toLowerCase()) {
+            if (pekerjaan.kecamatan && (!foundKecamatan || pekerjaan.kecamatan.toLowerCase() !== foundKecamatan.toLowerCase())) {
               validasiSesuai = false;
               if (validationError) validationError += ' ';
-              validationError += `Kecamatan yang terdeteksi (${foundKecamatan}) tidak sesuai dengan kecamatan pekerjaan (${pekerjaan.kecamatan}).`;
+              validationError += `Kecamatan yang terdeteksi (${foundKecamatan || 'tidak ditemukan'}) tidak sesuai dengan kecamatan pekerjaan (${pekerjaan.kecamatan}).`;
             }
             setData(data => ({
               ...data,
@@ -160,21 +185,8 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
     };
 
     const handleDelete = (fotoId: number) => {
-        if (confirm("Apakah Anda yakin ingin menghapus foto ini?")) {
-            router.delete(route("fotos.destroy", [pekerjaan.id, fotoId]), {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    if (flash?.success) {
-                        alert(flash.success);
-                    }
-                },
-                onError: (err) => {
-                    console.error("Error deleting photo:", err);
-                    alert("Gagal menghapus foto: " + JSON.stringify(err));
-                },
-            });
-        }
+        setFotoToDeleteId(fotoId);
+        setIsDeleteDialogOpen(true);
     };
 
     return (
@@ -547,6 +559,24 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                             initialLat={initialLat || -6.8106} // Use existing pekerjaan lat/lng or default
                             initialLng={initialLng || 107.1439} // Use existing pekerjaan lat/lng or default
                         />
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Konfirmasi Penghapusan</DialogTitle>
+                    </DialogHeader>
+                    <p>Apakah Anda yakin ingin menghapus foto ini? Tindakan ini tidak dapat dibatalkan.</p>
+                    <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleConfirmDelete}>
+                            Hapus
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

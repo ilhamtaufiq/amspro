@@ -15,15 +15,21 @@ class PasswordController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', Password::defaults(), 'confirmed'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'current_password' => ['required', 'current_password'],
+                'password' => ['required', Password::defaults(), 'confirmed'],
+            ]);
 
-        $request->user()->update([
-            'password' => Hash::make($validated['password']),
-        ]);
+            $request->user()->update([
+                'password' => Hash::make($validated['password']),
+            ]);
 
-        return back();
+            return back()->with('success', 'Password updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->with('error', 'Password update failed: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'An unexpected error occurred: ' . $e->getMessage());
+        }
     }
 }

@@ -12,7 +12,8 @@ export interface Kegiatan {
     updated_at: string;
 }
 
-export const columns: ColumnDef<Kegiatan, unknown>[] = [
+export const columns = (onDelete: (id: number) => void): ColumnDef<Kegiatan, unknown>[] => [
+
     {
         accessorKey: "id",
         header: "ID",
@@ -53,15 +54,8 @@ export const columns: ColumnDef<Kegiatan, unknown>[] = [
                 <Button variant="outline" size="sm" asChild>
                     <Link href={`/kegiatan/${row.getValue("id")}/edit`}>Edit</Link>
                 </Button>
-                <Button variant="destructive" size="sm" asChild>
-                    <Link
-                        href={`/kegiatan/${row.getValue("id")}`}
-                        method="delete"
-                        as="button"
-                        type="button"
-                    >
-                        Delete
-                    </Link>
+                <Button variant="destructive" size="sm" onClick={() => onDelete(row.getValue("id"))}>
+                    Delete
                 </Button>
             </div>
         ),

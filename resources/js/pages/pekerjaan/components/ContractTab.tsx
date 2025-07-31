@@ -15,6 +15,17 @@ import { Trash2, File, FileText, Image, FileSpreadsheet } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
 import { useState } from "react";
 import type { PageProps } from "./types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 interface KontrakFormData {
   id_kegiatan: number;
@@ -71,6 +82,30 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
   });
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [berkasToDeleteId, setBerkasToDeleteId] = useState<number | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (berkasToDeleteId !== null) {
+      router.delete(route("berkas.destroy", [pekerjaan.id, berkasToDeleteId]), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+          if (flash?.success) {
+            alert(flash.success);
+          }
+          setIsDeleteDialogOpen(false);
+          setBerkasToDeleteId(null);
+        },
+        onError: (err) => {
+          console.error("Error deleting document:", err);
+          alert("Gagal menghapus dokumen: " + JSON.stringify(err));
+          setIsDeleteDialogOpen(false);
+          setBerkasToDeleteId(null);
+        },
+      });
+    }
+  };
 
   const handleContractSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,21 +168,8 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
   };
 
   const handleDelete = (berkasId: number) => {
-    if (confirm("Apakah Anda yakin ingin menghapus dokumen ini?")) {
-      router.delete(route("berkas.destroy", [pekerjaan.id, berkasId]), {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: () => {
-          if (flash?.success) {
-            alert(flash.success);
-          }
-        },
-        onError: (err) => {
-          console.error("Error deleting document:", err);
-          alert("Gagal menghapus dokumen: " + JSON.stringify(err));
-        },
-      });
-    }
+    setBerkasToDeleteId(berkasId);
+    setIsDeleteDialogOpen(true);
   };
 
   // Map file extensions to lucide-react icons
@@ -442,6 +464,25 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Penghapusan</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            Apakah Anda yakin ingin menghapus dokumen ini? Tindakan ini tidak dapat dibatalkan.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} variant="destructive">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

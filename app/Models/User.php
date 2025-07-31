@@ -43,4 +43,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function pengawasan()
+    {
+        return $this->hasMany(Pengawas::class, 'pengawas1_id')->orWhere('pengawas2_id', $this->id);
+    }
 }

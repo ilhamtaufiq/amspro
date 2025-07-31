@@ -10,11 +10,23 @@ import { NavUser } from '@/layouts/layout/nav-user'
 import { TeamSwitcher } from '@/layouts/layout/team-switcher'
 import { sidebarData } from './data/sidebar-data'
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps {
+  user?: any
+  side?: "left" | "right"
+  variant?: "sidebar" | "floating" | "inset"
+  collapsible?: "offcanvas" | "icon" | "none"
+  className?: string
+}
+
+export function AppSidebar({ user, ...sidebarProps }: AppSidebarProps) {
+  // Use user data from Laravel if available, otherwise fallback to sidebarData
+  const currentUser = user || sidebarData.user
+  const currentTeams = sidebarData.teams
+
   return (
-    <Sidebar collapsible='icon' variant='floating' {...props}>
+    <Sidebar collapsible='icon' variant='floating' className='peer' {...sidebarProps}>
       <SidebarHeader>
-        <TeamSwitcher teams={sidebarData.teams} />
+        <TeamSwitcher teams={currentTeams} />
       </SidebarHeader>
       <SidebarContent>
         {sidebarData.navGroups.map((props) => (
@@ -22,7 +34,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarData.user} />
+        <NavUser user={currentUser} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

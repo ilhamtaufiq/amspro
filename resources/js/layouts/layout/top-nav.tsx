@@ -1,4 +1,3 @@
-// import { Link } from '@tanstack/react-router'
 import { IconMenu } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -8,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { router } from '@inertiajs/react'
 
 interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
   links: {
@@ -19,6 +19,10 @@ interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export function TopNav({ className, links, ...props }: TopNavProps) {
+  const handleNavigation = (href: string) => {
+    router.visit(href)
+  }
+
   return (
     <>
       <div className='md:hidden'>
@@ -30,14 +34,13 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent side='bottom' align='start'>
             {links.map(({ title, href, isActive, disabled }) => (
-              <DropdownMenuItem key={`${title}-${href}`} asChild>
-                {/* <Link */}
-                {/*  to={href} */}
-                {/*  className={!isActive ? 'text-muted-foreground' : ''} */}
-                {/*  disabled={disabled} */}
-                {/* > */}
-                  <span>{title}</span>
-                {/* </Link> */}
+              <DropdownMenuItem 
+                key={`${title}-${href}`} 
+                onClick={() => !disabled && handleNavigation(href)}
+                disabled={disabled}
+                className={!isActive ? 'text-muted-foreground' : ''}
+              >
+                {title}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -52,7 +55,18 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
         {...props}
       >
         {links.map(({ title, href, isActive, disabled }) => (
-          <span key={`${title}-${href}`}>{title}</span>
+          <button
+            key={`${title}-${href}`}
+            onClick={() => !disabled && handleNavigation(href)}
+            disabled={disabled}
+            className={cn(
+              'text-sm font-medium transition-colors hover:text-primary',
+              isActive ? 'text-foreground' : 'text-muted-foreground',
+              disabled && 'cursor-not-allowed opacity-50'
+            )}
+          >
+            {title}
+          </button>
         ))}
       </nav>
     </>

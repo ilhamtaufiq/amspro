@@ -19,87 +19,156 @@ import {
   IconUserOff,
   IconUsers,
   IconFileText,
+  IconBuilding,
+  IconMapPin,
+  IconClipboardList,
+  IconFileInvoice,
+  IconTruck,
+  IconChartBar,
+  IconCalendar,
+  IconFlag,
 } from '@tabler/icons-react'
 import { AudioWaveform, Command, GalleryVerticalEnd } from 'lucide-react'
-// import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
   user: {
-    name: 'satnaing',
-    email: 'satnaingdev@gmail.com',
-    avatar: '/avatars/shadcn.jpg',
+    name: 'Admin AMSPRO',
+    email: 'admin@amspro.com',
+    avatar: '/avatars/admin.jpg',
   },
   teams: [
     {
-      name: 'Shadcn Admin',
+      name: 'AMSPRO System',
       logo: Command,
-      plan: 'Vite + ShadcnUI',
+      plan: 'Laravel + Inertia.js',
     },
     {
-      name: 'Acme Inc',
+      name: 'Cianjur Kabupaten',
       logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
+      plan: 'Government',
     },
     {
-      name: 'Acme Corp.',
+      name: 'Development Team',
       logo: AudioWaveform,
-      plan: 'Startup',
+      plan: 'Development',
     },
   ],
   navGroups: [
     {
-      title: 'General',
+      title: 'Dashboard',
       items: [
         {
           title: 'Dashboard',
-          url: '/',
+          url: '/dashboard',
           icon: IconLayoutDashboard,
-        },
-        {
-          title: 'Tasks',
-          url: '/tasks',
-          icon: IconChecklist,
-        },
-        {
-          title: 'Apps',
-          url: '/apps',
-          icon: IconPackages,
         },
         {
           title: 'Peta Interaktif',
           url: '/map',
-          icon: IconLayoutDashboard,
+          icon: IconMapPin,
+        },
+      ],
+    },
+    {
+      title: 'Master Data',
+      items: [
+        {
+          title: 'Kegiatan',
+          url: '/kegiatan',
+          icon: IconBuilding,
         },
         {
-          title: 'Dokumen Pekerjaan',
-          url: '/dokumen-pekerjaan',
+          title: 'Pekerjaan',
+          url: '/pekerjaan',
+          icon: IconClipboardList,
+        },
+        {
+          title: 'Kontrak',
+          url: '/kontrak',
+          icon: IconFileInvoice,
+        },
+        {
+          title: 'Penyedia',
+          url: '/penyedia',
+          icon: IconTruck,
+        },
+        {
+          title: 'Status',
+          url: '/status',
+          icon: IconFlag,
+        },
+      ],
+    },
+    {
+      title: 'Management',
+      items: [
+        {
+          title: 'Progress',
+          url: '/progress',
+          icon: IconChartBar,
+        },
+        {
+          title: 'Keuangan',
+          url: '/keuangan',
           icon: IconFileText,
         },
-        
+        {
+          title: 'Output',
+          url: '/output',
+          icon: IconPackages,
+        },
+        {
+          title: 'Todos',
+          url: '/todos',
+          icon: IconChecklist,
+        },
+      ],
+    },
+    {
+      title: 'System',
+      items: [
         {
           title: 'Users',
           url: '/users',
           icon: IconUsers,
         },
-        // {
-        //   title: 'Secured by Clerk',
-        //   icon: ClerkLogo,
-        //   items: [
-        //     {
-        //       title: 'Sign In',
-        //       url: '/clerk/sign-in',
-        //     },
-        //     {
-        //       title: 'Sign Up',
-        //       url: '/clerk/sign-up',
-        //     },
-        //     {
-        //       title: 'User Management',
-        //       url: '/clerk/user-management',
-        //     },
-        //   ],
-        // },
+        {
+          title: 'Roles',
+          url: '/roles',
+          icon: IconLockAccess,
+        },
+        {
+          title: 'Permissions',
+          url: '/permissions',
+          icon: IconLock,
+        },
+        {
+          title: 'Settings',
+          icon: IconSettings,
+          items: [
+            {
+              title: 'Profile',
+              url: '/profile',
+              icon: IconUserCog,
+            },
+            {
+              title: 'Account',
+              url: '/settings/account',
+              icon: IconTool,
+            },
+            {
+              title: 'Appearance',
+              url: '/settings/appearance',
+              icon: IconPalette,
+            },
+            {
+              title: 'Notifications',
+              url: '/settings/notifications',
+              icon: IconNotification,
+            },
+          ],
+        },
       ],
     },
     {
@@ -110,24 +179,20 @@ export const sidebarData: SidebarData = {
           icon: IconLockAccess,
           items: [
             {
-              title: 'Sign In',
-              url: '/sign-in',
+              title: 'Login',
+              url: '/login',
             },
             {
-              title: 'Sign In (2 Col)',
-              url: '/sign-in-2',
-            },
-            {
-              title: 'Sign Up',
-              url: '/sign-up',
+              title: 'Register',
+              url: '/register',
             },
             {
               title: 'Forgot Password',
               url: '/forgot-password',
             },
             {
-              title: 'OTP',
-              url: '/otp',
+              title: 'Reset Password',
+              url: '/reset-password',
             },
           ],
         },
@@ -168,40 +233,14 @@ export const sidebarData: SidebarData = {
       title: 'Other',
       items: [
         {
-          title: 'Settings',
-          icon: IconSettings,
-          items: [
-            {
-              title: 'Profile',
-              url: '/settings',
-              icon: IconUserCog,
-            },
-            {
-              title: 'Account',
-              url: '/settings/account',
-              icon: IconTool,
-            },
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: IconPalette,
-            },
-            {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: IconNotification,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: IconBrowserCheck,
-            },
-          ],
-        },
-        {
           title: 'Help Center',
           url: '/help-center',
           icon: IconHelp,
+        },
+        {
+          title: 'Documentation',
+          url: '/docs',
+          icon: IconFileText,
         },
       ],
     },

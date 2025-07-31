@@ -33,13 +33,17 @@ class RoleController extends Controller
             'kegiatan.*' => 'exists:tbl_kegiatan,id',
         ]);
 
-        $role = Role::create(['name' => $validated['name']]);
-        $role->syncPermissions($validated['permissions']);
-        if (!empty($validated['kegiatan'])) {
-            $role->kegiatan()->sync($validated['kegiatan']);
-        }
+        try {
+            $role = Role::create(['name' => $validated['name']]);
+            $role->syncPermissions($validated['permissions']);
+            if (!empty($validated['kegiatan'])) {
+                $role->kegiatan()->sync($validated['kegiatan']);
+            }
 
-        return redirect()->back()->with('success', 'Role created successfully');
+            return redirect()->back()->with('success', 'Role created successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create role: ' . $e->getMessage());
+        }
     }
 
     public function update(Request $request, $id)
@@ -52,23 +56,31 @@ class RoleController extends Controller
             'kegiatan.*' => 'exists:tbl_kegiatan,id',
         ]);
 
-        $role = Role::findOrFail($id);
-        $role->update(['name' => $validated['name']]);
-        $role->syncPermissions($validated['permissions']);
-        if (isset($validated['kegiatan'])) {
-            $role->kegiatan()->sync($validated['kegiatan']);
-        } else {
-            $role->kegiatan()->detach();
-        }
+        try {
+            $role = Role::findOrFail($id);
+            $role->update(['name' => $validated['name']]);
+            $role->syncPermissions($validated['permissions']);
+            if (isset($validated['kegiatan'])) {
+                $role->kegiatan()->sync($validated['kegiatan']);
+            } else {
+                $role->kegiatan()->detach();
+            }
 
-        return redirect()->back()->with('success', 'Role updated successfully');
+            return redirect()->back()->with('success', 'Role updated successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update role: ' . $e->getMessage());
+        }
     }
 
     public function destroy($id)
     {
-        $role = Role::findOrFail($id);
-        $role->delete();
+        try {
+            $role = Role::findOrFail($id);
+            $role->delete();
 
-        return redirect()->back()->with('success', 'Role deleted successfully');
+            return redirect()->back()->with('success', 'Role deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete role: ' . $e->getMessage());
+        }
     }
 }

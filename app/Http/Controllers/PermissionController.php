@@ -38,9 +38,13 @@ class PermissionController extends Controller
             'name' => ['required', 'string', 'max:255', Rule::unique('permissions')],
         ]);
 
-        Permission::create($validated);
+        try {
+            Permission::create($validated);
 
-        return redirect()->back()->with('success', 'Permission created successfully.');
+            return redirect()->back()->with('success', 'Permission created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create permission: ' . $e->getMessage());
+        }
     }
 
     public function update(Request $request, Permission $permission)
@@ -49,15 +53,23 @@ class PermissionController extends Controller
             'name' => ['required', 'string', 'max:255', Rule::unique('permissions')->ignore($permission->id)],
         ]);
 
-        $permission->update($validated);
+        try {
+            $permission->update($validated);
 
-        return redirect()->back()->with('success', 'Permission updated successfully.');
+            return redirect()->back()->with('success', 'Permission updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update permission: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Permission $permission)
     {
-        $permission->delete();
+        try {
+            $permission->delete();
 
-        return redirect()->back()->with('success', 'Permission deleted successfully.');
+            return redirect()->back()->with('success', 'Permission deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete permission: ' . $e->getMessage());
+        }
     }
 }

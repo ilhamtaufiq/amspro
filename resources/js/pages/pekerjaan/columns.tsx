@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Row, Table, Column } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useForm, router } from "@inertiajs/react";
@@ -45,6 +45,8 @@ interface FormData {
   kecamatan_id: number | null;
   desa_id: number | null;
   pagu: number;
+  pengawas1_id: number | null;
+  pengawas2_id: number | null;
 }
 
 interface PekerjaanActionsCellProps {
@@ -78,6 +80,23 @@ function PekerjaanActionsCell({
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+  const [pengawasModalOpen, setPengawasModalOpen] = useState(false);
+  const [pengawasUsers, setPengawasUsers] = useState([]);
+  const [pengawasModalMessage, setPengawasModalMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  useEffect(() => {
+    const fetchPengawasUsers = async () => {
+      try {
+        const response = await fetch(route('pengawas.users'));
+        const data = await response.json();
+        setPengawasUsers(data);
+      } catch (error) {
+        console.error('Failed to fetch pengawas users:', error);
+      }
+    };
+
+    fetchPengawasUsers();
+  }, []);
 
   const form = useForm<FormData>({
     nama_paket: pekerjaan.nama_paket || "",
@@ -85,6 +104,8 @@ function PekerjaanActionsCell({
     kecamatan_id: pekerjaan.kecamatan_id ?? null,
     desa_id: pekerjaan.desa_id ?? null,
     pagu: pekerjaan.pagu || 0,
+    pengawas1_id: pekerjaan.pengawas?.pengawas1_id || null,
+    pengawas2_id: pekerjaan.pengawas?.pengawas2_id || null,
   });
 
   const { data, setData, processing, errors, setError, reset } = form;
@@ -97,6 +118,8 @@ function PekerjaanActionsCell({
       kecamatan_id: pekerjaan.kecamatan_id ?? null,
       desa_id: pekerjaan.desa_id ?? null,
       pagu: pekerjaan.pagu || 0,
+      pengawas1_id: pekerjaan.pengawas?.pengawas1_id || null,
+    pengawas2_id: pekerjaan.pengawas?.pengawas2_id || null,
     });
   }, [pekerjaan, reset, setData]);
 
@@ -109,6 +132,8 @@ function PekerjaanActionsCell({
         kecamatan_id: null,
         desa_id: null,
         pagu: 0,
+        pengawas1_id: null,
+        pengawas2_id: null,
       });
     }
   }, [createOpen, reset, setData]);
@@ -211,6 +236,24 @@ function PekerjaanActionsCell({
     });
   };
 
+  const handleUpdatePengawas = (e: React.FormEvent) => {
+    e.preventDefault();
+    form.put(route("pekerjaan.updatePengawas", pekerjaan.id), {
+      onSuccess: () => {
+        setPengawasModalOpen(false);
+        setAlertMessage("Pengawas berhasil diperbarui.");
+        setIsAlertOpen(true);
+      },
+      onError: (errors: Record<string, string>) => {
+        Object.keys(errors).forEach((key) => {
+          setError(key as keyof FormData, errors[key]);
+        });
+        setAlertMessage("Gagal memperbarui pengawas.");
+        setIsAlertOpen(true);
+      },
+    });
+  };
+
   return (
     <>
       {(userPermissions.includes("edit pekerjaan") ||
@@ -234,6 +277,11 @@ function PekerjaanActionsCell({
             {userPermissions.includes("edit pekerjaan") && (
               <DropdownMenuItem onClick={() => setEditOpen(true)}>
                 Edit
+              </DropdownMenuItem>
+            )}
+            {userPermissions.includes("edit pekerjaan") && (
+              <DropdownMenuItem onClick={() => setPengawasModalOpen(true)}>
+                Atur Pengawas
               </DropdownMenuItem>
             )}
             {userPermissions.includes("delete pekerjaan") && (
@@ -522,6 +570,74 @@ function PekerjaanActionsCell({
           </AlertDialogContent>
         </AlertDialog>
       )}
+
+      {userPermissions.includes("edit pekerjaan") && (
+        <Dialog open={pengawasModalOpen} onOpenChange={setPengawasModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Atur Pengawas untuk: {pekerjaan.nama_paket}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdatePengawas} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-1">Pengawas 1</label>
+                <Select
+                  value={data.pengawas1_id?.toString() || ""}
+                  onValueChange={(value) => setData("pengawas1_id", value ? Number(value) : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Pengawas 1" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="null">Tidak ada</SelectItem>
+                    {pengawasUsers.map((user: any) => (
+                      <SelectItem
+                        key={user.id}
+                        value={user.id.toString()}
+                      >
+                        {user.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Pengawas 2</label>
+                <Select
+                  value={data.pengawas2_id?.toString() || ""}
+                  onValueChange={(value) => setData("pengawas2_id", value ? Number(value) : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Pengawas 2" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="null">Tidak ada</SelectItem>
+                    {pengawasUsers.map((user: any) => (
+                      <SelectItem
+                        key={user.id}
+                        value={user.id.toString()}
+                      >
+                        {user.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setPengawasModalOpen(false)}
+                >
+                  Batal
+                </Button>
+                <Button type="submit" disabled={processing}>
+                  Simpan
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
@@ -537,6 +653,7 @@ interface TableMeta {
   createOpen: boolean;
   setCreateOpen: (open: boolean) => void;
   userPermissions: string[];
+  auth: any;
 }
 
 export const columns: ColumnDef<Pekerjaan, unknown>[] = [
@@ -545,7 +662,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
     header: "No",
     size: 60,
     enableSorting: false,
-    cell: ({ row, table }) => {
+    cell: ({ row, table }: { row: Row<Pekerjaan>, table: Table<Pekerjaan> }) => {
       const meta = table.options.meta as TableMeta;
       const currentPage = meta?.meta?.current_page || 1;
       const perPage = meta?.meta?.per_page || 10;
@@ -556,7 +673,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
   {
     accessorKey: "kegiatan",
     header: "Kegiatan",
-    cell: ({ row, table }) => {
+    cell: ({ row, table }: { row: Row<Pekerjaan>, table: Table<Pekerjaan> }) => {
       const meta = table.options.meta as TableMeta;
       const kegiatanList = meta?.kegiatanList || [];
       const kegiatanId = row.original.kegiatan_id;
@@ -567,7 +684,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
   },
   {
     accessorKey: "nama_paket",
-    header: ({ column }) => (
+    header: ({ column }: { column: Column<Pekerjaan> }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -581,7 +698,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
   {
     accessorKey: "kecamatan",
     header: "Kecamatan",
-    cell: ({ row, table }) => {
+    cell: ({ row, table }: { row: Row<Pekerjaan>, table: Table<Pekerjaan> }) => {
       const meta = table.options.meta as TableMeta;
       const kecamatanList = meta?.kecamatanList || [];
       const kecamatanId = row.original.kecamatan_id;
@@ -593,7 +710,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
   {
     accessorKey: "desa",
     header: "Desa",
-    cell: ({ row, table }) => {
+    cell: ({ row, table }: { row: Row<Pekerjaan>, table: Table<Pekerjaan> }) => {
       const meta = table.options.meta as TableMeta;
       const desaList = meta?.desaList || [];
       const desaId = row.original.desa_id;
@@ -604,7 +721,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
   },
   {
     accessorKey: "pagu",
-    header: ({ column }) => (
+    header: ({ column }: { column: Column<Pekerjaan> }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -613,7 +730,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Pekerjaan> }) => {
       const amount = row.getValue<number>("pagu");
       if (amount === null || amount === undefined) return "-";
       return new Intl.NumberFormat("id-ID", {
@@ -627,7 +744,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
   {
     accessorKey: "jumlah_foto",
     header: "Jumlah Foto",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Pekerjaan> }) => {
       const jumlahFoto = row.original.jumlah_foto;
       return jumlahFoto !== undefined ? jumlahFoto : "-";
     },
@@ -635,7 +752,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
   {
     accessorKey: "jumlah_penerima",
     header: "Jumlah Penerima",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Pekerjaan> }) => {
       const jumlahPenerima = row.original.jumlah_penerima;
       return jumlahPenerima !== undefined ? jumlahPenerima : "-";
     },
@@ -643,7 +760,7 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
   {
     accessorKey: "progress_fisik_persen",
     header: "Progress Fisik (%)",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Pekerjaan> }) => {
       const progressFisik = row.original.progress_fisik_persen;
       return progressFisik !== undefined ? `${progressFisik.toFixed(2)}%` : "-";
     },
@@ -651,15 +768,25 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
   {
     accessorKey: "progress_keuangan_persen",
     header: "Progress Keuangan (%)",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Pekerjaan> }) => {
       const progressKeuangan = row.original.progress_keuangan_persen;
       return progressKeuangan !== undefined ? `${progressKeuangan.toFixed(2)}%` : "-";
     },
   },
   {
+    accessorKey: "pengawas1",
+    header: "Pengawas 1",
+    cell: ({ row }: { row: Row<Pekerjaan> }) => row.original.pengawas?.pengawas1?.name || "-",
+  },
+  {
+    accessorKey: "pengawas2",
+    header: "Pengawas 2",
+    cell: ({ row }: { row: Row<Pekerjaan> }) => row.original.pengawas?.pengawas2?.name || "-",
+  },
+  {
     id: "actions",
     header: "",
-    cell: ({ row, table }) => {
+    cell: ({ row, table }: { row: Row<Pekerjaan>, table: Table<Pekerjaan> }) => {
       const meta = table.options.meta as TableMeta;
       const cellProps: PekerjaanActionsCellProps = {
         pekerjaan: row.original,
@@ -685,4 +812,4 @@ export const columns: ColumnDef<Pekerjaan, unknown>[] = [
       return <PekerjaanActionsCell {...cellProps} />;
     },
   },
-];
+].filter(column => column.cell !== null);

@@ -34,7 +34,7 @@ interface PekerjaanIndexProps extends PageProps {
         user: {
             name: string;
             email: string;
-            roles: string[];
+            roles: { id: number; name: string }[];
             permissions: string[];
         };
     };
@@ -52,9 +52,9 @@ export default function PekerjaanIndex({
     auth
 }: PekerjaanIndexProps) {
     return (
-        <AuthenticatedLayout user={auth.user} header="Dashboard">
+        <AuthenticatedLayout user={auth.user} header="Daftar Pekerjaan">
             <Head title="Pekerjaan" />
-            <div className="container mx-auto py-10">
+            <div className="mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4'">
                 <h1 className="text-2xl font-bold mb-4">Daftar Pekerjaan</h1>
                 <DataTable
                     columns={columns}
@@ -66,6 +66,7 @@ export default function PekerjaanIndex({
                     kegiatanList={kegiatanList}
                     kecamatanList={kecamatanList}
                     desaList={desaList}
+                    auth={auth}
                 />
             </div>
         </AuthenticatedLayout>

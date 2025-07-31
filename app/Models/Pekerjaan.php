@@ -142,4 +142,9 @@ class Pekerjaan extends Model
     //         'n_desa' => $this->desa->n_desa ?? null,
     //     ];
     // }
+
+    public function pengawas()
+    {
+        return $this->hasOne(Pengawas::class, 'pekerjaan_id');
+    }
 }

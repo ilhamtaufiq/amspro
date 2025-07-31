@@ -29,15 +29,19 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        try {
+            $request->user()->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+            if ($request->user()->isDirty('email')) {
+                $request->user()->email_verified_at = null;
+            }
+
+            $request->user()->save();
+
+            return Redirect::route('profile.edit')->with('success', 'Profile updated successfully.');
+        } catch (\Exception $e) {
+            return Redirect::back()->with('error', 'Failed to update profile: ' . $e->getMessage());
         }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit');
     }
 
     /**
@@ -49,15 +53,19 @@ class ProfileController extends Controller
             'password' => ['required', 'current_password'],
         ]);
 
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        Auth::logout();
+            Auth::logout();
 
-        $user->delete();
+            $user->delete();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+            return Redirect::to('/')->with('success', 'Account deleted successfully.');
+        } catch (\Exception $e) {
+            return Redirect::back()->with('error', 'Failed to delete account: ' . $e->getMessage());
+        }
     }
 }

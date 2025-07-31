@@ -140,15 +140,19 @@ class PenerimaController extends Controller
             'alamat' => 'required|string|max:255',
         ]);
 
-        Penerima::create([
-            'pekerjaan_id' => $pekerjaanId,
-            'nama' => $validated['nama'],
-            'nik' => $validated['nik'],
-            'jumlah_jiwa' => $validated['jumlah_jiwa'],
-            'alamat' => $validated['alamat'],
-        ]);
+        try {
+            Penerima::create([
+                'pekerjaan_id' => $pekerjaanId,
+                'nama' => $validated['nama'],
+                'nik' => $validated['nik'],
+                'jumlah_jiwa' => $validated['jumlah_jiwa'],
+                'alamat' => $validated['alamat'],
+            ]);
 
-        return redirect()->back()->with('success', 'Penerima berhasil ditambahkan.');
+            return redirect()->back()->with('success', 'Penerima berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menambahkan penerima: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -178,14 +182,18 @@ class PenerimaController extends Controller
             'alamat' => 'required|string|max:255',
         ]);
 
-        $penerima->update([
-            'nama' => $validated['nama'],
-            'nik' => $validated['nik'],
-            'jumlah_jiwa' => $validated['jumlah_jiwa'],
-            'alamat' => $validated['alamat'],
-        ]);
+        try {
+            $penerima->update([
+                'nama' => $validated['nama'],
+                'nik' => $validated['nik'],
+                'jumlah_jiwa' => $validated['jumlah_jiwa'],
+                'alamat' => $validated['alamat'],
+            ]);
 
-        return redirect()->back()->with('success', 'Penerima berhasil diperbarui.');
+            return redirect()->back()->with('success', 'Penerima berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui penerima: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -196,7 +204,11 @@ class PenerimaController extends Controller
         if ($penerima->pekerjaan_id != $pekerjaanId) {
             return redirect()->back()->with('error', 'Penerima tidak ditemukan.');
         }
-        $penerima->delete();
-        return redirect()->back()->with('success', 'Penerima berhasil dihapus.');
+        try {
+            $penerima->delete();
+            return redirect()->back()->with('success', 'Penerima berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus penerima: ' . $e->getMessage());
+        }
     }
 }

@@ -11,8 +11,22 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import type { PageProps } from "./types";
+import { useState } from "react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function OutputTab({ pekerjaan, outputs, auth, errors }: PageProps) {
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [outputToDeleteId, setOutputToDeleteId] = useState<number | null>(null);
+
     const { data, setData, post, put, processing, errors: outputErrors, reset } = useForm<{
         id?: number;
         komponen: string;
@@ -23,6 +37,26 @@ export function OutputTab({ pekerjaan, outputs, auth, errors }: PageProps) {
         satuan: "",
         volume: 0,
     });
+
+    const handleConfirmDelete = () => {
+        if (outputToDeleteId !== null) {
+            router.delete(route("outputs.destroy", [pekerjaan.id, outputToDeleteId]), {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    alert("Data output berhasil dihapus!");
+                    setIsDeleteDialogOpen(false);
+                    setOutputToDeleteId(null);
+                },
+                onError: (err) => {
+                    console.error("Error deleting output:", err);
+                    alert("Gagal menghapus data output.");
+                    setIsDeleteDialogOpen(false);
+                    setOutputToDeleteId(null);
+                },
+            });
+        }
+    };
 
     // Check permissions
     const canCreateOutput = auth.user?.permissions?.includes("create kegiatan") ?? false;
@@ -72,18 +106,9 @@ export function OutputTab({ pekerjaan, outputs, auth, errors }: PageProps) {
     };
 
     const handleDelete = (outputId: number) => {
-        if (canDeleteOutput && confirm("Apakah Anda yakin ingin menghapus data output ini?")) {
-            router.delete(route("outputs.destroy", [pekerjaan.id, outputId]), {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    alert("Data output berhasil dihapus!");
-                },
-                onError: (err) => {
-                    console.error("Error deleting output:", err);
-                    alert("Gagal menghapus data output.");
-                },
-            });
+        if (canDeleteOutput) {
+            setOutputToDeleteId(outputId);
+            setIsDeleteDialogOpen(true);
         }
     };
 
@@ -209,6 +234,25 @@ export function OutputTab({ pekerjaan, outputs, auth, errors }: PageProps) {
                     </p>
                 )}
             </CardContent>
+
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Konfirmasi Penghapusan</AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <AlertDialogDescription>
+                        Apakah Anda yakin ingin menghapus data output ini? Tindakan ini tidak dapat dibatalkan.
+                    </AlertDialogDescription>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmDelete} variant="destructive">
+                            Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </Card>
     );
 }

@@ -67,9 +67,14 @@ class PenyediaController extends Controller
             'norek' => 'nullable|string|max:255',
         ]);
 
-        $penyedia = Penyedia::create($validated);
-        Log::info('Penyedia created', ['id' => $penyedia->id]);
-        return redirect()->route('penyedia.index')->with('success', 'Penyedia created successfully.');
+        try {
+            $penyedia = Penyedia::create($validated);
+            Log::info('Penyedia created', ['id' => $penyedia->id]);
+            return redirect()->route('penyedia.index')->with('success', 'Penyedia created successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to create penyedia: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal membuat penyedia: ' . $e->getMessage());
+        }
     }
 
     public function show(Penyedia $penyedia)
@@ -104,17 +109,27 @@ class PenyediaController extends Controller
             'norek' => 'nullable|string|max:255',
         ]);
 
-        $penyedia->update($validated);
-        Log::info('Penyedia updated', ['id' => $penyedia->id]);
-        return redirect()->route('penyedia.index')->with('success', 'Penyedia updated successfully.');
+        try {
+            $penyedia->update($validated);
+            Log::info('Penyedia updated', ['id' => $penyedia->id]);
+            return redirect()->route('penyedia.index')->with('success', 'Penyedia updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to update penyedia: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memperbarui penyedia: ' . $e->getMessage());
+        }
     }
 
     public function destroy($id)
     {
         $penyedia = Penyedia::findOrFail($id);
         Log::info('Deleting penyedia', ['id' => $penyedia->id]);
-        $penyedia->delete();
-        Log::info('Penyedia deleted', ['id' => $penyedia->id]);
-        return redirect()->route('penyedia.index')->with('success', 'Penyedia deleted successfully.');
+        try {
+            $penyedia->delete();
+            Log::info('Penyedia deleted', ['id' => $penyedia->id]);
+            return redirect()->route('penyedia.index')->with('success', 'Penyedia deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to delete penyedia: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus penyedia: ' . $e->getMessage());
+        }
     }
 }

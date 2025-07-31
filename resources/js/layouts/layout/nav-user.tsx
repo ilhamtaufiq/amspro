@@ -1,4 +1,3 @@
-// import { Link } from '@tanstack/react-router'
 import {
   BadgeCheck,
   Bell,
@@ -6,6 +5,8 @@ import {
   CreditCard,
   LogOut,
   Sparkles,
+  User,
+  Settings,
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -23,17 +24,41 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { router } from '@inertiajs/react'
+
+interface User {
+  name: string
+  email: string
+  avatar?: string
+}
 
 export function NavUser({
   user,
 }: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
+  user: User
 }) {
   const { isMobile } = useSidebar()
+
+  const handleLogout = () => {
+    router.post('/logout')
+  }
+
+  const handleProfile = () => {
+    router.visit('/profile')
+  }
+
+  const handleSettings = () => {
+    router.visit('/settings')
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
 
   return (
     <SidebarMenu>
@@ -46,7 +71,7 @@ export function NavUser({
             >
               <Avatar className='h-8 w-8 rounded-lg'>
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className='rounded-lg'>SN</AvatarFallback>
+                <AvatarFallback className='rounded-lg'>{getInitials(user.name)}</AvatarFallback>
               </Avatar>
               <div className='grid flex-1 text-left text-sm leading-tight'>
                 <span className='truncate font-semibold'>{user.name}</span>
@@ -65,7 +90,7 @@ export function NavUser({
               <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
                 <Avatar className='h-8 w-8 rounded-lg'>
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className='rounded-lg'>SN</AvatarFallback>
+                  <AvatarFallback className='rounded-lg'>{getInitials(user.name)}</AvatarFallback>
                 </Avatar>
                 <div className='grid flex-1 text-left text-sm leading-tight'>
                   <span className='truncate font-semibold'>{user.name}</span>
@@ -75,35 +100,29 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
+              <DropdownMenuItem onClick={handleProfile}>
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSettings}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                {/* <Link to='/settings/account'> */}
-                  <BadgeCheck />
-                  Account
-                {/* </Link> */}
+              <DropdownMenuItem>
+                <Bell className="mr-2 h-4 w-4" />
+                Notifications
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                {/* <Link to='/settings'> */}
-                  <CreditCard />
-                  Billing
-                {/* </Link> */}
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                {/* <Link to='/settings/notifications'> */}
-                  <Bell />
-                  Notifications
-                {/* </Link> */}
+              <DropdownMenuItem>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Billing
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut />
+            <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+              <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

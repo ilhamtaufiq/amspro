@@ -5,6 +5,18 @@ import { columns, Todo } from './columns';
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
+import { useState } from "react";
+import { router } from "@inertiajs/react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TodoIndexProps extends PageProps {
     todos: Todo[];
@@ -21,6 +33,34 @@ interface TodoIndexProps extends PageProps {
 }
 
 export default function TodoIndex({ auth, todos, meta, search }: TodoIndexProps) {
+    const user = auth.user;
+
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [todoToDeleteId, setTodoToDeleteId] = useState<number | null>(null);
+
+    const handleDeleteTodo = (id: number) => {
+        setTodoToDeleteId(id);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (todoToDeleteId !== null) {
+            router.delete(route("todos.destroy", todoToDeleteId), {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsDeleteDialogOpen(false);
+                    setTodoToDeleteId(null);
+                },
+                onError: (err) => {
+                    console.error("Error deleting todo:", err);
+                    alert("Gagal menghapus todo: " + JSON.stringify(err));
+                    setIsDeleteDialogOpen(false);
+                    setTodoToDeleteId(null);
+                },
+            });
+        }
+    };
     return (
         <AuthenticatedLayout user={auth.user}
             header={
@@ -37,12 +77,31 @@ export default function TodoIndex({ auth, todos, meta, search }: TodoIndexProps)
             <Head title="Daftar Todo" />
 
             <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="container mx-auto py-10">
-                        <DataTable columns={columns} data={todos} meta={meta} search={search} />
+                <div className="mx-auto sm:px-6 lg:px-8">
+                    <div className="mx-auto py-10">
+                        <DataTable columns={columns(handleDeleteTodo)} data={todos} meta={meta} search={search} />
                     </div>
                 </div>
             </div>
+
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Konfirmasi Penghapusan</AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <AlertDialogDescription>
+                        Apakah Anda yakin ingin menghapus todo ini? Tindakan ini tidak dapat dibatalkan.
+                    </AlertDialogDescription>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmDelete} variant="destructive">
+                            Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AuthenticatedLayout>
     );
 }

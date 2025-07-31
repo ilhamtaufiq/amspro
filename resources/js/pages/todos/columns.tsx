@@ -14,7 +14,8 @@ export type Todo = {
     updated_at: string;
 };
 
-export const columns: ColumnDef<Todo>[] = [
+export const columns = (onDelete: (id: number) => void): ColumnDef<Todo>[] => [
+
     {
         accessorKey: "title",
         header: ({ column }) => {
@@ -70,17 +71,11 @@ export const columns: ColumnDef<Todo>[] = [
                                 Edit
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                            <button
-                                onClick={() => {
-                                    if (confirm('Apakah Anda yakin ingin menghapus todo ini?')) {
-                                        router.delete(route('todos.destroy', todo.id));
-                                    }
-                                }}
-                                className="w-full text-left text-red-600"
-                            >
-                                Delete
-                            </button>
+                        <DropdownMenuItem
+                            onClick={() => onDelete(todo.id)}
+                            className="text-red-600"
+                        >
+                            Delete
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

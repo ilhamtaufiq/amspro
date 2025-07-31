@@ -13,12 +13,16 @@ class EmailVerificationNotificationController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard', absolute: false));
+        try {
+            if ($request->user()->hasVerifiedEmail()) {
+                return redirect()->intended(route('dashboard', absolute: false))->with('info', 'Your email is already verified.');
+            }
+
+            $request->user()->sendEmailVerificationNotification();
+
+            return back()->with('success', 'A new verification link has been sent to the email address you provided during registration.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to send verification link: ' . $e->getMessage());
         }
-
-        $request->user()->sendEmailVerificationNotification();
-
-        return back()->with('status', 'verification-link-sent');
     }
 }

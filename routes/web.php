@@ -50,6 +50,8 @@ Route::get('/dokumen-pekerjaan', [DokumenPekerjaanController::class, 'index'])->
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/pengawas-users', [PekerjaanController::class, 'getPengawasUsers'])->name('pengawas.users');
+    Route::put('/pekerjaan/{pekerjaan}/pengawas', [PekerjaanController::class, 'updatePekerjaanPengawas'])->name('pekerjaan.updatePengawas');
     // Profile Routes (Accessible to all authenticated users)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -8,3 +8,15 @@ declare global {
 
     var route: typeof ziggyRoute;
 }
+
+declare module '@inertiajs/core' {
+    interface PageProps {
+        flash: {
+            success?: string;
+            error?: string;
+            warning?: string;
+            info?: string;
+        };
+        errors: Record<string, string[]>;
+    }
+}

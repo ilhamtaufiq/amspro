@@ -67,9 +67,13 @@ class TodoController extends Controller
             'completed' => 'boolean',
         ]);
 
-        Todo::create($validated);
+        try {
+            Todo::create($validated);
 
-        return redirect()->route('todos.index')->with('success', 'Todo created successfully.');
+            return redirect()->route('todos.index')->with('success', 'Todo created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create todo: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -103,9 +107,13 @@ class TodoController extends Controller
             'completed' => 'boolean',
         ]);
 
-        $todo->update($validated);
+        try {
+            $todo->update($validated);
 
-        return redirect()->route('todos.index')->with('success', 'Todo updated successfully.');
+            return redirect()->route('todos.index')->with('success', 'Todo updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update todo: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -113,8 +121,12 @@ class TodoController extends Controller
      */
     public function destroy(Todo $todo)
     {
-        $todo->delete();
+        try {
+            $todo->delete();
 
-        return redirect()->route('todos.index')->with('success', 'Todo deleted successfully.');
+            return redirect()->route('todos.index')->with('success', 'Todo deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete todo: ' . $e->getMessage());
+        }
     }
 }

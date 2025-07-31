@@ -17,7 +17,8 @@ export type Penyedia = {
     norek: string;
 };
 
-export const columns: ColumnDef<Penyedia>[] = [
+export const columns = (onDelete: (id: number) => void): ColumnDef<Penyedia>[] => [
+
     {
         accessorKey: "nama",
         header: ({ column }) => {
@@ -86,21 +87,11 @@ export const columns: ColumnDef<Penyedia>[] = [
                                 Edit
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                            <Link
-                                href={route('penyedia.destroy', penyedia.id)}
-                                method="delete"
-                                as="button"
-                                className="w-full text-left text-red-600"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    if (confirm('Apakah Anda yakin ingin menghapus penyedia ini?')) {
-                                        router.delete(route('penyedia.destroy', penyedia.id));
-                                    }
-                                }}
-                            >
-                                Delete
-                            </Link>
+                        <DropdownMenuItem
+                            onClick={() => onDelete(penyedia.id)}
+                            className="text-red-600"
+                        >
+                            Delete
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

@@ -92,7 +92,7 @@ export default function PermissionsIndex({ auth, permissions }: PermissionsPageP
             <Head title="Manajemen Permissions" />
 
             <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="mx-auto sm:px-6 lg:px-8">
                     <Card>
                         <CardHeader className="flex flex-row justify-between items-center">
                             <CardTitle>Daftar Permissions</CardTitle>

@@ -7,8 +7,21 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { PageProps } from "./types";
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PageProps) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [penerimaToDeleteId, setPenerimaToDeleteId] = useState<number | null>(null);
+
   const { data, setData, post, put, processing, errors: penerimaErrors, reset } = useForm<{
     id?: number;
     nama: string;
@@ -21,6 +34,30 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
     nik: "",
     alamat: "",
   });
+
+  const handleConfirmDelete = () => {
+    if (penerimaToDeleteId !== null) {
+      router.delete(route("penerima.destroy", [pekerjaan.id, penerimaToDeleteId]), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+          if (flash?.success) {
+            alert(flash.success);
+          } else {
+            alert("Data penerima berhasil dihapus!");
+          }
+          setIsDeleteDialogOpen(false);
+          setPenerimaToDeleteId(null);
+        },
+        onError: (err) => {
+          console.error("Error deleting penerima:", err);
+          alert("Gagal menghapus data penerima: " + JSON.stringify(err));
+          setIsDeleteDialogOpen(false);
+          setPenerimaToDeleteId(null);
+        },
+      });
+    }
+  };
 
   
 
@@ -109,22 +146,9 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
   };
 
   const handleDelete = (penerimaId: number) => {
-    if (canDeletePenerima && confirm("Apakah Anda yakin ingin menghapus data penerima ini?")) {
-      router.delete(route("penerima.destroy", [pekerjaan.id, penerimaId]), {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: () => {
-          if (flash?.success) {
-            alert(flash.success);
-          } else {
-            alert("Data penerima berhasil dihapus!");
-          }
-        },
-        onError: (err) => {
-          console.error("Error deleting penerima:", err);
-          alert("Gagal menghapus data penerima: " + JSON.stringify(err));
-        },
-      });
+    if (canDeletePenerima) {
+      setPenerimaToDeleteId(penerimaId);
+      setIsDeleteDialogOpen(true);
     }
   };
 
@@ -251,6 +275,25 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
           </p>
         )}
       </CardContent>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Penghapusan</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            Apakah Anda yakin ingin menghapus data penerima ini? Tindakan ini tidak dapat dibatalkan.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} variant="destructive">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

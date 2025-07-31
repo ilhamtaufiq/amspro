@@ -16,6 +16,16 @@ export interface Pekerjaan {
   progress_fisik_persen?: number;
   progress_keuangan_persen?: number;
   jumlah_penerima?: number;
+  pengawas?: {
+    pengawas1_id?: number;
+    pengawas2_id?: number;
+    pengawas1?: {
+      name: string;
+    };
+    pengawas2?: {
+      name: string;
+    };
+  };
 }
 
 export interface Kegiatan {

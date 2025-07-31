@@ -3,7 +3,8 @@ import { Link } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { User } from "./index";
 
-export const columns: ColumnDef<User, unknown>[] = [
+export const columns = (onDelete: (id: number) => void): ColumnDef<User, unknown>[] => [
+
     {
       accessorKey: "id",
       header: "ID",
@@ -51,15 +52,8 @@ export const columns: ColumnDef<User, unknown>[] = [
                 Edit
               </Button>
             </Link>
-            <Button variant="destructive" size="sm" asChild>
-              <Link
-                href={`/users/${user.id}`}
-                method="delete"
-                as="button"
-                type="button"
-              >
+            <Button variant="destructive" size="sm" onClick={() => onDelete(user.id)}>
                 Delete
-              </Link>
             </Button>
           </div>
         );

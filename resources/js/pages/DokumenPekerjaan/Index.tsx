@@ -24,7 +24,7 @@ export default function DokumenPekerjaanIndex({
     return (
         <AuthenticatedLayout user={auth.user} header="Dokumen Pekerjaan">
             <Head title="Dokumen Pekerjaan" />
-            <div className="container mx-auto py-10">
+            <div className="mx-auto py-10">
                 <h1 className="text-2xl font-bold mb-4">Daftar Dokumen Pekerjaan</h1>
                 <DataTable columns={columns} data={pekerjaan} meta={meta} search={search} />
             </div>

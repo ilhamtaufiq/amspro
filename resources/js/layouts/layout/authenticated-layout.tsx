@@ -1,37 +1,67 @@
-import Cookies from 'js-cookie'
-// import { Outlet } from '@tanstack/react-router'
-import { cn } from '@/lib/utils'
-// import { SearchProvider } from '@/context/search-context'
+import * as React from 'react'
 import { SidebarProvider } from '@/components/ui/sidebar'
-// import { AppSidebar } from '@/components/layout/app-sidebar'
-// import SkipToMain from '@/components/skip-to-main'
+import { AppSidebar } from '@/layouts/layout/app-sidebar'
+import { Header } from './header'
+import { TopNav } from './top-nav'
+import { ModernBreadcrumb } from '@/components/modern-breadcrumb'
+import { cn } from '@/lib/utils'
 
 interface Props {
-  children?: React.ReactNode
+  children: React.ReactNode
+  user: any
+  header?: React.ReactNode
+  navigation?: any
 }
 
-export function AuthenticatedLayout({ children }: Props) {
-  const defaultOpen = Cookies.get('sidebar_state') !== 'false'
+export function AuthenticatedLayout({ children, user, header, navigation }: Props) {
+  const [defaultOpen, setDefaultOpen] = React.useState(() => {
+    // Check if sidebar should be open by default (from cookie or localStorage)
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar-open')
+      return saved ? JSON.parse(saved) : true
+    }
+    return true
+  })
+
+  React.useEffect(() => {
+    // Save sidebar state to localStorage
+    localStorage.setItem('sidebar-open', JSON.stringify(defaultOpen))
+  }, [defaultOpen])
+
+  // Get current pathname for active state
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/dashboard'
+
+  // Navigation links for top nav with active state
+  const navLinks = [
+    { title: 'Dashboard', href: '/dashboard', isActive: currentPath === '/dashboard' },
+    { title: 'Kegiatan', href: '/kegiatan', isActive: currentPath === '/kegiatan' },
+    { title: 'Pekerjaan', href: '/pekerjaan', isActive: currentPath === '/pekerjaan' },
+    { title: 'Map', href: '/map', isActive: currentPath === '/map' },
+  ]
+
   return (
-    // <SearchProvider>
-      <SidebarProvider defaultOpen={defaultOpen}>
-        {/* <SkipToMain /> */}
-        {/* <AppSidebar /> */}
-        <div
-          id='content'
-          className={cn(
-            'ml-auto w-full max-w-full',
-            'peer-data-[state=collapsed]:w-[calc(100%-var(--sidebar-width-icon)-1rem)]',
-            'peer-data-[state=expanded]:w-[calc(100%-var(--sidebar-width))]',
-            'sm:transition-[width] sm:duration-200 sm:ease-linear',
-            'flex h-svh flex-col',
-            'group-data-[scroll-locked=1]/body:h-full',
-            'has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh'
-          )}
-        >
-          {children ? children : <div />}
-        </div>
-      </SidebarProvider>
-    // </SearchProvider>
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <AppSidebar user={user} />
+      <div id='content' className={cn(
+        'flex flex-col',
+        'h-screen w-full',
+        'bg-background',
+        'transition-[margin] ease-linear duration-300',
+        // 'lg:ml-[--sidebar-width]',
+        // 'peer-data-[collapsible=icon]:md:ml-[calc(var(--sidebar-width-icon))]'
+      )}>
+        <Header>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            {/* <TopNav links={navLinks} /> */}
+            {header && (
+              <ModernBreadcrumb items={[{ title: header as string, isActive: true }]} />
+            )}
+          </div>
+        </Header>
+        <main className="h-full overflow-auto">
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
   )
 }

@@ -51,6 +51,7 @@ interface DataTableProps<TData, TValue> {
   kegiatanList: Kegiatan[];
   kecamatanList: Kecamatan[];
   desaList: Desa[];
+  auth: PageProps['auth'];
 }
 
 export function DataTable<TData extends Pekerjaan, TValue>({
@@ -184,7 +185,7 @@ export function DataTable<TData extends Pekerjaan, TValue>({
       if (!isSuperAdmin) {
         return columns.filter(column => {
           if ('accessorKey' in column && typeof column.accessorKey === 'string') {
-            return column.accessorKey !== "pagu";
+            return !["pagu", "pengawas1", "pengawas2"].includes(column.accessorKey);
           }
           return true;
         });

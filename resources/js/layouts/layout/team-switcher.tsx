@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { ChevronsUpDown, Plus } from 'lucide-react'
+import { router } from '@inertiajs/react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,18 @@ export function TeamSwitcher({
 }) {
   const { isMobile } = useSidebar()
   const [activeTeam, setActiveTeam] = React.useState(teams[0])
+
+  const handleTeamSwitch = (team: typeof teams[0]) => {
+    setActiveTeam(team)
+    // Here you can add logic to switch teams in your Laravel backend
+    // For example, store the selected team in session or make an API call
+    console.log('Switching to team:', team.name)
+  }
+
+  const handleAddTeam = () => {
+    // Navigate to team creation page or open modal
+    router.visit('/teams/create')
+  }
 
   return (
     <SidebarMenu>
@@ -61,7 +74,7 @@ export function TeamSwitcher({
             {teams.map((team, index) => (
               <DropdownMenuItem
                 key={team.name}
-                onClick={() => setActiveTeam(team)}
+                onClick={() => handleTeamSwitch(team)}
                 className='gap-2 p-2'
               >
                 <div className='flex size-6 items-center justify-center rounded-sm border'>
@@ -72,7 +85,10 @@ export function TeamSwitcher({
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className='gap-2 p-2'>
+            <DropdownMenuItem 
+              className='gap-2 p-2'
+              onClick={handleAddTeam}
+            >
               <div className='bg-background flex size-6 items-center justify-center rounded-md border'>
                 <Plus className='size-4' />
               </div>

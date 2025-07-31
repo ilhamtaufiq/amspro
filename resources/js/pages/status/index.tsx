@@ -21,7 +21,7 @@ export default function StatusPage({ statuses, meta, tahun, search = "", kegiata
     <AuthenticatedLayout user={user} header="Checklist">
       <Head title="Checklist" />
 
-      <div className="container mx-auto py-10">
+      <div className="mx-auto py-10">
         <h1 className="text-2xl font-bold mb-4">Checklist</h1>
         <DataTable
           columns={columns}

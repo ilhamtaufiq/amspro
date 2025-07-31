@@ -1,11 +1,21 @@
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { Head } from "@inertiajs/react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, router } from "@inertiajs/react";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export interface User {
   id: number;
@@ -30,6 +40,33 @@ export default function Users() {
   const { users, auth } = usePage<any>().props;
   const user = auth.user;
   const [search, setSearch] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
+
+  const handleDeleteUser = (id: number) => {
+    setUserToDeleteId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (userToDeleteId !== null) {
+      router.delete(route("users.destroy", userToDeleteId), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+          setIsDeleteDialogOpen(false);
+          setUserToDeleteId(null);
+        },
+        onError: (err: Record<string, string>) => {
+          console.error("Error deleting user:", err);
+          alert("Gagal menghapus pengguna: " + JSON.stringify(err));
+          setIsDeleteDialogOpen(false);
+          setUserToDeleteId(null);
+        },
+      });
+    }
+  };
+
   const filteredUsers = users.filter(
     (user: User) =>
       user.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -40,7 +77,7 @@ export default function Users() {
     <AuthenticatedLayout user={user} header="Users">
       <Head title="Users" />
 
-      <div className="container mx-auto py-10">
+      <div className="mx-auto py-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">User Management</h1>
           <Link href="/users/create">
@@ -55,8 +92,27 @@ export default function Users() {
             className="max-w-sm"
           />
         </div>
-        <DataTable columns={columns} data={filteredUsers} />
+        <DataTable columns={columns(handleDeleteUser)} data={filteredUsers} />
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Penghapusan</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} variant="destructive">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AuthenticatedLayout>
   );
 }

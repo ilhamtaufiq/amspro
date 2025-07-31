@@ -12,6 +12,8 @@ use App\Models\Kontrak;
 use App\Models\Foto;
 use App\Models\Progress; // Add Progress model
 use App\Models\Berkas; // Add Progress model
+use App\Models\Pengawas;
+use App\Models\User;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\PekerjaanImport;
 use App\Exports\PekerjaanExport;
@@ -49,7 +51,7 @@ class PekerjaanController extends Controller
         $sortDirection = $request->query('sort_direction', 'desc');
 
         // Build the query for pekerjaan
-        $query = Pekerjaan::with(['kegiatan', 'kecamatan', 'desa', 'progresses', 'keuangan'])
+        $query = Pekerjaan::with(['kegiatan', 'kecamatan', 'desa', 'progresses', 'keuangan', 'pengawas.pengawasSatu', 'pengawas.pengawasDua'])
             ->withCount(['fotos', 'penerimas'])
             ->whereHas('kegiatan', function ($query) use ($tahun) {
                 $query->where('tahun_anggaran', $tahun);
@@ -126,6 +128,8 @@ class PekerjaanController extends Controller
                     'jumlah_penerima' => $item->penerimas_count,
                     'progress_fisik_persen' => $item->progresses->avg('realisasi_fisik') ?? 0,
                     'progress_keuangan_persen' => ($item->keuangan && $item->pagu > 0) ? ($item->keuangan->realisasi / $item->pagu) * 100 : 0,
+                    'pengawas1' => $item->pengawas && $item->pengawas->pengawasSatu ? $item->pengawas->pengawasSatu->name : null,
+                    'pengawas2' => $item->pengawas && $item->pengawas->pengawasDua ? $item->pengawas->pengawasDua->name : null,
                 ];
             });
 
@@ -176,15 +180,19 @@ class PekerjaanController extends Controller
             'pagu' => 'required|numeric',
         ]);
 
-        $pekerjaan = Pekerjaan::create([
-            'nama_paket' => $validated['nama_paket'],
-            'kegiatan_id' => $validated['kegiatan_id'],
-            'kecamatan_id' => $validated['kecamatan_id'],
-            'desa_id' => $validated['desa_id'],
-            'pagu' => $validated['pagu']
-        ]);
+        try {
+            $pekerjaan = Pekerjaan::create([
+                'nama_paket' => $validated['nama_paket'],
+                'kegiatan_id' => $validated['kegiatan_id'],
+                'kecamatan_id' => $validated['kecamatan_id'],
+                'desa_id' => $validated['desa_id'],
+                'pagu' => $validated['pagu']
+            ]);
 
-        return redirect()->back()->with('success', 'Pekerjaan created successfully');
+            return redirect()->back()->with('success', 'Pekerjaan created successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create pekerjaan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -203,7 +211,8 @@ class PekerjaanController extends Controller
             'outputs',
             'penerimas',
             'fotos.media', 'fotos.penerima', 'fotos.output',
-            'berkas.media'
+            'berkas.media',
+            'pengawas.pengawasSatu', 'pengawas.pengawasDua'
         ])->where('id', $id);
 
         if ($roleId) {
@@ -336,6 +345,12 @@ class PekerjaanController extends Controller
             'outputs' => $outputs,
             'penerimas' => $penerimas,
             'berkasList' => $berkasList,
+            'pengawas' => $pekerjaan->pengawas ? [
+                'pengawas1_id' => $pekerjaan->pengawas->pengawas1_id,
+                'pengawas1_nama' => $pekerjaan->pengawas->pengawasSatu->name ?? null,
+                'pengawas2_id' => $pekerjaan->pengawas->pengawas2_id,
+                'pengawas2_nama' => $pekerjaan->pengawas->pengawasDua->name ?? null,
+            ] : null,
             'auth' => [
                 'user' => Auth::user() ? [
                     'name' => Auth::user()->name,
@@ -374,17 +389,21 @@ class PekerjaanController extends Controller
             'pagu' => 'required|numeric',
         ]);
 
-        $pekerjaan = Pekerjaan::findOrFail($id);
+        try {
+            $pekerjaan = Pekerjaan::findOrFail($id);
 
-        $pekerjaan->update([
-            'nama_paket' => $validated['nama_paket'],
-            'kegiatan_id' => $validated['kegiatan_id'],
-            'kecamatan_id' => $validated['kecamatan_id'],
-            'desa_id' => $validated['desa_id'],
-            'pagu' => $validated['pagu']
-        ]);
+            $pekerjaan->update([
+                'nama_paket' => $validated['nama_paket'],
+                'kegiatan_id' => $validated['kegiatan_id'],
+                'kecamatan_id' => $validated['kecamatan_id'],
+                'desa_id' => $validated['desa_id'],
+                'pagu' => $validated['pagu']
+            ]);
 
-        return redirect()->back()->with('success', 'Pekerjaan updated successfully');
+            return redirect()->back()->with('success', 'Pekerjaan updated successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update pekerjaan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -392,12 +411,16 @@ class PekerjaanController extends Controller
      */
     public function destroy($id)
     {
-        $pekerjaan = Pekerjaan::withoutGlobalScopes()->findOrFail($id);
-        $pekerjaan->delete();
+        try {
+            $pekerjaan = Pekerjaan::withoutGlobalScopes()->findOrFail($id);
+            $pekerjaan->delete();
 
-        return redirect()->route('pekerjaan.index')
-            ->with('success', 'Data pekerjaan berhasil dihapus.')
-            ->with('deletedPekerjaanId', $id);
+            return redirect()->route('pekerjaan.index')
+                ->with('success', 'Data pekerjaan berhasil dihapus.')
+                ->with('deletedPekerjaanId', $id);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete pekerjaan: ' . $e->getMessage());
+        }
     }
 
     public function import(Request $request)
@@ -434,5 +457,29 @@ class PekerjaanController extends Controller
     {
         $filePath = public_path('templates/pekerjaan_template.xlsx');
         return response()->download($filePath, 'pekerjaan_template.xlsx');
+    }
+
+    public function getPengawasUsers()
+    {
+        $users = User::role('Pengawas Lapangan')->get();
+        return response()->json($users);
+    }
+
+    public function updatePekerjaanPengawas(Request $request, Pekerjaan $pekerjaan)
+    {
+        $validated = $request->validate([
+            'pengawas1_id' => 'required|exists:users,id',
+            'pengawas2_id' => 'nullable|exists:users,id',
+        ]);
+
+        $pekerjaan->pengawas()->updateOrCreate(
+            ['pekerjaan_id' => $pekerjaan->id],
+            [
+                'pengawas1_id' => $validated['pengawas1_id'] ?? null,
+                'pengawas2_id' => $validated['pengawas2_id'] ?? null,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Pengawas berhasil diperbarui.');
     }
 }

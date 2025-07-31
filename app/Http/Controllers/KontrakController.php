@@ -115,21 +115,25 @@ class KontrakController extends Controller
             'spmk' => 'nullable|string|max:255',
         ]);
 
-        $pekerjaan = Pekerjaan::find($validatedData['id_pekerjaan']);
+        try {
+            $pekerjaan = Pekerjaan::find($validatedData['id_pekerjaan']);
 
-        if ($request->nilai_kontrak > $pekerjaan->pagu) {
-            return redirect()->back()->withErrors(['nilai_kontrak' => 'Nilai kontrak tidak boleh melebihi pagu pekerjaan.'])->withInput();
+            if ($request->nilai_kontrak > $pekerjaan->pagu) {
+                return redirect()->back()->withErrors(['nilai_kontrak' => 'Nilai kontrak tidak boleh melebihi pagu pekerjaan.'])->withInput()->with('error', 'Gagal menyimpan data kontrak.');
+            }
+
+            // id_kegiatan is derived from the pekerjaan
+            $validatedData['id_kegiatan'] = $pekerjaan->kegiatan_id;
+
+            Kontrak::updateOrCreate(
+                ['id_pekerjaan' => $validatedData['id_pekerjaan']],
+                $validatedData
+            );
+
+            return redirect()->route('pekerjaan.show', ['pekerjaan' => $pekerjaan->id])->with('success', 'Data kontrak berhasil disimpan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data kontrak: ' . $e->getMessage());
         }
-
-        // id_kegiatan is derived from the pekerjaan
-        $validatedData['id_kegiatan'] = $pekerjaan->kegiatan_id;
-
-        Kontrak::updateOrCreate(
-            ['id_pekerjaan' => $validatedData['id_pekerjaan']],
-            $validatedData
-        );
-
-        return redirect()->route('pekerjaan.show', ['pekerjaan' => $pekerjaan->id])->with('success', 'Data kontrak berhasil disimpan.');
     }
 
     /**
@@ -176,10 +180,14 @@ class KontrakController extends Controller
             'spmk' => 'required|string|max:255',
         ]);
 
-        $kontrak = Kontrak::findOrFail($id);
-        $kontrak->update($request->all());
+        try {
+            $kontrak = Kontrak::findOrFail($id);
+            $kontrak->update($request->all());
 
-        return redirect()->back()->with('success', 'Kontrak berhasil diperbarui.');
+            return redirect()->back()->with('success', 'Kontrak berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui kontrak: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -188,9 +196,14 @@ class KontrakController extends Controller
     public function destroy(Kontrak $kontrak)
     {
         Log::info('Deleting kontrak', ['id' => $kontrak->id]);
-        $kontrak->delete();
-        Log::info('Kontrak deleted', ['id' => $kontrak->id]);
-        return redirect()->back()->with('success', 'Kontrak berhasil dihapus!');
+        try {
+            $kontrak->delete();
+            Log::info('Kontrak deleted', ['id' => $kontrak->id]);
+            return redirect()->back()->with('success', 'Kontrak berhasil dihapus!');
+        } catch (\Exception $e) {
+            Log::error('Failed to delete kontrak', ['id' => $kontrak->id, 'error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Gagal menghapus kontrak: ' . $e->getMessage());
+        }
     }
 
     public function generateCoverPdf(Kontrak $kontrak)

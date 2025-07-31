@@ -29,25 +29,29 @@ class ProgressController extends Controller
                 ->with('error', 'Gagal menambahkan data progress.');
         }
 
-        // Check if a progress record already exists for this komponen_id and pekerjaan_id
-        $existingProgress = Progress::where('pekerjaan_id', $pekerjaanId)
-            ->where('komponen_id', $request->komponen_id)
-            ->first();
+        try {
+            // Check if a progress record already exists for this komponen_id and pekerjaan_id
+            $existingProgress = Progress::where('pekerjaan_id', $pekerjaanId)
+                ->where('komponen_id', $request->komponen_id)
+                ->first();
 
-        if ($existingProgress) {
-            return redirect()->back()
-                ->withErrors(['komponen_id' => 'Komponen ini sudah memiliki data progress. Silakan perbarui data yang ada.'])
-                ->withInput()
-                ->with('error', 'Gagal menambahkan data progress.');
+            if ($existingProgress) {
+                return redirect()->back()
+                    ->withErrors(['komponen_id' => 'Komponen ini sudah memiliki data progress. Silakan perbarui data yang ada.'])
+                    ->withInput()
+                    ->with('error', 'Gagal menambahkan data progress.');
+            }
+
+            Progress::create([
+                'pekerjaan_id' => $pekerjaanId,
+                'komponen_id' => $request->komponen_id,
+                'realisasi_fisik' => $request->realisasi_fisik,
+            ]);
+
+            return redirect()->back()->with('success', 'Data progress berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menambahkan data progress: ' . $e->getMessage());
         }
-
-        Progress::create([
-            'pekerjaan_id' => $pekerjaanId,
-            'komponen_id' => $request->komponen_id,
-            'realisasi_fisik' => $request->realisasi_fisik,
-        ]);
-
-        return redirect()->back()->with('success', 'Data progress berhasil ditambahkan.');
     }
 
     public function update(Request $request, $pekerjaanId, Progress $progress)
@@ -64,17 +68,25 @@ class ProgressController extends Controller
                 ->with('error', 'Gagal memperbarui data progress.');
         }
 
-        $progress->update([
-            'komponen_id' => $request->komponen_id,
-            'realisasi_fisik' => $request->realisasi_fisik,
-        ]);
+        try {
+            $progress->update([
+                'komponen_id' => $request->komponen_id,
+                'realisasi_fisik' => $request->realisasi_fisik,
+            ]);
 
-        return redirect()->back()->with('success', 'Data progress berhasil diperbarui.');
+            return redirect()->back()->with('success', 'Data progress berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data progress: ' . $e->getMessage());
+        }
     }
 
     public function destroy($pekerjaanId, Progress $progress)
     {
-        $progress->delete();
-        return redirect()->back()->with('success', 'Data progress berhasil dihapus.');
+        try {
+            $progress->delete();
+            return redirect()->back()->with('success', 'Data progress berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus data progress: ' . $e->getMessage());
+        }
     }
 }

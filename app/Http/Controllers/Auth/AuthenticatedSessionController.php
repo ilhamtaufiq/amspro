@@ -29,11 +29,15 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
 
-        $request->session()->regenerate();
+            $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()->intended(route('dashboard', absolute: false))->with('success', 'Login successful!');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput($request->only('email', 'remember'))->withErrors(['email' => 'These credentials do not match our records.'])->with('error', 'Login failed: Invalid credentials.');
+        }
     }
 
     /**
@@ -41,12 +45,16 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        Auth::guard('web')->logout();
+        try {
+            Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
+            $request->session()->invalidate();
 
-        $request->session()->regenerateToken();
+            $request->session()->regenerateToken();
 
-        return redirect('/');
+            return redirect('/')->with('success', 'Logout successful!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Logout failed: ' . $e->getMessage());
+        }
     }
 }

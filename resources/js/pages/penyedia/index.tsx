@@ -6,6 +6,18 @@ import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
+import { useState } from "react";
+import { router } from "@inertiajs/react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PenyediaIndexProps extends PageProps {
     penyedia: Penyedia[];
@@ -25,6 +37,33 @@ export default function PenyediaIndex({ auth, penyedia, meta, search }: Penyedia
     const { auth: pageAuth } = usePage<any>().props;
     const user = pageAuth.user;
 
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [penyediaToDeleteId, setPenyediaToDeleteId] = useState<number | null>(null);
+
+    const handleDeletePenyedia = (id: number) => {
+        setPenyediaToDeleteId(id);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (penyediaToDeleteId !== null) {
+            router.delete(route("penyedia.destroy", penyediaToDeleteId), {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsDeleteDialogOpen(false);
+                    setPenyediaToDeleteId(null);
+                },
+                onError: (err) => {
+                    console.error("Error deleting penyedia:", err);
+                    alert("Gagal menghapus penyedia: " + JSON.stringify(err));
+                    setIsDeleteDialogOpen(false);
+                    setPenyediaToDeleteId(null);
+                },
+            });
+        }
+    };
+
     return (
         <AuthenticatedLayout user={user}
             header={
@@ -42,11 +81,30 @@ export default function PenyediaIndex({ auth, penyedia, meta, search }: Penyedia
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="container mx-auto py-10">
-                        <DataTable columns={columns} data={penyedia} meta={meta} search={search} />
+                    <div className="mx-auto py-10">
+                        <DataTable columns={columns(handleDeletePenyedia)} data={penyedia} meta={meta} search={search} />
                     </div>
                 </div>
             </div>
+
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Konfirmasi Penghapusan</AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <AlertDialogDescription>
+                        Apakah Anda yakin ingin menghapus penyedia ini? Tindakan ini tidak dapat dibatalkan.
+                    </AlertDialogDescription>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmDelete} variant="destructive">
+                            Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AuthenticatedLayout>
     );
 }

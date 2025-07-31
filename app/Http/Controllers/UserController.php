@@ -35,18 +35,22 @@ class UserController extends Controller
             'roles' => 'array',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
 
-        if ($request->has('roles')) {
-            $user->syncRoles($request->roles);
+            if ($request->has('roles')) {
+                $user->syncRoles($request->roles);
+            }
+
+            return redirect()->route('users.index')
+                ->with('success', 'User created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create user: ' . $e->getMessage());
         }
-
-        return redirect()->route('users.index')
-            ->with('success', 'User created successfully.');
     }
 
     public function edit(User $user)
@@ -66,29 +70,37 @@ class UserController extends Controller
             'roles' => 'array',
         ]);
 
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
-
-        if ($request->filled('password')) {
+        try {
             $user->update([
-                'password' => Hash::make($request->password),
+                'name' => $request->name,
+                'email' => $request->email,
             ]);
-        }
 
-        if ($request->has('roles')) {
-            $user->syncRoles($request->roles);
-        }
+            if ($request->filled('password')) {
+                $user->update([
+                    'password' => Hash::make($request->password),
+                ]);
+            }
 
-        return redirect()->route('users.index')
-            ->with('success', 'User updated successfully.');
+            if ($request->has('roles')) {
+                $user->syncRoles($request->roles);
+            }
+
+            return redirect()->route('users.index')
+                ->with('success', 'User updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update user: ' . $e->getMessage());
+        }
     }
 
     public function destroy(User $user)
     {
-        $user->delete();
-        return redirect()->route('users.index')
-            ->with('success', 'User deleted successfully.');
+        try {
+            $user->delete();
+            return redirect()->route('users.index')
+                ->with('success', 'User deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete user: ' . $e->getMessage());
+        }
     }
 }

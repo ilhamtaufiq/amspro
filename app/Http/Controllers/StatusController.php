@@ -132,12 +132,16 @@ class StatusController extends Controller
             'review' => 'required|boolean',
         ]);
 
-        $status->update([
-            'kontrak' => $request->kontrak,
-            'nphd' => $request->nphd,
-            'review' => $request->review,
-        ]);
+        try {
+            $status->update([
+                'kontrak' => $request->kontrak,
+                'nphd' => $request->nphd,
+                'review' => $request->review,
+            ]);
 
-        return redirect()->back()->with('success', 'Pekerjaan updated successfully');
+            return redirect()->back()->with('success', 'Status updated successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update status: ' . $e->getMessage());
+        }
     }
 }

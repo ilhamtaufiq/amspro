@@ -39,10 +39,14 @@ class KegiatanController extends Controller
             'sumber_dana' => 'nullable|string|max:255',
         ]);
 
-        Kegiatan::create($request->all());
+        try {
+            Kegiatan::create($request->all());
 
-        return redirect()->route('kegiatan.index')
-            ->with('success', 'Kegiatan created successfully.');
+            return redirect()->route('kegiatan.index')
+                ->with('success', 'Kegiatan created successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create kegiatan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -75,10 +79,14 @@ class KegiatanController extends Controller
             'sumber_dana' => 'nullable|string|max:255',
         ]);
 
-        $kegiatan->update($request->all());
+        try {
+            $kegiatan->update($request->all());
 
-        return redirect()->route('kegiatan.index')
-            ->with('success', 'Kegiatan updated successfully.');
+            return redirect()->route('kegiatan.index')
+                ->with('success', 'Kegiatan updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update kegiatan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -86,8 +94,12 @@ class KegiatanController extends Controller
      */
     public function destroy(Kegiatan $kegiatan)
     {
-        $kegiatan->delete();
-        return redirect()->route('kegiatan.index')
-            ->with('success', 'Kegiatan deleted successfully.');
+        try {
+            $kegiatan->delete();
+            return redirect()->route('kegiatan.index')
+                ->with('success', 'Kegiatan deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete kegiatan: ' . $e->getMessage());
+        }
     }
 }

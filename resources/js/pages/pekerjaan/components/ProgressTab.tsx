@@ -13,8 +13,24 @@ import {
 } from "@/components/ui/select";
 import { FileText } from "lucide-react";
 import type { PageProps } from "./types";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function ProgressTab({ pekerjaan, kontrak, keuangan, progresses, outputs, errors, flash }: PageProps) {
+  const [isDeleteProgressDialogOpen, setIsDeleteProgressDialogOpen] = useState(false);
+  const [progressToDeleteId, setProgressToDeleteId] = useState<number | null>(null);
+  const [isDeleteKeuanganDialogOpen, setIsDeleteKeuanganDialogOpen] = useState(false);
+  const [keuanganToDeleteId, setKeuanganToDeleteId] = useState<number | null>(null);
+
   const { data: progressData, setData: setProgressData, post: postProgress, put: putProgress, processing: progressProcessing, errors: progressErrors, reset: resetProgress } = useForm<{
     id?: number;
     komponen_id: number | string;
@@ -75,21 +91,8 @@ export function ProgressTab({ pekerjaan, kontrak, keuangan, progresses, outputs,
   };
 
   const handleDeleteProgress = (progressId: number) => {
-    if (confirm("Apakah Anda yakin ingin menghapus data progress ini?")) {
-      router.delete(route("progress.destroy", [pekerjaan.id, progressId]), {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: () => {
-          if (flash?.success) {
-            alert(flash.success);
-          }
-        },
-        onError: (err) => {
-          console.error("Error deleting progress:", err);
-          alert("Gagal menghapus data progress.");
-        },
-      });
-    }
+    setProgressToDeleteId(progressId);
+    setIsDeleteProgressDialogOpen(true);
   };
 
   const handleKeuanganSubmit = (e: React.FormEvent) => {
@@ -124,18 +127,49 @@ export function ProgressTab({ pekerjaan, kontrak, keuangan, progresses, outputs,
   };
 
   const handleDeleteKeuangan = (keuanganId: number) => {
-    if (confirm("Apakah Anda yakin ingin menghapus data keuangan ini?")) {
-      router.delete(route("keuangan.destroy", [pekerjaan.id, keuanganId]), {
+    setKeuanganToDeleteId(keuanganId);
+    setIsDeleteKeuanganDialogOpen(true);
+  };
+
+  const handleConfirmDeleteProgress = () => {
+    if (progressToDeleteId !== null) {
+      router.delete(route("progress.destroy", [pekerjaan.id, progressToDeleteId]), {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
           if (flash?.success) {
             alert(flash.success);
           }
+          setIsDeleteProgressDialogOpen(false);
+          setProgressToDeleteId(null);
+        },
+        onError: (err) => {
+          console.error("Error deleting progress:", err);
+          alert("Gagal menghapus data progress.");
+          setIsDeleteProgressDialogOpen(false);
+          setProgressToDeleteId(null);
+        },
+      });
+    }
+  };
+
+  const handleConfirmDeleteKeuangan = () => {
+    if (keuanganToDeleteId !== null) {
+      router.delete(route("keuangan.destroy", [pekerjaan.id, keuanganToDeleteId]), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+          if (flash?.success) {
+            alert(flash.success);
+          }
+          setIsDeleteKeuanganDialogOpen(false);
+          setKeuanganToDeleteId(null);
         },
         onError: (err) => {
           console.error("Error deleting keuangan:", err);
           alert("Gagal menghapus data keuangan.");
+          setIsDeleteKeuanganDialogOpen(false);
+          setKeuanganToDeleteId(null);
         },
       });
     }
@@ -355,6 +389,44 @@ export function ProgressTab({ pekerjaan, kontrak, keuangan, progresses, outputs,
           )}
         </div>
       </CardContent>
+
+      <AlertDialog open={isDeleteProgressDialogOpen} onOpenChange={setIsDeleteProgressDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Penghapusan Progress</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            Apakah Anda yakin ingin menghapus data progress ini? Tindakan ini tidak dapat dibatalkan.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteProgressDialogOpen(false)}>
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDeleteProgress} variant="destructive">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isDeleteKeuanganDialogOpen} onOpenChange={setIsDeleteKeuanganDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Penghapusan Keuangan</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            Apakah Anda yakin ingin menghapus data keuangan ini? Tindakan ini tidak dapat dibatalkan.
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteKeuanganDialogOpen(false)}>
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDeleteKeuangan} variant="destructive">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

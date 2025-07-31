@@ -29,17 +29,21 @@ class OutputController extends Controller
             'volume' => 'required|numeric|min:0',
         ]);
 
-        $pekerjaan = Pekerjaan::findOrFail($pekerjaanId);
+        try {
+            $pekerjaan = Pekerjaan::findOrFail($pekerjaanId);
 
-        Output::create([
-            'pekerjaan_id' => $pekerjaanId,
-            'komponen' => $validated['komponen'],
-            'satuan' => $validated['satuan'],
-            'volume' => $validated['volume'],
-        ]);
+            Output::create([
+                'pekerjaan_id' => $pekerjaanId,
+                'komponen' => $validated['komponen'],
+                'satuan' => $validated['satuan'],
+                'volume' => $validated['volume'],
+            ]);
 
-        return redirect()->route('pekerjaan.show', $pekerjaanId)
-            ->with('success', 'Output berhasil ditambahkan');
+            return redirect()->route('pekerjaan.show', $pekerjaanId)
+                ->with('success', 'Output berhasil ditambahkan');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menambahkan output: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -72,14 +76,18 @@ class OutputController extends Controller
             'volume' => 'required|numeric|min:0',
         ]);
 
-        $output->update([
-            'komponen' => $validated['komponen'],
-            'satuan' => $validated['satuan'],
-            'volume' => $validated['volume'],
-        ]);
+        try {
+            $output->update([
+                'komponen' => $validated['komponen'],
+                'satuan' => $validated['satuan'],
+                'volume' => $validated['volume'],
+            ]);
 
-        return redirect()->route('pekerjaan.show', $pekerjaanId)
-            ->with('success', 'Output berhasil diperbarui');
+            return redirect()->route('pekerjaan.show', $pekerjaanId)
+                ->with('success', 'Output berhasil diperbarui');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui output: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -92,9 +100,13 @@ class OutputController extends Controller
                 ->with('error', 'Output tidak ditemukan');
         }
 
-        $output->delete();
+        try {
+            $output->delete();
 
-        return redirect()->route('pekerjaan.show', $pekerjaanId)
-            ->with('success', 'Output berhasil dihapus');
+            return redirect()->route('pekerjaan.show', $pekerjaanId)
+                ->with('success', 'Output berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus output: ' . $e->getMessage());
+        }
     }
 }

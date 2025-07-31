@@ -39,7 +39,7 @@ export default function KontrakIndex({ auth, kontrak, meta, search, tahun, kegia
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="container mx-auto py-10">
+                    <div className="mx-auto py-10">
 
                         <DataTable columns={columns} data={kontrak} meta={meta} search={search} tahun={tahun} kegiatanList={kegiatanList} kegiatan_id={kegiatan_id} />
                     </div>
