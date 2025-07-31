@@ -96,7 +96,8 @@ class FotoController extends Controller
      */
     public function destroy(Pekerjaan $pekerjaan, Foto $foto)
     {
-        Storage::disk('public')->delete($foto->photo_path);
+        // Delete all media associated with this foto
+        $foto->clearMediaCollection('foto/pekerjaan');
         $foto->delete();
 
         return redirect()->back()->with('success', 'Foto berhasil dihapus.');
