@@ -44,6 +44,7 @@ Route::post('/set-tahun', function (Request $request) {
     ]);
 })->middleware('auth')->name('set-tahun');
 
+
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 Route::get('/map', [MapController::class, 'index'])->name('map.index')->middleware('auth');
 Route::get('/dokumen-pekerjaan', [DokumenPekerjaanController::class, 'index'])->name('dokumen-pekerjaan.index')->middleware('auth');
@@ -115,6 +116,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/progress/{progress}', [ProgressController::class, 'update'])->name('progress.update')->middleware('permission:edit pekerjaan|tfl');
         Route::delete('/progress/{progress}', [ProgressController::class, 'destroy'])->name('progress.destroy')->middleware('permission:delete pekerjaan|tfl');
     });
+
+    Route::get('/settings/menu', [\App\Http\Controllers\MenuSettingsController::class, 'index'])->name('settings.menu.index')->middleware('role:Super Admin');
+    Route::post('/settings/menu', [\App\Http\Controllers\MenuSettingsController::class, 'store'])->name('settings.menu.store')->middleware('role:Super Admin');
 });
 
 require __DIR__ . '/auth.php';

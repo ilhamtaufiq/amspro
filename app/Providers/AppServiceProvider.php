@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Menu;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -30,6 +32,16 @@ class AppServiceProvider extends ServiceProvider
                     'warning' => Session::get('warning'),
                     'info' => Session::get('info'),
                 ];
+            },
+            'menu' => function () {
+                if (Auth::check()) {
+                    $user = Auth::user();
+                    if ($user->hasRole('Super Admin')) {
+                        return Menu::all();
+                    }
+                    return $user->getMenus();
+                }
+                return [];
             },
         ]);
           if (app()->environment('production')) {

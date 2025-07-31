@@ -21,4 +21,9 @@ class Role extends SpatieRole
         return $this->belongsToMany(Kegiatan::class, 'kegiatan_role', 'role_id', 'kegiatan_id')
                     ->withTimestamps();
     }
+
+    public function menus()
+    {
+        return $this->belongsToMany(Menu::class, 'menu_role');
+    }
 }

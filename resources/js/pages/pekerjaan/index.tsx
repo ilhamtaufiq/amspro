@@ -55,7 +55,7 @@ export default function PekerjaanIndex({
         <AuthenticatedLayout user={auth.user} header="Daftar Pekerjaan">
             <Head title="Pekerjaan" />
             <div className="mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4'">
-                <h1 className="text-2xl font-bold mb-4">Daftar Pekerjaan</h1>
+                {/* <h1 className="text-2xl font-bold mb-4">Daftar Pekerjaan</h1> */}
                 <DataTable
                     columns={columns}
                     data={pekerjaan}

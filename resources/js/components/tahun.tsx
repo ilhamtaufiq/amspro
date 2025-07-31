@@ -56,41 +56,40 @@ export function PilihTahun() {
   }, [tahun_aktif, hasViewTahunPermission, currentYear]);
 
   const handleSelect = async (selected: string) => {
-  if (selected === value) {
-    setOpen(false);
-    return;
-  }
-
-  setValue(selected);
-  setOpen(false);
-
-  try {
-    const response = await fetch(route("set-tahun"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
-      },
-      body: JSON.stringify({ tahun: selected }),
-    });
-
-    if (!response.ok) {
-      console.error("Failed to set tahun:", await response.json());
+    if (selected === value) {
+      setOpen(false);
       return;
     }
+    setValue(selected);
+    setOpen(false);
 
-    const currentUrl = new URL(window.location.href);
-    const searchParams = new URLSearchParams(currentUrl.search);
-    searchParams.set("tahun", selected);
+    try {
+      const response = await fetch(route("set-tahun"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
+        },
+        body: JSON.stringify({ tahun: selected }),
+      });
 
-    router.visit(
-      currentUrl.pathname + "?" + searchParams.toString(),
-      {
-        method: "get",
-        preserveState: true,
-        preserveScroll: true,
-        only: [
+      if (!response.ok) {
+        console.error("Failed to set tahun:", await response.json());
+        return;
+      }
+
+      const currentUrl = new URL(window.location.href);
+      const searchParams = new URLSearchParams(currentUrl.search);
+      searchParams.set("tahun", selected);
+
+      router.visit(
+        currentUrl.pathname + "?" + searchParams.toString(),
+        {
+          method: "get",
+          preserveState: true,
+          preserveScroll: true,
+          only: [
             "pekerjaan",
             "meta",
             "tahun_aktif",
@@ -101,16 +100,17 @@ export function PilihTahun() {
             "stats",
             "kontrakStats",
             "kontrak"
-        ],
-        onSuccess: (page: any) => {
-        //   console.log("Year change response:", page); // Debug
-        },
-      }
-    );
-  } catch (error) {
-    console.error("Error setting tahun:", error);
-  }
-};
+          ],
+          onSuccess: (page: any) => {
+            // console.log("Year change response:", page); // Debug
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error setting tahun:", error);
+    }
+  };
+
   return (
     <>
       {hasViewTahunPermission ? (
@@ -121,13 +121,13 @@ export function PilihTahun() {
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              className="w-[200px] justify-between"
+              className="w-[100px] justify-between"
             >
               {tahunOptions.find((ta) => ta.value === value)?.label ?? currentYear}
-              <ChevronsUpDown className="opacity-50" />
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0">
+          <PopoverContent className="w-[100px] p-0">
             <Command>
               <CommandList>
                 <CommandEmpty>Tidak ditemukan.</CommandEmpty>
@@ -141,7 +141,7 @@ export function PilihTahun() {
                       {ta.label}
                       <Check
                         className={cn(
-                          "ml-auto",
+                          "ml-auto h-4 w-4",
                           value === ta.value ? "opacity-100" : "opacity-0"
                         )}
                       />
@@ -156,10 +156,12 @@ export function PilihTahun() {
         // Users without view tahun permission see the current year as static text
         <Button
           variant="outline"
-          className="w-[200px] justify-between cursor-default"
+          role="combobox"
+          className="w-[100px] justify-between"
           disabled
         >
           {currentYear}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       )}
     </>

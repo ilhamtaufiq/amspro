@@ -10,6 +10,8 @@ use App\Models\Kontrak;
 use App\Models\Progress;
 use App\Models\Foto;
 use App\Models\Todo;
+use App\Models\User;
+use App\Models\Penyedia;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -60,16 +62,6 @@ class DashboardController extends Controller
             })
             ->filter();
 
-        
-
-        if (!$user->hasRole('Super Admin')) {
-            return Inertia::render('dashboard', [
-                'locations' => $locations,
-                'tahun_aktif' => (int) $tahun,
-                'isSuperAdmin' => false,
-            ]);
-        }
-
         // Statistik Utama
         $stats = [
             'totalPekerjaan' => (clone $pekerjaanQuery)->whereHas('kegiatan', function ($query) use ($tahun) {
@@ -86,7 +78,46 @@ class DashboardController extends Controller
                     $q->where('tahun_anggaran', $tahun);
                 });
             })->sum('realisasi'),
+            'totalUsers' => User::count(),
+            'completedPekerjaan' => (clone $pekerjaanQuery)->whereHas('progresses', function ($query) {
+                $query->where('realisasi_fisik', 100);
+            })->whereHas('kegiatan', function ($query) use ($tahun) {
+                $query->where('tahun_anggaran', $tahun);
+            })->count(),
+            'pendingPekerjaan' => (clone $pekerjaanQuery)->whereDoesntHave('progresses', function ($query) {
+                $query->where('realisasi_fisik', 100);
+            })->whereHas('kegiatan', function ($query) use ($tahun) {
+                $query->where('tahun_anggaran', $tahun);
+            })->count(),
+            'activeKontrak' => Kontrak::where('tgl_spmk', '<', now())->where('tgl_selesai', '>', now())->whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
+                $query->whereHas('kegiatan', function ($q) use ($tahun) {
+                    $q->where('tahun_anggaran', $tahun);
+                });
+            })->count(),
+            'totalPenyedia' => Penyedia::count(),
         ];
+
+        // Data Progres Bulanan
+        $monthlyProgress = Progress::select(
+            DB::raw('YEAR(created_at) as year, MONTH(created_at) as month'),
+            DB::raw('avg(realisasi_fisik) as completed')
+        )
+        ->whereHas('pekerjaan', function ($query) use ($pekerjaanQuery, $tahun) {
+            $query->whereHas('kegiatan', function ($q) use ($tahun) {
+                $q->where('tahun_anggaran', $tahun);
+            });
+        })
+        ->groupBy('year', 'month')
+        ->orderBy('year', 'asc')
+        ->orderBy('month', 'asc')
+        ->get()
+        ->map(function ($item) {
+            return [
+                'month' => date('M', mktime(0, 0, 0, $item->month, 1, $item->year)),
+                'completed' => round($item->completed, 2),
+                'target' => 100,
+            ];
+        });
 
         // Pekerjaan Terbaru
         $recentPekerjaan = (clone $pekerjaanQuery)->with(['kegiatan', 'kecamatan', 'desa'])
@@ -147,7 +178,10 @@ class DashboardController extends Controller
             'locations' => $locations,
             'recentTodos' => $recentTodos,
             'tahun_aktif' => (int) $tahun,
-            'isSuperAdmin' => true,
+            'isSuperAdmin' => $user->hasRole('Super Admin'),
+            'monthlyProgress' => $monthlyProgress,
+            'recentActivities' => [],
+            'calendarEvents' => [],
         ]);
     }
 }

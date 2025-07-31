@@ -1,3 +1,5 @@
+import { Menu } from './models';
+
 export interface Permission {
     id: number;
     name: string;
@@ -47,5 +49,6 @@ export type PageProps<
     auth: {
         user: User;
     };
+    menu: Menu[];
     [key: string]: any;
 };

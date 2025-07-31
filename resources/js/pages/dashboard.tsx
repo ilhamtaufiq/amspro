@@ -14,13 +14,18 @@ import { QuickActions } from '@/components/quick-actions';
 import { CalendarWidget } from '@/components/calendar-widget';
 
 interface DashboardProps extends PageProps {
-    stats?: {
+    stats: {
         totalPekerjaan: number;
         totalKegiatan: number;
         totalPenerima: number;
         realisasiKeuangan: number;
+        totalUsers: number;
+        completedPekerjaan: number;
+        pendingPekerjaan: number;
+        activeKontrak: number;
+        totalPenyedia: number;
     };
-    recentPekerjaan?: Array<{
+    recentPekerjaan: Array<{
         id: number;
         nama_paket: string;
         pagu: number;
@@ -28,12 +33,12 @@ interface DashboardProps extends PageProps {
         desa: string;
         created_at: string;
     }>;
-    progressData?: Array<{
+    progressData: Array<{
         nama_paket: string;
         realisasi_fisik: number;
         realisasi_keuangan: number;
     }>;
-    kontrakStats?: {
+    kontrakStats: {
         totalKontrak: number;
         nilaiKontrak: number;
     };
@@ -43,7 +48,7 @@ interface DashboardProps extends PageProps {
         lat: number | null;
         lng: number | null;
     }>;
-    recentTodos?: Array<{
+    recentTodos: Array<{
         id: number;
         title: string;
         completed: boolean;
@@ -51,19 +56,26 @@ interface DashboardProps extends PageProps {
     }>;
     tahun_aktif: number;
     isSuperAdmin: boolean;
+    monthlyProgress: Array<{
+        month: string;
+        completed: number;
+        target: number;
+    }>;
+    recentActivities: Array<any>;
+    calendarEvents: Array<any>;
 }
 
-export default function Dashboard({ auth, stats, recentPekerjaan, progressData, kontrakStats, locations, recentTodos, tahun_aktif, isSuperAdmin }: DashboardProps) {
+export default function Dashboard({ auth, stats, recentPekerjaan, progressData, kontrakStats, locations, recentTodos, tahun_aktif, isSuperAdmin, monthlyProgress, recentActivities, calendarEvents }: DashboardProps) {
     // Prepare data for new components
     const dashboardStats = {
-        totalUsers: 150, // You can get this from your backend
+        totalUsers: stats?.totalUsers || 0,
         totalKegiatan: stats?.totalKegiatan || 0,
         totalPekerjaan: stats?.totalPekerjaan || 0,
-        completedPekerjaan: Math.floor((stats?.totalPekerjaan || 0) * 0.7), // Example calculation
-        pendingPekerjaan: Math.floor((stats?.totalPekerjaan || 0) * 0.3), // Example calculation
+        completedPekerjaan: stats?.completedPekerjaan || 0,
+        pendingPekerjaan: stats?.pendingPekerjaan || 0,
         totalKontrak: kontrakStats?.totalKontrak || 0,
-        activeKontrak: Math.floor((kontrakStats?.totalKontrak || 0) * 0.8), // Example calculation
-        totalPenyedia: 25 // You can get this from your backend
+        activeKontrak: stats?.activeKontrak || 0,
+        totalPenyedia: stats?.totalPenyedia || 0
     };
 
     const pekerjaanData = progressData?.map(item => ({
@@ -74,89 +86,12 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
     })) || [];
 
     const kegiatanData = [
-        { name: 'Active', value: Math.floor((stats?.totalKegiatan || 0) * 0.6) },
-        { name: 'Completed', value: Math.floor((stats?.totalKegiatan || 0) * 0.3) },
-        { name: 'Pending', value: Math.floor((stats?.totalKegiatan || 0) * 0.1) }
+        { name: 'Active', value: stats.totalKegiatan - stats.completedPekerjaan - stats.pendingPekerjaan },
+        { name: 'Completed', value: stats.completedPekerjaan },
+        { name: 'Pending', value: stats.pendingPekerjaan }
     ];
 
-    const monthlyProgress = [
-        { month: 'Jan', completed: 65, target: 80 },
-        { month: 'Feb', completed: 72, target: 85 },
-        { month: 'Mar', completed: 78, target: 90 },
-        { month: 'Apr', completed: 85, target: 95 },
-        { month: 'May', completed: 82, target: 100 },
-        { month: 'Jun', completed: 88, target: 105 }
-    ];
-
-    const recentActivities = [
-        {
-            id: '1',
-            type: 'pekerjaan' as const,
-            title: 'New pekerjaan created',
-            description: 'Pembangunan Jalan Desa Sukamaju has been created',
-            user: { name: 'John Doe', initials: 'JD' },
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            status: 'in-progress' as const
-        },
-        {
-            id: '2',
-            type: 'kegiatan' as const,
-            title: 'Kegiatan updated',
-            description: 'Infrastructure development status updated',
-            user: { name: 'Jane Smith', initials: 'JS' },
-            timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-            status: 'completed' as const
-        },
-        {
-            id: '3',
-            type: 'kontrak' as const,
-            title: 'Contract signed',
-            description: 'New contract for road construction signed',
-            user: { name: 'Mike Johnson', initials: 'MJ' },
-            timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-            status: 'completed' as const
-        },
-        {
-            id: '4',
-            type: 'user' as const,
-            title: 'New user registered',
-            description: 'New supervisor account created',
-            user: { name: 'Admin', initials: 'AD' },
-            timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-            status: 'completed' as const
-        }
-    ];
-
-    const calendarEvents = [
-        {
-            id: '1',
-            title: 'Project Review Meeting',
-            date: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-            type: 'meeting' as const,
-            description: 'Monthly project review with stakeholders'
-        },
-        {
-            id: '2',
-            title: 'Contract Deadline',
-            date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-            type: 'deadline' as const,
-            description: 'Submit final contract documents'
-        },
-        {
-            id: '3',
-            title: 'Milestone Achievement',
-            date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
-            type: 'milestone' as const,
-            description: 'Road construction phase 1 completion'
-        },
-        {
-            id: '4',
-            title: 'Site Inspection',
-            date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
-            type: 'reminder' as const,
-            description: 'Regular site inspection and progress check'
-        }
-    ];
+    
 
     return (
         <AuthenticatedLayout user={auth.user}
@@ -211,79 +146,7 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
                                 </div>
                             </div>
 
-                            {/* Legacy Cards for backward compatibility */}
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-8">
-                                <Card className="col-span-4">
-                                    <CardHeader>
-                                        <CardTitle>Progres Fisik dan Keuangan</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="pl-2">
-                                        <ResponsiveContainer width="100%" height={350}>
-                                            <BarChart data={progressData}>
-                                                <XAxis
-                                                    dataKey="nama_paket"
-                                                    stroke="#888888"
-                                                    fontSize={12}
-                                                    tickLine={false}
-                                                    axisLine={false}
-                                                />
-                                                <YAxis
-                                                    stroke="#888888"
-                                                    fontSize={12}
-                                                    tickLine={false}
-                                                    axisLine={false}
-                                                    tickFormatter={(value) => `${value}%`}
-                                                />
-                                                <Tooltip formatter={(value: number) => `${value}%`} />
-                                                <Legend />
-                                                <Bar dataKey="realisasi_fisik" fill="#8884d8" name="Realisasi Fisik" />
-                                                <Bar dataKey="realisasi_keuangan" fill="#82ca9d" name="Realisasi Keuangan" />
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    </CardContent>
-                                </Card>
-                                <Card className="col-span-3">
-                                    <CardHeader>
-                                        <CardTitle>Pekerjaan Terbaru</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <ul className="space-y-2">
-                                            {recentPekerjaan.map((pekerjaan) => (
-                                                <li key={pekerjaan.id} className="border-b pb-2 last:border-b-0 last:pb-0">
-                                                    <Link href={route('pekerjaan.show', pekerjaan.id)} className="text-blue-600 hover:underline">
-                                                        <p className="font-medium">{pekerjaan.nama_paket}</p>
-                                                    </Link>
-                                                    <p className="text-sm text-muted-foreground">{pekerjaan.kecamatan} - {pekerjaan.desa}</p>
-                                                    <p className="text-sm text-muted-foreground">Pagu: {formatRupiah(pekerjaan.pagu)}</p>
-                                                    <p className="text-xs text-muted-foreground">Dibuat: {pekerjaan.created_at}</p>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </CardContent>
-                                </Card>
-                                <Card className="col-span-3">
-                                    <CardHeader>
-                                        <CardTitle>Todo Terbaru</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <ul className="space-y-2">
-                                            {recentTodos.length > 0 ? (
-                                                recentTodos.map((todo) => (
-                                                    <li key={todo.id} className="border-b pb-2 last:border-b-0 last:pb-0">
-                                                        <Link href={route('todos.edit', todo.id)} className="text-blue-600 hover:underline">
-                                                            <p className="font-medium">{todo.title}</p>
-                                                        </Link>
-                                                        <p className="text-sm text-muted-foreground">{todo.completed ? 'Selesai' : 'Belum Selesai'}</p>
-                                                        <p className="text-xs text-muted-foreground">Dibuat: {new Date(todo.created_at).toLocaleDateString()}</p>
-                                                    </li>
-                                                ))
-                                            ) : (
-                                                <p className="text-center text-muted-foreground">Tidak ada todo terbaru.</p>
-                                            )}
-                                        </ul>
-                                    </CardContent>
-                                </Card>
-                            </div>
+                            
                         </>
                     )}
 

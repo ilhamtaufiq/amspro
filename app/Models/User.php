@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Role as CustomRole;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -47,5 +49,31 @@ class User extends Authenticatable implements MustVerifyEmail
     public function pengawasan()
     {
         return $this->hasMany(Pengawas::class, 'pengawas1_id')->orWhere('pengawas2_id', $this->id);
+    }
+
+    /**
+     * A user may have multiple roles.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->morphToMany(
+            CustomRole::class,
+            'model',
+            config('permission.table_names.model_has_roles'),
+            config('permission.column_names.model_morph_key'),
+            config('permission.column_names.role_pivot_key')
+        );
+    }
+
+    public function getMenus()
+    {
+        $roles = $this->roles()->with('menus')->get();
+        $menus = collect();
+
+        foreach ($roles as $role) {
+            $menus = $menus->merge($role->menus);
+        }
+
+        return $menus->unique('id');
     }
 }

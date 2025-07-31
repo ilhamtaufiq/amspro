@@ -16,6 +16,7 @@ class PermissionSeeder extends Seeder
             'view pekerjaan', 'create pekerjaan', 'edit pekerjaan', 'delete pekerjaan',
             'view kegiatan', 'create kegiatan', 'edit kegiatan', 'delete kegiatan',
             'view roles', 'create roles', 'edit roles', 'delete roles',
+            'view tahun',
         ];
 
         // Create permissions (only if they don't exist)
