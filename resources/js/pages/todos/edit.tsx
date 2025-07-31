@@ -34,9 +34,9 @@ export default function Edit({ auth, todo }: TodoEditProps) {
 
     return (
         <AuthenticatedLayout user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Edit Todo</h2>}
+            header="Edit To do"
         >
-            <Head title="Edit Todo" />
+            <Head title="Edit To do" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">

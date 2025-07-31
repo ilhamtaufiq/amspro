@@ -25,16 +25,7 @@ interface KontrakIndexProps extends PageProps {
 
 export default function KontrakIndex({ auth, kontrak, meta, search, tahun, kegiatanList, kegiatan_id }: KontrakIndexProps) {
     return (
-        <AuthenticatedLayout user={auth.user}
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="">Daftar Kontrak</h2>
-                    <div className="flex items-center space-x-4">
-
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout user={auth.user} header="Daftar Kontrak">
             <Head title="Daftar Kontrak" />
 
             <div className="py-12">

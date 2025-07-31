@@ -58,9 +58,7 @@ export default function Create({ auth, pekerjaanList, penyediaList }: KontrakCre
     const sisaPagu = selectedPekerjaan ? selectedPekerjaan.pagu - parseFloat(data.nilai_kontrak || '0') : null;
 
     return (
-        <AuthenticatedLayout user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Tambah Kontrak</h2>}
-        >
+        <AuthenticatedLayout user={auth.user} header="Tambah Kontrak">
             <Head title="Tambah Kontrak" />
 
             <div className="py-12">

@@ -94,13 +94,7 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
     
 
     return (
-        <AuthenticatedLayout user={auth.user}
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>
-                </div>
-            }
-        >
+        <AuthenticatedLayout user={auth.user}header="Dashboard">
             <Head title="Dashboard" />
 
             <div className="py-12">

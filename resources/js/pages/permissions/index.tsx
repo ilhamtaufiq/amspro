@@ -87,7 +87,7 @@ export default function PermissionsIndex({ auth, permissions }: PermissionsPageP
     return (
         <AuthenticatedLayout
             user={auth.user ?? { name: '', email: '', roles: [], permissions: [] }}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Manajemen Permissions</h2>}
+            header="Manajemen Permissions"
         >
             <Head title="Manajemen Permissions" />
 

@@ -156,9 +156,9 @@ export default function RolesIndex({ auth, roles, permissions, kegiatanList, fla
 
     return (
         <AuthenticatedLayout user={user}
-            header={<h2 className="font-semibold text-xl text-foreground leading-tight">Role Management</h2>}
+            header="Role Manajemen"
         >
-            <Head title="Role Management" />
+            <Head title="Role Manajemen" />
 
             <div className="py-12">
                 <div className="mx-auto sm:px-6 lg:px-8">
