@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import { Head } from '@inertiajs/react';
 import MapComponentGeoJSON from '@/components/MapComponentGeoJSON';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 interface MapPageProps {
     geojson: GeoJSON.FeatureCollection[];
-    kecamatanList: { id: number; name: string; geojson: GeoJSON.Feature | null }[];
-    desaList: { id: number; name: string; kecamatan_id: number; geojson: GeoJSON.Feature | null }[];
-    pekerjaanList: { id: number; nama_paket: string; kecamatan_id: number; desa_id: number; kecamatan_name: string | null; desa_name: string | null; lat: number | null; lng: number | null; }[];
+    kecamatanList: { id: number; name: string; geojson: GeoJSON.Feature | null; pekerjaan_count: number }[];
+    desaList: { id: number; name: string; kecamatan_id: number; geojson: GeoJSON.Feature | null; pekerjaan_count: number }[];
+    pekerjaanGeojson: GeoJSON.Feature[];
+    tahun_aktif: number;
+    isSuperAdmin: boolean;
     auth: {
         user: {
             name: string;
@@ -19,43 +22,83 @@ interface MapPageProps {
     };
 }
 
-export default function MapIndex({ auth, geojson, kecamatanList, desaList, pekerjaanList }: MapPageProps) {
+export default function MapIndex({ 
+    auth, 
+    geojson, 
+    kecamatanList, 
+    desaList, 
+    pekerjaanGeojson, 
+    tahun_aktif, 
+    isSuperAdmin 
+}: MapPageProps) {
     const [selectedKecamatan, setSelectedKecamatan] = useState<{ id: number; name: string; geojson: GeoJSON.Feature | null } | null>(null);
     const [selectedDesa, setSelectedDesa] = useState<{ id: number; name: string; kecamatan_id: number; geojson: GeoJSON.Feature | null } | null>(null);
-    const [filteredDesaList, setFilteredDesaList] = useState(desaList);
-    const [showPekerjaan, setShowPekerjaan] = useState(false);
+    const [showPekerjaan, setShowPekerjaan] = useState(true); // Default to true for heatmap
 
-    useEffect(() => {
+    // Memoize filtered desa list to prevent unnecessary recalculations
+    const filteredDesaList = useMemo(() => {
         if (selectedKecamatan) {
-            setFilteredDesaList(desaList.filter(desa => desa.kecamatan_id === selectedKecamatan.id));
-        } else {
-            setFilteredDesaList(desaList);
+            return desaList.filter(desa => desa.kecamatan_id === selectedKecamatan.id);
         }
-        setSelectedDesa(null); // Reset desa selection when kecamatan changes
+        return desaList;
     }, [selectedKecamatan, desaList]);
 
-    const handleKecamatanChange = (value: string) => {
-        const kecamatan = kecamatanList.find(k => k.id.toString() === value);
-        setSelectedKecamatan(kecamatan || null);
-        // console.log("Selected Kecamatan:", kecamatan);
-    };
+    // Memoize selected feature to prevent unnecessary map updates
+    const selectedFeatureGeoJSON = useMemo(() => {
+        return selectedDesa?.geojson || selectedKecamatan?.geojson || null;
+    }, [selectedDesa, selectedKecamatan]);
 
-    const handleDesaChange = (value: string) => {
-        const desa = desaList.find(d => d.id.toString() === value);
-        setSelectedDesa(desa || null);
-        // console.log("Selected Desa:", desa);
-    };
+    // Memoize filtered pekerjaan list
+    const filteredPekerjaanList = useMemo(() => {
+        if (!showPekerjaan) return [];
+        
+        if (selectedDesa) {
+            return pekerjaanGeojson.filter(pekerjaan => 
+                pekerjaan.properties?.desa_id === selectedDesa.id
+            );
+        } else if (selectedKecamatan) {
+            return pekerjaanGeojson.filter(pekerjaan => 
+                pekerjaan.properties?.kecamatan_id === selectedKecamatan.id
+            );
+        }
+        
+        return pekerjaanGeojson;
+    }, [showPekerjaan, selectedDesa, selectedKecamatan, pekerjaanGeojson]);
 
-    const selectedFeatureGeoJSON = selectedDesa?.geojson || selectedKecamatan?.geojson || null;
-    // console.log("Selected Feature GeoJSON:", selectedFeatureGeoJSON);
+    // Memoize handlers to prevent unnecessary re-renders
+    const handleKecamatanChange = useCallback((value: string) => {
+        if (value === "all") {
+            setSelectedKecamatan(null);
+        } else {
+            const kecamatan = kecamatanList.find(k => k.id.toString() === value);
+            setSelectedKecamatan(kecamatan || null);
+        }
+        setSelectedDesa(null); // Reset desa selection when kecamatan changes
+    }, [kecamatanList]);
+
+    const handleDesaChange = useCallback((value: string) => {
+        if (value === "all") {
+            setSelectedDesa(null);
+        } else {
+            const desa = desaList.find(d => d.id.toString() === value);
+            setSelectedDesa(desa || null);
+        }
+    }, [desaList]);
+
+    const handleTogglePekerjaan = useCallback(() => {
+        setShowPekerjaan(prev => !prev);
+    }, []);
 
     return (
         <AuthenticatedLayout user={auth.user} header="Peta Interaktif">
             <Head title="Peta Interaktif" />
-            <div className="mx-auto py-10">
-                <h1 className="text-2xl font-bold mb-4">Peta Interaktif Wilayah Kecamatan</h1>
-                <div className="flex space-x-4 mb-4">
-                    <Select value={selectedKecamatan?.id.toString() || ""} onValueChange={handleKecamatanChange}>
+            <div className="h-screen flex flex-col">
+                {/* Controls Section - Fixed at top */}
+                <div className="flex flex-wrap gap-4 p-4 bg-white border-b border-gray-200">
+                    <Select 
+                        value={selectedKecamatan?.id.toString() || "all"} 
+                        onValueChange={handleKecamatanChange}
+                    >
                         <SelectTrigger className="w-[200px]">
                             <SelectValue placeholder="Pilih Kecamatan" />
                         </SelectTrigger>
@@ -63,13 +106,17 @@ export default function MapIndex({ auth, geojson, kecamatanList, desaList, peker
                             <SelectItem value="all">Semua Kecamatan</SelectItem>
                             {kecamatanList.map((kecamatan) => (
                                 <SelectItem key={kecamatan.id} value={kecamatan.id.toString()}>
-                                    {kecamatan.name}
+                                    {kecamatan.name} ({kecamatan.pekerjaan_count})
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
 
-                    <Select value={selectedDesa?.id.toString() || ""} onValueChange={handleDesaChange} disabled={!selectedKecamatan}>
+                    <Select 
+                        value={selectedDesa?.id.toString() || "all"} 
+                        onValueChange={handleDesaChange} 
+                        disabled={!selectedKecamatan}
+                    >
                         <SelectTrigger className="w-[200px]">
                             <SelectValue placeholder="Pilih Desa" />
                         </SelectTrigger>
@@ -77,14 +124,33 @@ export default function MapIndex({ auth, geojson, kecamatanList, desaList, peker
                             <SelectItem value="all">Semua Desa</SelectItem>
                             {filteredDesaList.map((desa) => (
                                 <SelectItem key={desa.id} value={desa.id.toString()}>
-                                    {desa.name}
+                                    {desa.name} ({desa.pekerjaan_count})
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+
+                    <Button
+                        onClick={handleTogglePekerjaan}
+                        variant={showPekerjaan ? "default" : "outline"}
+                        size="sm"
+                    >
+                        {showPekerjaan ? 'Sembunyikan' : 'Tampilkan'} Heatmap Pekerjaan
+                    </Button>
                 </div>
-                <div className="h-[600px] w-full rounded-md overflow-hidden">
-                    <MapComponentGeoJSON geojson={geojson} selectedFeatureGeoJSON={selectedFeatureGeoJSON} selectedKecamatanId={selectedKecamatan?.id.toString() || ""} selectedDesaId={selectedDesa?.id.toString() || ""} kecamatanList={kecamatanList} desaList={desaList} pekerjaanList={showPekerjaan ? pekerjaanList : []} />
+
+                {/* Full Screen Map Container */}
+                <div className="flex-1 w-full">
+                    <MapComponentGeoJSON 
+                        geojson={geojson} 
+                        selectedFeatureGeoJSON={selectedFeatureGeoJSON} 
+                        selectedKecamatanId={selectedKecamatan?.id.toString() || ""} 
+                        selectedDesaId={selectedDesa?.id.toString() || ""} 
+                        kecamatanList={kecamatanList} 
+                        desaList={desaList} 
+                        pekerjaanList={filteredPekerjaanList} 
+                        showHeatmap={showPekerjaan}
+                    />
                 </div>
             </div>
         </AuthenticatedLayout>
