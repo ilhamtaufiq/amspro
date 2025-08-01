@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
@@ -6,6 +6,7 @@ import { GlobalSearch } from '@/components/global-search'
 import { NotificationBell } from '@/components/notification-bell'
 import AppearanceDropdown from '@/components/appearance-dropdown'
 import PilihTahun from '@/components/tahun'
+import axios from 'axios'
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   fixed?: boolean
@@ -20,8 +21,9 @@ export const Header = ({
   ...props
 }: HeaderProps) => {
   const [offset, setOffset] = React.useState(0)
+  const [notifications, setNotifications] = useState([])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const onScroll = () => {
       setOffset(document.body.scrollTop || document.documentElement.scrollTop)
     }
@@ -33,36 +35,11 @@ export const Header = ({
     return () => document.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Sample notifications - you can pass this as props or fetch from API
-  const sampleNotifications = [
-    {
-      id: '1',
-      title: 'New pekerjaan created',
-      description: 'Pembangunan Jalan Desa Sukamaju has been created',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      type: 'info' as const,
-      read: false,
-      user: { name: 'John Doe', initials: 'JD' }
-    },
-    {
-      id: '2',
-      title: 'Contract signed',
-      description: 'New contract for road construction signed',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      type: 'success' as const,
-      read: false,
-      user: { name: 'Jane Smith', initials: 'JS' }
-    },
-    {
-      id: '3',
-      title: 'Progress update',
-      description: 'Project completion rate updated to 75%',
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      type: 'warning' as const,
-      read: true,
-      user: { name: 'Mike Johnson', initials: 'MJ' }
-    }
-  ]
+  useEffect(() => {
+    axios.get(route('notifications.index')).then(response => {
+        setNotifications(response.data)
+    })
+  }, [])
 
   return (
     <header
@@ -81,7 +58,7 @@ export const Header = ({
       </div>
       <div className="flex items-center gap-2 w-full md:w-auto justify-end">
         <GlobalSearch />
-        <NotificationBell notifications={sampleNotifications} />
+        <NotificationBell notifications={notifications} />
         <PilihTahun />
         <AppearanceDropdown />
       </div>

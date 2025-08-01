@@ -46,7 +46,7 @@ Route::post('/set-tahun', function (Request $request) {
 
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
-Route::get('/map', [MapController::class, 'index'])->name('map.index')->middleware('auth');
+Route::get('/peta', [MapController::class, 'index'])->name('peta.index')->middleware('auth');
 Route::get('/dokumen-pekerjaan', [DokumenPekerjaanController::class, 'index'])->name('dokumen-pekerjaan.index')->middleware('auth');
 
 
@@ -123,6 +123,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/all', [App\Http\Controllers\NotificationController::class, 'all'])->name('notifications.all');
+    Route::post('/notifications/{notification}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+});
+
+Route::middleware(['auth', 'verified', 'role:Super Admin'])->group(function () {
+    Route::get('/notifications/create', [App\Http\Controllers\NotificationController::class, 'create'])->name('notifications.create');
+    Route::post('/notifications', [App\Http\Controllers\NotificationController::class, 'store'])->name('notifications.store');
+});
 
 use App\Http\Controllers\ReverseGeocodeController;
 

@@ -15,6 +15,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
+import { formatDistanceToNow, parseISO } from 'date-fns';
+
 interface Notification {
   id: string
   title: string
@@ -51,20 +53,12 @@ export function NotificationBell({ notifications = [], className }: Notification
   }
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-    
-    if (diffInMinutes < 1) {
-      return 'Just now'
-    } else if (diffInMinutes < 60) {
-      return `${diffInMinutes}m ago`
-    } else if (diffInMinutes < 1440) {
-      const hours = Math.floor(diffInMinutes / 60)
-      return `${hours}h ago`
-    } else {
-      const days = Math.floor(diffInMinutes / 1440)
-      return `${days}d ago`
+    try {
+        const date = parseISO(timestamp);
+        return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+        console.error("Invalid date format:", timestamp, error);
+        return "Invalid date";
     }
   }
 
@@ -141,8 +135,8 @@ export function NotificationBell({ notifications = [], className }: Notification
         {notifications.length > 5 && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <p className="text-sm text-muted-foreground">View all notifications</p>
+            <DropdownMenuItem asChild>
+              <a href={route('notifications.all')} className="text-sm text-muted-foreground text-center block w-full">View all notifications</a>
             </DropdownMenuItem>
           </>
         )}

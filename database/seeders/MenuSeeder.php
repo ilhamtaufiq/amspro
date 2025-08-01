@@ -18,13 +18,20 @@ class MenuSeeder extends Seeder
             ['name' => 'dashboard', 'label' => 'Dashboard'],
             ['name' => 'kegiatan', 'label' => 'Kegiatan'],
             ['name' => 'pekerjaan', 'label' => 'Pekerjaan'],
-            ['name' => 'map', 'label' => 'Map'],
+            ['name' => 'peta', 'label' => 'Map'],
             ['name' => 'users', 'label' => 'Users'],
             ['name' => 'roles', 'label' => 'Roles'],
             ['name' => 'permissions', 'label' => 'Permissions'],
             ['name' => 'penyedia', 'label' => 'Penyedia'],
             ['name' => 'todos', 'label' => 'Todos'],
             ['name' => 'status', 'label' => 'Status'],
+            ['name' => 'notifications.create', 'label' => 'Create Notification'],
+            ['name' => 'kontrak', 'label' => 'Kontrak'],
+            ['name' => 'progress', 'label' => 'Progress'],
+            ['name' => 'keuangan', 'label' => 'Keuangan'],
+            ['name' => 'output', 'label' => 'Output'],
+            ['name' => 'dokumen-pekerjaan', 'label' => 'Dokumen Pekerjaan'],
+            ['name' => 'settings/menu', 'label' => 'Menu Settings'],
         ];
 
         foreach ($menus as $menu) {
