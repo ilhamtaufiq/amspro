@@ -3,7 +3,6 @@ import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import { Head } from '@inertiajs/react';
 import MapComponentGeoJSON from '@/components/MapComponentGeoJSON';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 
 interface MapPageProps {
     geojson: GeoJSON.FeatureCollection[];
@@ -33,7 +32,6 @@ export default function MapIndex({
 }: MapPageProps) {
     const [selectedKecamatan, setSelectedKecamatan] = useState<{ id: number; name: string; geojson: GeoJSON.Feature | null } | null>(null);
     const [selectedDesa, setSelectedDesa] = useState<{ id: number; name: string; kecamatan_id: number; geojson: GeoJSON.Feature | null } | null>(null);
-    const [showPekerjaan, setShowPekerjaan] = useState(true); // Default to true for heatmap
 
     // Memoize filtered desa list to prevent unnecessary recalculations
     const filteredDesaList = useMemo(() => {
@@ -47,23 +45,6 @@ export default function MapIndex({
     const selectedFeatureGeoJSON = useMemo(() => {
         return selectedDesa?.geojson || selectedKecamatan?.geojson || null;
     }, [selectedDesa, selectedKecamatan]);
-
-    // Memoize filtered pekerjaan list
-    const filteredPekerjaanList = useMemo(() => {
-        if (!showPekerjaan) return [];
-        
-        if (selectedDesa) {
-            return pekerjaanGeojson.filter(pekerjaan => 
-                pekerjaan.properties?.desa_id === selectedDesa.id
-            );
-        } else if (selectedKecamatan) {
-            return pekerjaanGeojson.filter(pekerjaan => 
-                pekerjaan.properties?.kecamatan_id === selectedKecamatan.id
-            );
-        }
-        
-        return pekerjaanGeojson;
-    }, [showPekerjaan, selectedDesa, selectedKecamatan, pekerjaanGeojson]);
 
     // Memoize handlers to prevent unnecessary re-renders
     const handleKecamatanChange = useCallback((value: string) => {
@@ -85,16 +66,12 @@ export default function MapIndex({
         }
     }, [desaList]);
 
-    const handleTogglePekerjaan = useCallback(() => {
-        setShowPekerjaan(prev => !prev);
-    }, []);
-
     return (
         <AuthenticatedLayout user={auth.user} header="Peta Interaktif">
             <Head title="Peta Interaktif" />
             <div className="h-screen flex flex-col">
                 {/* Controls Section - Fixed at top */}
-                <div className="flex flex-wrap gap-4 p-4 bg-white border-b border-gray-200">
+                <div className="flex space-x-4 mb-4">
                     <Select 
                         value={selectedKecamatan?.id.toString() || "all"} 
                         onValueChange={handleKecamatanChange}
@@ -106,7 +83,7 @@ export default function MapIndex({
                             <SelectItem value="all">Semua Kecamatan</SelectItem>
                             {kecamatanList.map((kecamatan) => (
                                 <SelectItem key={kecamatan.id} value={kecamatan.id.toString()}>
-                                    {kecamatan.name} ({kecamatan.pekerjaan_count})
+                                    {kecamatan.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -124,19 +101,11 @@ export default function MapIndex({
                             <SelectItem value="all">Semua Desa</SelectItem>
                             {filteredDesaList.map((desa) => (
                                 <SelectItem key={desa.id} value={desa.id.toString()}>
-                                    {desa.name} ({desa.pekerjaan_count})
+                                    {desa.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-
-                    <Button
-                        onClick={handleTogglePekerjaan}
-                        variant={showPekerjaan ? "default" : "outline"}
-                        size="sm"
-                    >
-                        {showPekerjaan ? 'Sembunyikan' : 'Tampilkan'} Heatmap Pekerjaan
-                    </Button>
                 </div>
 
                 {/* Full Screen Map Container */}
@@ -148,8 +117,8 @@ export default function MapIndex({
                         selectedDesaId={selectedDesa?.id.toString() || ""} 
                         kecamatanList={kecamatanList} 
                         desaList={desaList} 
-                        pekerjaanList={filteredPekerjaanList} 
-                        showHeatmap={showPekerjaan}
+                        pekerjaanList={[]} 
+                        showHeatmap={false}
                     />
                 </div>
             </div>
