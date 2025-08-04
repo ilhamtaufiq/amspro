@@ -34,16 +34,19 @@ class MediaScanDiskFilenames extends Command
 
         foreach ($mediaItems as $media) {
             $disk = $media->disk;
-            $filePathOnDisk = Storage::disk($disk)->path($media->getPathRelativeToRoot());
+            $pathRelativeToRoot = $media->getPathRelativeToRoot();
+            $filePathOnDisk = Storage::disk($disk)->path($pathRelativeToRoot);
             $fileNameOnDisk = basename($filePathOnDisk);
 
-            if (str_contains($fileNameOnDisk, '%')) {
-                $this->warn("Found file on disk with %: ID {$media->id}, Path: {$filePathOnDisk}");
+            $this->info("Checking Media ID: {$media->id}, DB Filename: {$media->file_name}, Disk Path: {$filePathOnDisk}, Disk Filename: {$fileNameOnDisk}");
+
+            if (str_contains($fileNameOnDisk, '%') || str_contains($fileNameOnDisk, '%25')) {
+                $this->warn("Found file on disk with % or %25: ID {$media->id}, Path: {$filePathOnDisk}");
                 $foundIssues = true;
             }
 
-            if (str_contains($media->file_name, '%')) {
-                $this->warn("Found database entry with %: ID {$media->id}, DB Filename: {$media->file_name}");
+            if (str_contains($media->file_name, '%') || str_contains($media->file_name, '%25')) {
+                $this->warn("Found database entry with % or %25: ID {$media->id}, DB Filename: {$media->file_name}");
                 $foundIssues = true;
             }
         }
