@@ -34,42 +34,34 @@ class FixFilenamesCommand extends Command
         foreach ($fotos as $foto) {
             $directory = $foto->id;
             $expectedFilename = $foto->filename;
-
             $expectedPath = $directory . '/' . $expectedFilename;
 
-            // Check if the expected file already exists on disk
-            if (Storage::disk('public')->exists($expectedPath)) {
+            // Get all files in the specific foto's directory
+            $filesInDirectory = Storage::disk('public')->files($directory);
+            $actualFilenames = array_map('basename', $filesInDirectory);
+
+            // Check if the expected file already exists
+            if (in_array($expectedFilename, $actualFilenames)) {
                 $this->line("File for ID {$foto->id} already matches: {$expectedPath}");
                 continue;
             }
 
-            // List all files in the foto's directory
-            $filesInDirectory = Storage::disk('public')->files($directory);
-
-            $actualProblematicFilename = null;
-            foreach ($filesInDirectory as $filePath) {
-                $filename = basename($filePath);
-                if ($filename !== $expectedFilename) {
-                    $actualProblematicFilename = $filename;
-                    break; // Assuming only one problematic file per directory
-                }
-            }
-
-            if ($actualProblematicFilename) {
+            // If the expected file does not exist, look for a single problematic file
+            // This assumes there should only be one file per ID directory that needs renaming
+            if (count($actualFilenames) === 1) {
+                $actualProblematicFilename = $actualFilenames[0];
                 $actualProblematicPath = $directory . '/' . $actualProblematicFilename;
+
                 try {
                     Storage::disk('public')->move($actualProblematicPath, $expectedPath);
                     $this->info("Renamed file for ID {$foto->id}: {$actualProblematicPath} -> {$expectedPath}");
-
-                    // No need to update $foto->filename as it's already the expected one
-                    // $foto->filename = $expectedFilename; // This line is redundant if $foto->filename is already correct
-                    // $foto->save(); // This line is also redundant if no change to $foto->filename
-
                 } catch (\Exception $e) {
                     $this->error("Error renaming file for ID {$foto->id}: " . $e->getMessage());
                 }
+            } elseif (count($actualFilenames) > 1) {
+                $this->warn("Multiple files found for ID {$foto->id} and expected file '{$expectedFilename}' is missing. Cannot automatically fix. Files found: " . implode(', ', $actualFilenames));
             } else {
-                $this->warn("No problematic file found for ID {$foto->id} (expected: {$expectedPath}). Directory content: " . implode(', ', $filesInDirectory));
+                $this->warn("No files found for ID {$foto->id} (expected: {$expectedPath}).");
             }
         }
 
