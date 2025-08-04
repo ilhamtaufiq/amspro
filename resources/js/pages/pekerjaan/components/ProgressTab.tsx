@@ -188,15 +188,7 @@ export function ProgressTab({ pekerjaan, kontrak, keuangan, progresses, outputs,
     }, 0) / progresses.length;
   };
 
-  const calculateFisikProgress = () => {
-    if (progresses.length === 0) return 0;
-    return progresses.reduce((sum, progress) => {
-      const fisikPercent = progress.output_volume && progress.output_volume > 0
-        ? (Number(progress.realisasi_fisik) / Number(progress.output_volume)) * 100
-        : 0;
-      return sum + fisikPercent;
-    }, 0) / progresses.length;
-  };
+  const fisikProgress = pekerjaan.progress_fisik_persen ?? 0;
 
   return (
     <Card>
@@ -318,9 +310,9 @@ export function ProgressTab({ pekerjaan, kontrak, keuangan, progresses, outputs,
             <p className="text-sm font-medium">Progress Fisik</p>
             <div className="flex justify-between">
               <p className="text-sm">Realisasi</p>
-              <p className="text-sm">{calculateFisikProgress().toFixed(2)}%</p>
+              <p className="text-sm">{fisikProgress.toFixed(2)}%</p>
             </div>
-            <Progress value={calculateFisikProgress()} className="h-2" />
+            <Progress value={fisikProgress} className="h-2" />
           </div>
 
           <div className="space-y-2">

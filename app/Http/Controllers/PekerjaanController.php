@@ -333,6 +333,7 @@ class PekerjaanController extends Controller
                 'created_at' => $pekerjaan->created_at ? $pekerjaan->created_at->toDateTimeString() : null,
                 'updated_at' => $pekerjaan->updated_at ? $pekerjaan->updated_at->toDateTimeString() : null,
                 'tahun_anggaran' => $pekerjaan->kegiatan ? $pekerjaan->kegiatan->tahun_anggaran : null,
+                'progress_fisik_persen' => $pekerjaan->getProgresFisikPersen(),
             ],
             'kontrak' => $pekerjaan->kontrak ? [
                 'id' => $pekerjaan->kontrak->id,

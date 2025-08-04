@@ -12,6 +12,7 @@ export interface Pekerjaan {
   created_at: string | null;
   updated_at: string | null;
   tahun_anggaran?: number;
+  progress_fisik_persen?: number;
   pengawas?: {
     pengawas1_id?: number;
     pengawas2_id?: number;
