@@ -147,4 +147,16 @@ class Pekerjaan extends Model
     {
         return $this->hasOne(Pengawas::class, 'pekerjaan_id');
     }
+
+    public function getProgresFisikPersen()
+    {
+        $totalVolume = $this->outputs->sum('volume');
+        $totalRealisasi = $this->progresses->sum('realisasi_fisik');
+
+        if ($totalVolume == 0) {
+            return 0;
+        }
+
+        return ($totalRealisasi / $totalVolume) * 100;
+    }
 }

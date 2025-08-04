@@ -126,7 +126,7 @@ class PekerjaanController extends Controller
                     'tahun_anggaran' => $item->kegiatan ? $item->kegiatan->tahun_anggaran : null,
                     'jumlah_foto' => $item->fotos_count,
                     'jumlah_penerima' => $item->penerimas_count,
-                    'progress_fisik_persen' => $item->progresses->avg('realisasi_fisik') ?? 0,
+                    'progress_fisik_persen' => $item->getProgresFisikPersen(),
                     'progress_keuangan_persen' => ($item->keuangan && $item->pagu > 0) ? ($item->keuangan->realisasi / $item->pagu) * 100 : 0,
                     'pengawas1' => $item->pengawas && $item->pengawas->pengawasSatu ? $item->pengawas->pengawasSatu->name : null,
                     'pengawas2' => $item->pengawas && $item->pengawas->pengawasDua ? $item->pengawas->pengawasDua->name : null,
