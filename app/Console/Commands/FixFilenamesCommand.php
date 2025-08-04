@@ -32,8 +32,15 @@ class FixFilenamesCommand extends Command
         $fotos = Foto::all();
 
         foreach ($fotos as $foto) {
-            $directory = $foto->id;
-            $expectedFilename = $foto->filename;
+            $media = $foto->getFirstMedia('foto/pekerjaan');
+
+            if (!$media) {
+                $this->warn("No media found for Foto ID {$foto->id}. Skipping.");
+                continue;
+            }
+
+            $directory = $media->id; // Spatie uses media ID as directory
+            $expectedFilename = $media->file_name;
             $expectedPath = $directory . '/' . $expectedFilename;
 
             // Get all files in the specific foto's directory
