@@ -20,7 +20,7 @@ class FixFilenamesCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Fixes filename discrepancies for Foto model, specifically for 0%.png issues.';
+    protected $description = 'Fixes filename discrepancies for Foto model by renaming files on disk to match database entries.';
 
     /**
      * Execute the console command.
@@ -34,10 +34,8 @@ class FixFilenamesCommand extends Command
         foreach ($fotos as $foto) {
             $directory = $foto->id;
             $expectedFilename = $foto->filename;
-            $actualFilenamePattern = '0%.png'; // Assuming this is the common problematic filename
 
             $expectedPath = $directory . '/' . $expectedFilename;
-            $actualProblematicPath = $directory . '/' . $actualFilenamePattern;
 
             // Check if the expected file already exists on disk
             if (Storage::disk('public')->exists($expectedPath)) {
@@ -45,23 +43,33 @@ class FixFilenamesCommand extends Command
                 continue;
             }
 
-            // If the expected file doesn't exist, check for the problematic file
-            if (Storage::disk('public')->exists($actualProblematicPath)) {
+            // List all files in the foto's directory
+            $filesInDirectory = Storage::disk('public')->files($directory);
+
+            $actualProblematicFilename = null;
+            foreach ($filesInDirectory as $filePath) {
+                $filename = basename($filePath);
+                if ($filename !== $expectedFilename) {
+                    $actualProblematicFilename = $filename;
+                    break; // Assuming only one problematic file per directory
+                }
+            }
+
+            if ($actualProblematicFilename) {
+                $actualProblematicPath = $directory . '/' . $actualProblematicFilename;
                 try {
                     Storage::disk('public')->move($actualProblematicPath, $expectedPath);
                     $this->info("Renamed file for ID {$foto->id}: {$actualProblematicPath} -> {$expectedPath}");
 
-                    // Update the database entry if the filename was different (e.g., if it was 0%.png in DB)
-                    if ($foto->filename !== $expectedFilename) {
-                        $foto->filename = $expectedFilename;
-                        $foto->save();
-                        $this->info("Updated database entry for ID {$foto->id} to: {$expectedFilename}");
-                    }
+                    // No need to update $foto->filename as it's already the expected one
+                    // $foto->filename = $expectedFilename; // This line is redundant if $foto->filename is already correct
+                    // $foto->save(); // This line is also redundant if no change to $foto->filename
+
                 } catch (\Exception $e) {
                     $this->error("Error renaming file for ID {$foto->id}: " . $e->getMessage());
                 }
             } else {
-                $this->warn("No matching file found for ID {$foto->id} (expected: {$expectedPath}, found: {$actualProblematicPath})");
+                $this->warn("No problematic file found for ID {$foto->id} (expected: {$expectedPath}). Directory content: " . implode(', ', $filesInDirectory));
             }
         }
 
