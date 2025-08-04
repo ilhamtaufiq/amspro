@@ -234,17 +234,6 @@ class PekerjaanController extends Controller
         })->toArray();
 
         $fotos = $pekerjaan->fotos->map(function ($foto) {
-            $media = $foto->getFirstMedia('foto/pekerjaan');
-            $photo_base64 = null;
-            if ($media) {
-                $path = $media->getPath();
-                if (file_exists($path)) {
-                    $type = pathinfo($path, PATHINFO_EXTENSION);
-                    $data = file_get_contents($path);
-                    $photo_base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                }
-            }
-
             return [
                 'id' => $foto->id,
                 'pekerjaan_id' => $foto->pekerjaan_id,
@@ -258,7 +247,6 @@ class PekerjaanController extends Controller
                 'photo_url' => $foto->getFirstMediaUrl('foto/pekerjaan'),
                 'photo_thumb_url' => $foto->getFirstMediaUrl('foto/pekerjaan', 'thumb'),
                 'photo_medium_url' => $foto->getFirstMediaUrl('foto/pekerjaan', 'medium'),
-                'photo_base64' => $photo_base64,
                 'komponen_nama' => $foto->output ? $foto->output->komponen : null,
                 'penerima_nama' => $foto->penerima ? $foto->penerima->nama : null,
             ];
