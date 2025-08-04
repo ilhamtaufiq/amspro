@@ -6,6 +6,7 @@ use App\Models\Berkas;
 use App\Models\Pekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class BerkasController extends Controller
 {
@@ -32,6 +33,7 @@ class BerkasController extends Controller
 
             if ($request->hasFile('file')) {
                 $berkas->addMediaFromRequest('file')
+                       ->usingFileName(Str::random(40) . '.' . $request->file('file')->getClientOriginalExtension())
                        ->toMediaCollection('berkas/dokumen');
             }
 

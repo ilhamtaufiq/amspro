@@ -3,9 +3,6 @@
         Options -MultiViews -Indexes
     </IfModule>
 
-    # Allow encoded slashes in URLs
-    AllowEncodedSlashes On
-
     RewriteEngine On
 
     # Handle Authorization Header

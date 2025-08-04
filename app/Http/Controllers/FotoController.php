@@ -8,6 +8,7 @@ use App\Models\Penerima;
 use App\Models\Output;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class FotoController extends Controller
@@ -57,7 +58,9 @@ class FotoController extends Controller
         $foto->save();
 
         if ($request->hasFile('photo')) {
-            $foto->addMediaFromRequest('photo')->toMediaCollection('foto/pekerjaan');
+            $foto->addMediaFromRequest('photo')
+                 ->usingFileName(Str::random(40) . '.' . $request->file('photo')->getClientOriginalExtension())
+                 ->toMediaCollection('foto/pekerjaan');
         }
 
         return redirect()->back()->with('success', 'Foto berhasil diunggah.');
