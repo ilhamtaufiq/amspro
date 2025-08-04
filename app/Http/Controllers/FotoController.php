@@ -138,7 +138,17 @@ class FotoController extends Controller
 
             foreach ($group as $foto) {
                 if (in_array($foto->keterangan, ['0%', '25%', '50%', '75%', '100%'])) {
-                    $data['fotos'][$foto->keterangan] = $foto->getFirstMediaUrl('foto/pekerjaan');
+                    $media = $foto->getFirstMedia('foto/pekerjaan');
+                    $photo_base64 = null;
+                    if ($media) {
+                        $path = $media->getPath();
+                        if (file_exists($path)) {
+                            $type = pathinfo($path, PATHINFO_EXTENSION);
+                            $data = file_get_contents($path);
+                            $photo_base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                        }
+                    }
+                    $data['fotos'][$foto->keterangan] = $photo_base64;
                 }
             }
             return $data;

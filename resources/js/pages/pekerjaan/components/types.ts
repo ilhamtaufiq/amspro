@@ -67,6 +67,7 @@ export interface Foto {
   photo_url: string;
   photo_thumb_url: string;
   photo_medium_url: string;
+  photo_base64: string | null;
   komponen_nama: string | null;
   penerima_nama: string | null;
   validasi_koordinat: boolean | undefined;
