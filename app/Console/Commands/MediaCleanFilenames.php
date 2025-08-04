@@ -55,6 +55,13 @@ class MediaCleanFilenames extends Command
             $newDiskPath = $directoryOnDisk . '/' . $newFileName;
 
             try {
+                $this->info("Attempting to move file: {$oldDiskPath} to {$newDiskPath} on disk {$disk}");
+                if (Storage::disk($disk)->exists($oldDiskPath)) {
+                    $this->info("File exists on disk: {$oldDiskPath}");
+                } else {
+                    $this->error("File DOES NOT exist on disk: {$oldDiskPath}");
+                }
+
                 if (Storage::disk($disk)->exists($oldDiskPath)) {
                     Storage::disk($disk)->move($oldDiskPath, $newDiskPath);
 
