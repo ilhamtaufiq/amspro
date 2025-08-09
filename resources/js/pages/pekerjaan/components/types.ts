@@ -62,9 +62,10 @@ export interface Foto {
   pekerjaan_id: number;
   komponen_id: number;
   penerima_id: number | null;
+  unit: string | null;
   keterangan: string;
   koordinat: string;
-  created_at: string;
+  created_at: string | null;
   photo_url: string;
   photo_thumb_url: string;
   photo_medium_url: string;
@@ -82,7 +83,7 @@ export interface Progress {
   komponen_nama: string | null;
   realisasi_fisik: number;
   output_volume: number | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface Output {
@@ -91,7 +92,9 @@ export interface Output {
   komponen: string;
   satuan: string;
   volume: number;
-  created_at: string;
+  unit: string | null;
+  penerima_is_optional: boolean;
+  created_at: string | null;
 }
 
 export interface OutcomeData {
@@ -141,7 +144,7 @@ export interface Berkas {
   id: number;
   pekerjaan_id: number;
   jenis_dokumen: string;
-  created_at: string;
+  created_at: string | null;
   file_url: string;
 }
 

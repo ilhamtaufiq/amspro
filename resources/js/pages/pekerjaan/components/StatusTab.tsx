@@ -105,12 +105,12 @@ export function StatusTab({ pekerjaan, kontrak, keuangan, progresses, outputs }:
         status = completionPercent >= 100 ? "Selesai" : "Dalam Proses";
         const latestProgress = relatedProgresses.reduce(
           (latest, progress) =>
-            !latest || new Date(progress.created_at) > new Date(latest.created_at)
+            !latest || (progress.created_at && latest.created_at && new Date(progress.created_at) > new Date(latest.created_at))
               ? progress
               : latest,
           null as ProgressType | null
         );
-        if (latestProgress) {
+        if (latestProgress && latestProgress.created_at) {
           try {
             const progressDate = new Date(latestProgress.created_at);
             if (!isNaN(progressDate.getTime())) {

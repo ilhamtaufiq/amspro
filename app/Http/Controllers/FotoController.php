@@ -36,7 +36,7 @@ class FotoController extends Controller
      */
     public function store(Request $request, Pekerjaan $pekerjaan)
     {
-        $request->validate([
+        $validated = $request->validate([
             'photo' => 'required|image|max:5120', // Max 5MB
             'keterangan' => 'required|string|in:0%,25%,50%,75%,100%',
             'komponen_id' => 'required|exists:tbl_output,id',
@@ -46,15 +46,8 @@ class FotoController extends Controller
             'validasi_koordinat_message' => 'nullable|string',
         ]);
 
-        $foto = new Foto([
-            'pekerjaan_id' => $pekerjaan->id,
-            'keterangan' => $request->keterangan,
-            'komponen_id' => $request->komponen_id,
-            'penerima_id' => $request->penerima_id,
-            'koordinat' => $request->koordinat,
-            'validasi_koordinat' => $request->validasi_koordinat,
-            'validasi_koordinat_message' => $request->validasi_koordinat_message,
-        ]);
+        $foto = new Foto($validated);
+        $foto->pekerjaan_id = $pekerjaan->id;
         $foto->save();
 
         if ($request->hasFile('photo')) {
@@ -91,7 +84,32 @@ class FotoController extends Controller
      */
     public function update(Request $request, Pekerjaan $pekerjaan, Foto $foto)
     {
-        // Not typically used
+        $validated = $request->validate([
+            'photo' => 'sometimes|image|max:5120', // Max 5MB, optional
+            'keterangan' => 'required|string|in:0%,25%,50%,75%,100%',
+            'komponen_id' => 'required|exists:tbl_output,id',
+            'penerima_id' => 'nullable|exists:tbl_penerima,id',
+            'unit_penerima_text' => 'nullable|string|max:255',
+            'koordinat' => 'required|string',
+            'validasi_koordinat' => 'boolean',
+            'validasi_koordinat_message' => 'nullable|string',
+        ]);
+
+        $output = Output::find($validated['komponen_id']);
+        if ($output && !$output->penerima_is_optional && empty($validated['penerima_id'])) {
+            return back()->withErrors(['penerima_id' => 'Penerima harus dipilih untuk komponen ini.'])->withInput();
+        }
+
+        $foto->update($validated);
+
+        if ($request->hasFile('photo')) {
+            $foto->clearMediaCollection('foto/pekerjaan');
+            $foto->addMediaFromRequest('photo')
+                 ->usingFileName(Str::random(40) . '.' . $request->file('photo')->getClientOriginalExtension())
+                 ->toMediaCollection('foto/pekerjaan');
+        }
+
+        return redirect()->back()->with('success', 'Foto berhasil diperbarui.');
     }
 
     /**

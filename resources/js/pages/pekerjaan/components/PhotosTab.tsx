@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, ChevronsUpDown, Trash2, Loader2, FileDown } from "lucide-react";
+import { Check, ChevronsUpDown, Trash2, Loader2, FileDown, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
     Command,
@@ -20,9 +20,9 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogOverlay, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MapSelector from "@/components/MapSelector";
-import type { PageProps } from "./types";
+import type { PageProps, Foto, Output } from "./types";
 
 
 export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash, initialLat, initialLng }: PageProps & { initialLat?: number; initialLng?: number; }) {
@@ -34,16 +34,37 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
     const [isMapSelectionOpen, setIsMapSelectionOpen] = useState(false); // State for map selection dialog
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // State for delete confirmation dialog
     const [fotoToDeleteId, setFotoToDeleteId] = useState<number | null>(null); // State to store the ID of the photo to be deleted
+    const [editingFoto, setEditingFoto] = useState<Foto | null>(null); // State for editing foto
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
+    const [selectedOutput, setSelectedOutput] = useState<Output | null>(null);
 
     const { data, setData, post, processing, reset, errors: formErrors, setError, clearErrors } = useForm({
         photo: null as File | null,
         keterangan: "0%",
         komponen_id: "",
         penerima_id: null as string | null,
+        unit: "",
         koordinat: "",
         validasi_koordinat: true,
         validasi_koordinat_message: "",
     });
+
+    const { data: editData, setData: setEditData, post: updatePost, processing: editProcessing, errors: editErrors, reset: resetEditForm } = useForm({
+        photo: null as File | null,
+        keterangan: "",
+        komponen_id: "",
+        penerima_id: null as string | null,
+        unit: "",
+        koordinat: "",
+        validasi_koordinat: true,
+        validasi_koordinat_message: "",
+        _method: 'PUT'
+    });
+
+    useEffect(() => {
+        const output = outputs.find(o => o.id.toString() === data.komponen_id) || null;
+        setSelectedOutput(output);
+    }, [data.komponen_id, outputs]);
 
     const handleConfirmDelete = () => {
         if (fotoToDeleteId !== null) {
@@ -67,10 +88,79 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
         }
     };
 
+    const handleEdit = (foto: Foto) => {
+        setEditingFoto(foto);
+        setEditData("photo", null);
+        setEditData("keterangan", foto.keterangan);
+        setEditData("komponen_id", foto.komponen_id.toString());
+        setEditData("penerima_id", foto.penerima_id?.toString() || null);
+        setEditData("unit", foto.unit || "");
+        setEditData("koordinat", foto.koordinat);
+        setEditData("validasi_koordinat", foto.validasi_koordinat ?? true);
+        setEditData("validasi_koordinat_message", foto.validasi_koordinat_message ?? "");
+        setIsEditDialogOpen(true);
+    };
+
+    const handleUpdateSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingFoto) return;
+
+        const isEditPenerimaOptional = isPenerimaOptional(editData.komponen_id);
+
+        // Create a new FormData object to handle file upload properly
+        const formData = new FormData();
+        
+        // Only add photo if a new one is selected
+        if (editData.photo) {
+            formData.append('photo', editData.photo);
+        }
+        
+        // Add other fields
+        formData.append('keterangan', editData.keterangan);
+        formData.append('komponen_id', editData.komponen_id);
+        
+        if (isEditPenerimaOptional) {
+            formData.append('penerima_id', ''); // Send empty string or null if optional
+            formData.append('unit', editData.unit);
+        } else {
+            if (editData.penerima_id) {
+                formData.append('penerima_id', editData.penerima_id);
+            } else {
+                // Set error if penerima is not optional and not selected
+                setEditData('penerima_id', ''); // Clear penerima_id to trigger validation
+                alert('Penerima harus dipilih untuk komponen ini.'); // Or use a more sophisticated error display
+                return;
+            }
+            formData.append('unit', ''); // Clear unit if not optional
+        }
+
+        formData.append('koordinat', editData.koordinat);
+        formData.append('validasi_koordinat', editData.validasi_koordinat ? '1' : '0');
+        formData.append('validasi_koordinat_message', editData.validasi_koordinat_message);
+        formData.append('_method', 'PUT');
+
+        // Use router.post instead of updatePost to handle FormData
+        router.post(route("fotos.update", [pekerjaan.id, editingFoto.id]), formData, {
+            onSuccess: () => {
+                setIsEditDialogOpen(false);
+                resetEditForm();
+            },
+            onError: (err) => {
+                console.error("Error updating photo:", err);
+                alert("Gagal memperbarui foto: " + JSON.stringify(err));
+            }
+        });
+    };
+
     // State for Combobox open/closed
     const [keteranganOpen, setKeteranganOpen] = useState(false);
     const [komponenOpen, setKomponenOpen] = useState(false);
     const [penerimaOpen, setPenerimaOpen] = useState(false);
+    
+    // State for Edit Dialog Combobox open/closed
+    const [editKeteranganOpen, setEditKeteranganOpen] = useState(false);
+    const [editKomponenOpen, setEditKomponenOpen] = useState(false);
+    const [editPenerimaOpen, setEditPenerimaOpen] = useState(false);
 
     const keteranganOptions = [
         { value: "0%", label: "0%" },
@@ -91,8 +181,8 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
     ];
 
     // Cek apakah penerima opsional
-    const isPenerimaOptional = () => {
-      const selectedKomponen = outputs.find((output) => output.id.toString() === data.komponen_id)?.komponen || '';
+    const isPenerimaOptional = (komponenId: string | null) => {
+      const selectedKomponen = outputs.find((output) => output.id.toString() === komponenId)?.komponen || '';
       return komponenOpsional.some((nama) => selectedKomponen.toLowerCase().includes(nama.toLowerCase()));
     };
 
@@ -164,11 +254,18 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Validasi penerima jika diperlukan
-        if (!isPenerimaOptional() && !data.penerima_id) {
+
+        const dataToSubmit = {
+            ...data,
+            penerima_id: isPenerimaOptional(data.komponen_id) ? null : data.penerima_id,
+            unit: isPenerimaOptional(data.komponen_id) ? data.unit : "",
+        };
+
+        if (!isPenerimaOptional(data.komponen_id) && !dataToSubmit.penerima_id) {
           setError('penerima_id', 'Penerima harus dipilih untuk komponen ini.');
           return;
         }
+
         post(route("fotos.store", pekerjaan.id), {
             preserveState: true,
             preserveScroll: true,
@@ -178,7 +275,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                     alert(flash.success);
                 }
             },
-            onError: (err) => {
+            onError: (err: any) => {
                 console.error("Error uploading photo:", err);
                 alert("Gagal mengunggah foto: " + JSON.stringify(err));
             },
@@ -330,7 +427,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                             {formErrors.komponen_id && <span className="text-red-500 text-sm">{formErrors.komponen_id}</span>}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="penerima_id">Penerima {isPenerimaOptional() ? '(Opsional)' : '(Wajib)'}</Label>
+                            <Label htmlFor="penerima_id">Penerima {isPenerimaOptional(data.komponen_id) ? '(Opsional)' : '(Wajib)'}</Label>
                             <Popover open={penerimaOpen} onOpenChange={setPenerimaOpen}>
                                 <PopoverTrigger asChild>
                                     <Button
@@ -393,6 +490,18 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                             </Popover>
                             {formErrors.penerima_id && <span className="text-red-500 text-sm">{formErrors.penerima_id}</span>}
                         </div>
+                        {isPenerimaOptional(data.komponen_id) && (
+                            <div className="space-y-2">
+                                <Label htmlFor="unit">Unit (Opsional)</Label>
+                                <Input
+                                    id="unit"
+                                    value={data.unit}
+                                    onChange={(e) => setData("unit", e.target.value)}
+                                    placeholder="Contoh: Unit A, Unit B, dll"
+                                />
+                                {formErrors.unit && <span className="text-red-500 text-sm">{formErrors.unit}</span>}
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <Label htmlFor="koordinat">Koordinat</Label>
                             <div className="flex gap-2">
@@ -651,7 +760,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                         </TableCell>
                                         <TableCell>{foto.keterangan}</TableCell>
                                         <TableCell>{foto.komponen_nama || "N/A"}</TableCell>
-                                        <TableCell>{foto.penerima_nama || "N/A"}</TableCell>
+                                        <TableCell>{foto.penerima_nama || foto.unit || "N/A"}</TableCell>
                                         <TableCell>{foto.koordinat}</TableCell>
                                         <TableCell>
                                             {foto.validasi_koordinat === undefined ? (
@@ -662,7 +771,10 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                                 <span className="text-red-600">{foto.validasi_koordinat_message || "Tidak Sesuai"}</span>
                                             )}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="space-x-2">
+                                            <Button variant="outline" size="sm" onClick={() => handleEdit(foto)}>
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
                                             <Button variant="destructive" size="sm" onClick={() => handleDelete(foto.id)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
@@ -745,6 +857,245 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                             Hapus
                         </Button>
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Foto</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleUpdateSubmit} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-photo">Ubah Foto (Opsional)</Label>
+                                <Input
+                                    id="edit-photo"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/gif"
+                                    onChange={(e) => setEditData("photo", e.target.files?.[0] || null)}
+                                />
+                                {editErrors.photo && <span className="text-red-500 text-sm">{editErrors.photo}</span>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-keterangan">Keterangan (Opsional)</Label>
+                                <Popover open={editKeteranganOpen} onOpenChange={setEditKeteranganOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={editKeteranganOpen}
+                                            className="w-full justify-between"
+                                        >
+                                            {editData.keterangan
+                                                ? keteranganOptions.find((opt) => opt.value === editData.keterangan)?.label
+                                                : "Pilih Keterangan..."}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Cari keterangan..." />
+                                            <CommandList>
+                                                <CommandEmpty>Tidak ada keterangan ditemukan.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {keteranganOptions.map((opt) => (
+                                                        <CommandItem
+                                                            key={opt.value}
+                                                            value={opt.value}
+                                                            onSelect={(currentValue) => {
+                                                                setEditData("keterangan", currentValue);
+                                                                setEditKeteranganOpen(false);
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    editData.keterangan === opt.value ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                            {opt.label}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                                {editErrors.keterangan && <span className="text-red-500 text-sm">{editErrors.keterangan}</span>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-komponen">Komponen (Opsional)</Label>
+                                <Popover open={editKomponenOpen} onOpenChange={setEditKomponenOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={editKomponenOpen}
+                                            className="w-full justify-between"
+                                        >
+                                            {editData.komponen_id
+                                                ? outputs.find((output) => output.id.toString() === editData.komponen_id)?.komponen
+                                                : "Pilih Komponen..."}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Cari komponen..." />
+                                            <CommandList>
+                                                <CommandEmpty>Tidak ada komponen ditemukan.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {outputs.map((output) => (
+                                                        <CommandItem
+                                                            key={output.id}
+                                                            value={output.id.toString()}
+                                                            onSelect={(currentValue) => {
+                                                                setEditData("komponen_id", currentValue);
+                                                                setEditKomponenOpen(false);
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    editData.komponen_id === output.id.toString() ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                            {output.komponen}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                                {editErrors.komponen_id && <span className="text-red-500 text-sm">{editErrors.komponen_id}</span>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-penerima">Penerima {isPenerimaOptional(editData.komponen_id) ? '(Opsional)' : '(Wajib)'}</Label>
+                                <Popover open={editPenerimaOpen} onOpenChange={setEditPenerimaOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={editPenerimaOpen}
+                                            className="w-full justify-between"
+                                        >
+                                            {editData.penerima_id
+                                                ? penerimas.find((penerima) => penerima.id.toString() === editData.penerima_id)?.nama
+                                                : editData.penerima_id === "none"
+                                                    ? "Tidak Ada"
+                                                    : "Pilih Penerima..."}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Cari penerima..." />
+                                            <CommandList>
+                                                <CommandEmpty>Tidak ada penerima ditemukan.</CommandEmpty>
+                                                <CommandGroup>
+                                                    <CommandItem
+                                                        value="none"
+                                                        onSelect={() => {
+                                                            setEditData("penerima_id", null);
+                                                            setEditPenerimaOpen(false);
+                                                        }}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                editData.penerima_id === null ? "opacity-100" : "opacity-0"
+                                                            )}
+                                                        />
+                                                        Tidak Ada
+                                                    </CommandItem>
+                                                    {penerimas.map((penerima) => (
+                                                        <CommandItem
+                                                            key={penerima.id}
+                                                            value={penerima.id.toString()}
+                                                            onSelect={(currentValue) => {
+                                                                setEditData("penerima_id", currentValue);
+                                                                setEditPenerimaOpen(false);
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    editData.penerima_id === penerima.id.toString() ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                            {penerima.nama}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                                {editErrors.penerima_id && <span className="text-red-500 text-sm">{editErrors.penerima_id}</span>}
+                            </div>
+                            {isPenerimaOptional(editData.komponen_id) && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-unit">Unit (Opsional)</Label>
+                                    <Input
+                                        id="edit-unit"
+                                        value={editData.unit || ""}
+                                        onChange={(e) => setEditData("unit", e.target.value)}
+                                        placeholder="Contoh: Unit A, Unit B, dll"
+                                    />
+                                    {editErrors.unit && <span className="text-red-500 text-sm">{editErrors.unit}</span>}
+                                </div>
+                            )}
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="edit-koordinat">Koordinat</Label>
+                                <div className="flex gap-2">
+                                <Input
+                                    id="edit-koordinat"
+                                    value={editData.koordinat}
+                                        placeholder="Contoh: -6.786978, 107.167854"
+                                        disabled
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={handleGetCoordinates}
+                                        disabled={isGettingCoordinates || isGeocodingLoading}
+                                    >
+                                        {isGettingCoordinates ? (
+                                            <span className="flex items-center gap-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Mendapatkan...
+                                            </span>
+                                        ) : isGeocodingLoading ? (
+                                            <span className="flex items-center gap-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Mencari Lokasi...
+                                            </span>
+                                        ) : (
+                                            "Dapatkan Koordinat"
+                                        )}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setIsMapSelectionOpen(true)}
+                                    >
+                                        Pilih di Peta
+                                    </Button>
+                                </div>
+                                {editErrors.koordinat && <span className="text-red-500 text-sm">{editErrors.koordinat}</span>}
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={editProcessing}>
+                                {editProcessing ? "Menyimpan..." : "Simpan Perubahan"}
+                            </Button>
+                        </div>
+                    </form>
                 </DialogContent>
             </Dialog>
         </Card>

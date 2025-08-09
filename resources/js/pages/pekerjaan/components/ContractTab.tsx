@@ -421,7 +421,7 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
                       {berkas.jenis_dokumen}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Diunggah: {new Date(berkas.created_at).toLocaleDateString()}
+                      Diunggah: {berkas.created_at ? new Date(berkas.created_at).toLocaleDateString() : 'N/A'}
                     </p>
                     <a
                       href={berkas.file_url}

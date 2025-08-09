@@ -45,7 +45,7 @@
         <div class="flex-center position-ref full-height">
             <div class="content">
                 <div class="title">
-                    <img src="https://http.cat/@yield('code')" alt="@yield('code')">
+                    <img src="https://http.cat/@yield('code')" alt="@yield('code')"> </br>
                     @yield('message')
                 </div>
             </div>

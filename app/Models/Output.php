@@ -13,6 +13,8 @@ class Output extends Model
         'komponen',
         'satuan',
         'volume',
+        'unit',
+        'penerima_is_optional',
     ];
 
 }
