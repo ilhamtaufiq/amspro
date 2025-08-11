@@ -65,24 +65,13 @@ export default function PenyediaIndex({ auth, penyedia, meta, search }: Penyedia
     };
 
     return (
-        <AuthenticatedLayout user={user}
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">Daftar Penyedia</h2>
-                    {auth.user?.permissions?.includes('create penyedia') && (
-                        <Link href={route('penyedia.create')}>
-                            <Button>Tambah Penyedia</Button>
-                        </Link>
-                    )}
-                </div>
-            }
-        >
+        <AuthenticatedLayout user={user} header="Daftar Penyedia">
             <Head title="Daftar Penyedia" />
-
             <div className="py-12">
+            
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="mx-auto py-10">
-                        <DataTable columns={columns(handleDeletePenyedia)} data={penyedia} meta={meta} search={search} />
+                    <DataTable columns={columns(handleDeletePenyedia)} data={penyedia} meta={meta} search={search} auth={auth} />
                     </div>
                 </div>
             </div>

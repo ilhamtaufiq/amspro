@@ -20,7 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { router } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
+import { PageProps } from "@/types";
 import { Loader2, ChevronDown } from "lucide-react";
 import {
     DropdownMenu,
@@ -44,6 +45,7 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
     meta: Meta;
     search: string;
+    auth: PageProps['auth'];
 }
 
 export function DataTable<TData, TValue>({
@@ -51,6 +53,7 @@ export function DataTable<TData, TValue>({
     data: initialData,
     meta,
     search: initialSearch,
+    auth,
 }: DataTableProps<TData, TValue>) {
     const [data, setData] = useState<TData[]>(initialData);
     const [sorting, setSorting] = useState<SortingState>([]);
@@ -85,7 +88,7 @@ export function DataTable<TData, TValue>({
     const performSearch = (value: string) => {
         setIsSearching(true);
         router.get(
-            "/penyedia",
+            route("penyedia.index"),
             { search: value, page: 1 },
             { preserveState: true, preserveScroll: true }
         );
@@ -110,7 +113,7 @@ export function DataTable<TData, TValue>({
 
     const handlePageChange = (page: number) => {
         router.get(
-            "/penyedia",
+            route("penyedia.index"),
             { search, page },
             { preserveState: true, preserveScroll: true }
         );
@@ -133,16 +136,23 @@ export function DataTable<TData, TValue>({
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <div className="relative">
-                    <Input
-                        placeholder="Cari nama, direktur, atau no. akta..."
-                        value={search}
-                        onChange={handleSearch}
-                        onKeyDown={handleKeyDown}
-                        className="max-w-sm pr-8"
-                    />
-                    {isSearching && (
-                        <Loader2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                <div className="flex items-center space-x-4">
+                    <div className="relative">
+                        <Input
+                            placeholder="Cari nama, direktur, atau no. akta..."
+                            value={search}
+                            onChange={handleSearch}
+                            onKeyDown={handleKeyDown}
+                            className="max-w-sm pr-8"
+                        />
+                        {isSearching && (
+                            <Loader2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                    </div>
+                    {auth.user?.permissions?.includes('create penyedia') && (
+                        <Link href={route('penyedia.create')}>
+                            <Button>Tambah Penyedia</Button>
+                        </Link>
                     )}
                 </div>
                 <DropdownMenu>
