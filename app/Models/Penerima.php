@@ -16,7 +16,12 @@ class Penerima extends Model
         'nik',
         'jumlah_jiwa',
         'alamat',
+        'is_komunal',
     ];
+    protected $casts = [
+        'is_komunal' => 'boolean',
+    ];
+
     public function pekerjaan(): BelongsTo
     {
         return $this->belongsTo(Pekerjaan::class);

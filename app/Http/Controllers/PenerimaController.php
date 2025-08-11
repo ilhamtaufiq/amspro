@@ -133,26 +133,44 @@ class PenerimaController extends Controller
      */
     public function store(Request $request, $pekerjaanId)
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'nik' => 'required|string|max:16|unique:tbl_penerima,nik',
-            'jumlah_jiwa' => 'required|integer|min:1',
-            'alamat' => 'required|string|max:255',
+       // Cek apakah komunal atau individual
+    $is_komunal = $request->input('is_komunal', false);
+    
+    // Base validation rules
+    $rules = [
+        'nama' => 'required|string|max:255',
+        'is_komunal' => 'boolean',
+    ];
+    
+    // Conditional validation berdasarkan tipe penerima
+    if (!$is_komunal) {
+        // Untuk penerima individual
+        $rules['nik'] = 'required|string|size:16|regex:/^\d{16}$/|unique:tbl_penerima,nik';
+        $rules['jumlah_jiwa'] = 'required|integer|min:1';
+        $rules['alamat'] = 'required|string|max:255';
+    } else {
+        // Untuk penerima komunal
+        $rules['nik'] = 'nullable|string|size:16|regex:/^\d{16}$/|unique:tbl_penerima,nik';
+        $rules['jumlah_jiwa'] = 'nullable|integer';
+        $rules['alamat'] = 'nullable|string|max:255';
+    }
+    
+    $validated = $request->validate($rules);
+
+    try {
+        Penerima::create([
+            'pekerjaan_id' => $pekerjaanId,
+            'nama' => $validated['nama'],
+            'nik' => $validated['nik'] ?? null,
+            'jumlah_jiwa' => $validated['jumlah_jiwa'] ?? null,
+            'alamat' => $validated['alamat'] ?? null,
+            'is_komunal' => $is_komunal,
         ]);
 
-        try {
-            Penerima::create([
-                'pekerjaan_id' => $pekerjaanId,
-                'nama' => $validated['nama'],
-                'nik' => $validated['nik'],
-                'jumlah_jiwa' => $validated['jumlah_jiwa'],
-                'alamat' => $validated['alamat'],
-            ]);
-
-            return redirect()->back()->with('success', 'Penerima berhasil ditambahkan.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menambahkan penerima: ' . $e->getMessage());
-        }
+        return redirect()->back()->with('success', 'Penerima berhasil ditambahkan.');
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Gagal menambahkan penerima: ' . $e->getMessage());
+    }
     }
 
     /**
@@ -177,17 +195,50 @@ class PenerimaController extends Controller
 
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'nik' => 'required|string|max:16|unique:tbl_penerima,nik,' . $penerima->id,
-            'jumlah_jiwa' => 'required|integer|min:1',
-            'alamat' => 'required|string|max:255',
+            'is_komunal' => 'boolean',
+            'nik' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:16',
+                'unique:tbl_penerima,nik,' . $penerima->id,
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!$request->input('is_komunal') && empty($value)) {
+                        $fail('The ' . str_replace('_', ' ', $attribute) . ' field is required.');
+                    }
+                },
+            ],
+            'jumlah_jiwa' => [
+                'sometimes',
+                'nullable',
+                'integer',
+                'min:1',
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!$request->input('is_komunal') && (empty($value) || $value < 1)) {
+                        $fail('The ' . str_replace('_', ' ', $attribute) . ' field must be at least 1.');
+                    }
+                },
+            ],
+            'alamat' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) use ($request) {
+                    if (!$request->input('is_komunal') && empty($value)) {
+                        $fail('The ' . str_replace('_', ' ', $attribute) . ' field is required.');
+                    }
+                },
+            ],
         ]);
 
         try {
             $penerima->update([
                 'nama' => $validated['nama'],
-                'nik' => $validated['nik'],
-                'jumlah_jiwa' => $validated['jumlah_jiwa'],
-                'alamat' => $validated['alamat'],
+                'nik' => $validated['nik'] ?? null,
+                'jumlah_jiwa' => $validated['jumlah_jiwa'] ?? null,
+                'alamat' => $validated['alamat'] ?? null,
+                'is_komunal' => $validated['is_komunal'],
             ]);
 
             return redirect()->back()->with('success', 'Penerima berhasil diperbarui.');

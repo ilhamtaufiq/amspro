@@ -283,6 +283,7 @@ class PekerjaanController extends Controller
                 'jumlah_jiwa' => $penerima->jumlah_jiwa,
                 'nik' => $penerima->nik,
                 'alamat' => $penerima->alamat,
+                'is_komunal' => $penerima->is_komunal,
                 'created_at' => $penerima->created_at ? $penerima->created_at->toDateTimeString() : null,
                 'updated_at' => $penerima->updated_at ? $penerima->updated_at->toDateTimeString() : null,
             ];

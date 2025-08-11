@@ -22,10 +22,11 @@ import {
 import { Dialog, DialogContent, DialogOverlay, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import MapSelector from "@/components/MapSelector";
-import type { PageProps, Foto, Output } from "./types";
+import type { PageProps, Foto, Output, Penerima } from "./types";
 
 
 export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash, initialLat, initialLng }: PageProps & { initialLat?: number; initialLng?: number; }) {
+    // console.log("penerimas prop:", penerimas);
     const [isGettingCoordinates, setIsGettingCoordinates] = useState(false);
     const [desaName, setDesaName] = useState<string | null>(null);
     const [kecamatanName, setKecamatanName] = useState<string | null>(null);
@@ -36,14 +37,12 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
     const [fotoToDeleteId, setFotoToDeleteId] = useState<number | null>(null); // State to store the ID of the photo to be deleted
     const [editingFoto, setEditingFoto] = useState<Foto | null>(null); // State for editing foto
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for edit dialog
-    const [selectedOutput, setSelectedOutput] = useState<Output | null>(null);
 
     const { data, setData, post, processing, reset, errors: formErrors, setError, clearErrors } = useForm({
         photo: null as File | null,
         keterangan: "0%",
         komponen_id: "",
         penerima_id: null as string | null,
-        unit: "",
         koordinat: "",
         validasi_koordinat: true,
         validasi_koordinat_message: "",
@@ -54,17 +53,38 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
         keterangan: "",
         komponen_id: "",
         penerima_id: null as string | null,
-        unit: "",
         koordinat: "",
-        validasi_koordinat: true,
+        validasi_koordinat: null as boolean | null,
         validasi_koordinat_message: "",
         _method: 'PUT'
     });
 
+    const communalComponentNames = ["IPAL", "Tangki Septik Komunal", "Broncaptering", "Reservoir", "Pipa", "Pompa"];
+
     useEffect(() => {
-        const output = outputs.find(o => o.id.toString() === data.komponen_id) || null;
-        setSelectedOutput(output);
-    }, [data.komponen_id, outputs]);
+        const selectedOutput = outputs.find(o => o.id.toString() === data.komponen_id) || null;
+        if (selectedOutput) {
+            const isCommunal = communalComponentNames.includes(selectedOutput.komponen);
+            const selectedPenerima = penerimas.find(p => p.id.toString() === data.penerima_id);
+            if (selectedPenerima && selectedPenerima.is_komunal !== isCommunal) {
+                setData('penerima_id', null);
+            }
+        } else {
+             setData('penerima_id', null);
+        }
+    }, [data.komponen_id, penerimas, outputs]);
+
+    useEffect(() => {
+        const selectedOutput = outputs.find((output) => output.id.toString() === editData.komponen_id);
+        if (selectedOutput) {
+            const isCommunal = communalComponentNames.includes(selectedOutput.komponen);
+            const selectedPenerima = penerimas.find(p => p.id.toString() === editData.penerima_id);
+            if (selectedPenerima && selectedPenerima.is_komunal !== isCommunal) {
+                setEditData('penerima_id', null);
+            }
+        }
+    }, [editData.komponen_id, penerimas, outputs]);
+
 
     const handleConfirmDelete = () => {
         if (fotoToDeleteId !== null) {
@@ -93,10 +113,9 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
         setEditData("photo", null);
         setEditData("keterangan", foto.keterangan);
         setEditData("komponen_id", foto.komponen_id.toString());
-        setEditData("penerima_id", foto.penerima_id?.toString() || null);
-        setEditData("unit", foto.unit || "");
+        setEditData("penerima_id", foto.penerima_id?.toString() ?? null);
         setEditData("koordinat", foto.koordinat);
-        setEditData("validasi_koordinat", foto.validasi_koordinat ?? true);
+        setEditData("validasi_koordinat", foto.validasi_koordinat ?? null);
         setEditData("validasi_koordinat_message", foto.validasi_koordinat_message ?? "");
         setIsEditDialogOpen(true);
     };
@@ -107,39 +126,38 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
 
         const isEditPenerimaOptional = isPenerimaOptional(editData.komponen_id);
 
-        // Create a new FormData object to handle file upload properly
         const formData = new FormData();
         
-        // Only add photo if a new one is selected
+        for (const key in editData) {
+            if (key !== 'photo' && key !== 'validasi_koordinat' && key !== 'validasi_koordinat_message' && (editData as any)[key] !== null) {
+                formData.append(key, (editData as any)[key]);
+            }
+        }
+
         if (editData.photo) {
             formData.append('photo', editData.photo);
         }
         
-        // Add other fields
-        formData.append('keterangan', editData.keterangan);
-        formData.append('komponen_id', editData.komponen_id);
-        
         if (isEditPenerimaOptional) {
-            formData.append('penerima_id', ''); // Send empty string or null if optional
-            formData.append('unit', editData.unit);
+            formData.delete('penerima_id');
         } else {
             if (editData.penerima_id) {
                 formData.append('penerima_id', editData.penerima_id);
             } else {
-                // Set error if penerima is not optional and not selected
-                setEditData('penerima_id', ''); // Clear penerima_id to trigger validation
-                alert('Penerima harus dipilih untuk komponen ini.'); // Or use a more sophisticated error display
+                alert('Penerima harus dipilih untuk komponen ini.');
                 return;
             }
-            formData.append('unit', ''); // Clear unit if not optional
         }
 
-        formData.append('koordinat', editData.koordinat);
-        formData.append('validasi_koordinat', editData.validasi_koordinat ? '1' : '0');
-        formData.append('validasi_koordinat_message', editData.validasi_koordinat_message);
+        if (editData.validasi_koordinat !== null && editData.validasi_koordinat !== undefined) {
+            formData.append('validasi_koordinat', editData.validasi_koordinat ? '1' : '0');
+        }
+        
+        if (editData.validasi_koordinat_message) {
+            formData.append('validasi_koordinat_message', editData.validasi_koordinat_message);
+        }
         formData.append('_method', 'PUT');
 
-        // Use router.post instead of updatePost to handle FormData
         router.post(route("fotos.update", [pekerjaan.id, editingFoto.id]), formData, {
             onSuccess: () => {
                 setIsEditDialogOpen(false);
@@ -152,12 +170,10 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
         });
     };
 
-    // State for Combobox open/closed
     const [keteranganOpen, setKeteranganOpen] = useState(false);
     const [komponenOpen, setKomponenOpen] = useState(false);
     const [penerimaOpen, setPenerimaOpen] = useState(false);
     
-    // State for Edit Dialog Combobox open/closed
     const [editKeteranganOpen, setEditKeteranganOpen] = useState(false);
     const [editKomponenOpen, setEditKomponenOpen] = useState(false);
     const [editPenerimaOpen, setEditPenerimaOpen] = useState(false);
@@ -170,20 +186,8 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
         { value: "100%", label: "100%" },
     ];
 
-    // Komponen yang membuat penerima opsional
-    const komponenOpsional = [
-      'IPAL',
-      'Tangki Septik Komunal',
-      'Broncaptering',
-      'Reservoir',
-      'Pompa',
-      'Sumur Bor',
-    ];
-
-    // Cek apakah penerima opsional
     const isPenerimaOptional = (komponenId: string | null) => {
-      const selectedKomponen = outputs.find((output) => output.id.toString() === komponenId)?.komponen || '';
-      return komponenOpsional.some((nama) => selectedKomponen.toLowerCase().includes(nama.toLowerCase()));
+      return false;
     };
 
     const performGeocodingAndValidation = async (latitude: number, longitude: number) => {
@@ -200,7 +204,6 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
             setDesaName(foundDesa || "Tidak ditemukan");
             setKecamatanName(foundKecamatan || "Tidak ditemukan");
 
-            // Validasi kecocokan desa dan kecamatan
             let validasiSesuai = true;
             let validationError = '';
             if (pekerjaan.desa && (!foundDesa || pekerjaan.desa.toLowerCase() !== foundDesa.toLowerCase())) {
@@ -238,7 +241,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                 const { latitude, longitude } = position.coords;
                 const coordsString = `${latitude}, ${longitude}`;
                 setData("koordinat", coordsString);
-                clearErrors('koordinat'); // Clear any previous coordinate errors
+                clearErrors('koordinat');
                 setIsGettingCoordinates(false);
                 performGeocodingAndValidation(latitude, longitude);
             },
@@ -254,19 +257,31 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-
-        const dataToSubmit = {
-            ...data,
-            penerima_id: isPenerimaOptional(data.komponen_id) ? null : data.penerima_id,
-            unit: isPenerimaOptional(data.komponen_id) ? data.unit : "",
-        };
-
-        if (!isPenerimaOptional(data.komponen_id) && !dataToSubmit.penerima_id) {
-          setError('penerima_id', 'Penerima harus dipilih untuk komponen ini.');
-          return;
+    
+        const submitData = new FormData();
+        for (const key in data) {
+            if (key !== 'penerima_id' && key !== 'validasi_koordinat' && key !== 'validasi_koordinat_message' && (data as any)[key] !== null) {
+                submitData.append(key, (data as any)[key]);
+            }
         }
-
-        post(route("fotos.store", pekerjaan.id), {
+    
+        if (isPenerimaOptional(data.komponen_id)) {
+        } else {
+            if (data.penerima_id) {
+                submitData.append('penerima_id', data.penerima_id);
+            } else {
+                setError('penerima_id', 'Penerima harus dipilih untuk komponen ini.');
+                return;
+            }
+        }
+    
+        submitData.append('validasi_koordinat', data.validasi_koordinat ? '1' : '0');
+        
+        if (data.validasi_koordinat_message) {
+            submitData.append('validasi_koordinat_message', data.validasi_koordinat_message);
+        }
+    
+        router.post(route("fotos.store", pekerjaan.id), submitData, {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
@@ -292,9 +307,8 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
     const [komponenFilter, setKomponenFilter] = useState<string | null>(null);
     const [isKomponenFilterOpen, setIsKomponenFilterOpen] = useState(false);
 
-    // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10; // You can adjust this value
+    const itemsPerPage = 10;
 
     const filteredFotos = fotos.filter((foto) => {
         const matchesKeterangan = keteranganFilter ? foto.keterangan === keteranganFilter : true;
@@ -302,15 +316,24 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
         return matchesKeterangan && matchesKomponen;
     });
 
-    // Calculate total pages
     const totalPages = Math.ceil(filteredFotos.length / itemsPerPage);
 
-    // Get current page photos
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentFotos = filteredFotos.slice(indexOfFirstItem, indexOfLastItem);
 
     const [isPrinting, setIsPrinting] = useState(false);
+
+    const selectedOutputForPenerima = outputs.find((output) => output.id.toString() === data.komponen_id);
+    const isCommunalComponent = selectedOutputForPenerima ? communalComponentNames.includes(selectedOutputForPenerima.komponen) : false;
+        const displayedPenerimas = penerimas.filter(p => !!p.is_komunal === isCommunalComponent);
+    // console.log("selectedOutputForPenerima:", selectedOutputForPenerima);
+    // console.log("isCommunalComponent:", isCommunalComponent);
+    // console.log("displayedPenerimas:", displayedPenerimas);
+
+    const selectedEditOutputForPenerima = outputs.find((output) => output.id.toString() === editData.komponen_id);
+    const isEditCommunalComponent = selectedEditOutputForPenerima ? communalComponentNames.includes(selectedEditOutputForPenerima.komponen) : false;
+        const displayedEditPenerimas = penerimas.filter(p => !!p.is_komunal === isEditCommunalComponent);
 
     return (
         <Card>
@@ -426,82 +449,55 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                             </Popover>
                             {formErrors.komponen_id && <span className="text-red-500 text-sm">{formErrors.komponen_id}</span>}
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="penerima_id">Penerima {isPenerimaOptional(data.komponen_id) ? '(Opsional)' : '(Wajib)'}</Label>
-                            <Popover open={penerimaOpen} onOpenChange={setPenerimaOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        aria-expanded={penerimaOpen}
-                                        className="w-full justify-between"
-                                    >
-                                        {data.penerima_id
-                                            ? penerimas.find((penerima) => penerima.id.toString() === data.penerima_id)?.nama
-                                            : data.penerima_id === "none"
-                                                ? "Tidak Ada"
-                                                : "Pilih Penerima..."}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0">
-                                    <Command>
-                                        <CommandInput placeholder="Cari penerima..." />
-                                        <CommandList>
-                                            <CommandEmpty>Tidak ada penerima ditemukan.</CommandEmpty>
-                                            <CommandGroup>
-                                                <CommandItem
-                                                    value="none"
-                                                    onSelect={() => {
-                                                        setData("penerima_id", null);
-                                                        setPenerimaOpen(false);
-                                                    }}
-                                                >
-                                                    <Check
-                                                        className={cn(
-                                                            "mr-2 h-4 w-4",
-                                                            data.penerima_id === null ? "opacity-100" : "opacity-0"
-                                                        )}
-                                                    />
-                                                    Tidak Ada
-                                                </CommandItem>
-                                                {penerimas.map((penerima) => (
-                                                    <CommandItem
-                                                        key={penerima.id}
-                                                        value={penerima.id.toString()}
-                                                        onSelect={(currentValue) => {
-                                                            setData("penerima_id", currentValue);
-                                                            setPenerimaOpen(false);
-                                                        }}
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                "mr-2 h-4 w-4",
-                                                                data.penerima_id === penerima.id.toString() ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                        {penerima.nama}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
-                            {formErrors.penerima_id && <span className="text-red-500 text-sm">{formErrors.penerima_id}</span>}
-                        </div>
-                        {isPenerimaOptional(data.komponen_id) && (
+                        {!isPenerimaOptional(data.komponen_id) && (
                             <div className="space-y-2">
-                                <Label htmlFor="unit">Unit (Opsional)</Label>
-                                <Input
-                                    id="unit"
-                                    value={data.unit}
-                                    onChange={(e) => setData("unit", e.target.value)}
-                                    placeholder="Contoh: Unit A, Unit B, dll"
-                                />
-                                {formErrors.unit && <span className="text-red-500 text-sm">{formErrors.unit}</span>}
+                                <Label htmlFor="penerima_id">Penerima (Wajib)</Label>
+                                <Popover open={penerimaOpen} onOpenChange={setPenerimaOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={penerimaOpen}
+                                            className="w-full justify-between"
+                                        >
+                                            {data.penerima_id
+                                                ? penerimas.find((penerima) => penerima.id.toString() === data.penerima_id)?.nama
+                                                : "Pilih Penerima..."}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Cari penerima..." />
+                                            <CommandList>
+                                                <CommandEmpty>Tidak ada penerima ditemukan.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {displayedPenerimas.map((penerima) => (
+                                                        <CommandItem
+                                                            key={penerima.id}
+                                                            value={penerima.id.toString()}
+                                                            onSelect={(currentValue) => {
+                                                                setData("penerima_id", currentValue);
+                                                                setPenerimaOpen(false);
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    data.penerima_id === penerima.id.toString() ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                            {penerima.nama}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                                {formErrors.penerima_id && <span className="text-red-500 text-sm">{formErrors.penerima_id}</span>}
                             </div>
-                        )}
+                        ) }
                         <div className="space-y-2">
                             <Label htmlFor="koordinat">Koordinat</Label>
                             <div className="flex gap-2">
@@ -541,10 +537,8 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                 </Button>
                             </div>
                             {formErrors.koordinat && <span className="text-red-500 text-sm">{formErrors.koordinat}</span>}
-                            {/* Hapus validasi lokasi global (hijau/merah) yang lama, hanya tampilkan validasi per field */}
                             {(desaName || kecamatanName) && (
                               <>
-                                {/* Pesan validasi jika ada yang tidak sesuai */}
                                 {(
                                   (pekerjaan.desa && desaName && pekerjaan.desa.toLowerCase() !== desaName.toLowerCase()) ||
                                   (pekerjaan.kecamatan && kecamatanName && pekerjaan.kecamatan.toLowerCase() !== kecamatanName.toLowerCase())
@@ -565,7 +559,6 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                   </div>
                                 )}
 
-                                {/* Validasi per field */}
                                 <div className="mt-2 space-y-1">
                                   <div className="flex items-center gap-2">
                                     <span>Desa/Kelurahan:</span>
@@ -601,8 +594,6 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                         </span>
                                     ) : (
                                         <>
-                                            {/* {desaName && <p>Desa: {desaName}</p>}
-                                            {kecamatanName && <p>Kecamatan: {kecamatanName}</p>} */}
                                         </>
                                     )}
                                 </div>
@@ -760,7 +751,7 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                         </TableCell>
                                         <TableCell>{foto.keterangan}</TableCell>
                                         <TableCell>{foto.komponen_nama || "N/A"}</TableCell>
-                                        <TableCell>{foto.penerima_nama || foto.unit || "N/A"}</TableCell>
+                                        <TableCell>{foto.penerima_nama || "N/A"}</TableCell>
                                         <TableCell>{foto.koordinat}</TableCell>
                                         <TableCell>
                                             {foto.validasi_koordinat === undefined ? (
@@ -789,7 +780,6 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                     <p className="text-center text-muted-foreground">Belum ada foto yang diunggah.</p>
                 )}
 
-                {/* Pagination Controls */}
                 {filteredFotos.length > itemsPerPage && (
                     <div className="flex justify-center items-center space-x-2 mt-4">
                         <Button
@@ -811,7 +801,6 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                 )}
             </CardContent>
 
-            {/* Image Preview Dialog */}
             <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
                 <DialogContent className="max-w-3xl p-0">
                     {previewImage && (
@@ -820,7 +809,6 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                 </DialogContent>
             </Dialog>
 
-            {/* Map Selection Dialog */}
             <Dialog open={isMapSelectionOpen} onOpenChange={setIsMapSelectionOpen}>
                 <DialogContent className="max-w-4xl p-0">
                     <DialogHeader className="p-4">
@@ -835,14 +823,13 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                 setIsMapSelectionOpen(false);
                                 performGeocodingAndValidation(lat, lng);
                             }}
-                            initialLat={initialLat || -6.8106} // Use existing pekerjaan lat/lng or default
-                            initialLng={initialLng || 107.1439} // Use existing pekerjaan lat/lng or default
+                            initialLat={initialLat || -6.8106}
+                            initialLng={initialLng || 107.1439}
                         />
                     </div>
                 </DialogContent>
             </Dialog>
 
-            {/* Delete Confirmation Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -860,7 +847,6 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                 </DialogContent>
             </Dialog>
 
-            {/* Edit Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
@@ -972,80 +958,53 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                 </Popover>
                                 {editErrors.komponen_id && <span className="text-red-500 text-sm">{editErrors.komponen_id}</span>}
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="edit-penerima">Penerima {isPenerimaOptional(editData.komponen_id) ? '(Opsional)' : '(Wajib)'}</Label>
-                                <Popover open={editPenerimaOpen} onOpenChange={setEditPenerimaOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={editPenerimaOpen}
-                                            className="w-full justify-between"
-                                        >
-                                            {editData.penerima_id
-                                                ? penerimas.find((penerima) => penerima.id.toString() === editData.penerima_id)?.nama
-                                                : editData.penerima_id === "none"
-                                                    ? "Tidak Ada"
-                                                    : "Pilih Penerima..."}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-full p-0">
-                                        <Command>
-                                            <CommandInput placeholder="Cari penerima..." />
-                                            <CommandList>
-                                                <CommandEmpty>Tidak ada penerima ditemukan.</CommandEmpty>
-                                                <CommandGroup>
-                                                    <CommandItem
-                                                        value="none"
-                                                        onSelect={() => {
-                                                            setEditData("penerima_id", null);
-                                                            setEditPenerimaOpen(false);
-                                                        }}
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                "mr-2 h-4 w-4",
-                                                                editData.penerima_id === null ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                        Tidak Ada
-                                                    </CommandItem>
-                                                    {penerimas.map((penerima) => (
-                                                        <CommandItem
-                                                            key={penerima.id}
-                                                            value={penerima.id.toString()}
-                                                            onSelect={(currentValue) => {
-                                                                setEditData("penerima_id", currentValue);
-                                                                setEditPenerimaOpen(false);
-                                                            }}
-                                                        >
-                                                            <Check
-                                                                className={cn(
-                                                                    "mr-2 h-4 w-4",
-                                                                    editData.penerima_id === penerima.id.toString() ? "opacity-100" : "opacity-0"
-                                                                )}
-                                                            />
-                                                            {penerima.nama}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                                {editErrors.penerima_id && <span className="text-red-500 text-sm">{editErrors.penerima_id}</span>}
-                            </div>
-                            {isPenerimaOptional(editData.komponen_id) && (
+                            {!isPenerimaOptional(editData.komponen_id) && (
                                 <div className="space-y-2">
-                                    <Label htmlFor="edit-unit">Unit (Opsional)</Label>
-                                    <Input
-                                        id="edit-unit"
-                                        value={editData.unit || ""}
-                                        onChange={(e) => setEditData("unit", e.target.value)}
-                                        placeholder="Contoh: Unit A, Unit B, dll"
-                                    />
-                                    {editErrors.unit && <span className="text-red-500 text-sm">{editErrors.unit}</span>}
+                                    <Label htmlFor="edit-penerima">Penerima (Wajib)</Label>
+                                    <Popover open={editPenerimaOpen} onOpenChange={setEditPenerimaOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={editPenerimaOpen}
+                                                className="w-full justify-between"
+                                            >
+                                                {editData.penerima_id
+                                                    ? penerimas.find((penerima) => penerima.id.toString() === editData.penerima_id)?.nama
+                                                    : "Pilih Penerima..."}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-full p-0">
+                                            <Command>
+                                                <CommandInput placeholder="Cari penerima..." />
+                                                <CommandList>
+                                                    <CommandEmpty>Tidak ada penerima ditemukan.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {displayedEditPenerimas.map((penerima) => (
+                                                            <CommandItem
+                                                                key={penerima.id}
+                                                                value={penerima.id.toString()}
+                                                                onSelect={(currentValue) => {
+                                                                    setEditData("penerima_id", currentValue);
+                                                                    setEditPenerimaOpen(false);
+                                                                }}
+                                                            >
+                                                                <Check
+                                                                    className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        editData.penerima_id === penerima.id.toString() ? "opacity-100" : "opacity-0"
+                                                                    )}
+                                                                />
+                                                                {penerima.nama}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                    {editErrors.penerima_id && <span className="text-red-500 text-sm">{editErrors.penerima_id}</span>}
                                 </div>
                             )}
                             <div className="space-y-2 md:col-span-2">

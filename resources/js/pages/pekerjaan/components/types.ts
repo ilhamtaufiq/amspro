@@ -62,7 +62,6 @@ export interface Foto {
   pekerjaan_id: number;
   komponen_id: number;
   penerima_id: number | null;
-  unit: string | null;
   keterangan: string;
   koordinat: string;
   created_at: string | null;
@@ -135,6 +134,7 @@ export interface Penerima {
   jumlah_jiwa: number;
   nik: string;
   alamat: string | null;
+  is_komunal: boolean;
   ktp_path: string | null;
   created_at: string | null;
   updated_at: string | null;

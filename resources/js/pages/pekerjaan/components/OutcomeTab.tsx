@@ -28,11 +28,13 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
     jumlah_jiwa: number;
     nik: string;
     alamat: string;
+    is_komunal: boolean;
   }>({
     nama: "",
     jumlah_jiwa: 0,
     nik: "",
     alamat: "",
+    is_komunal: false,
   });
 
   const handleConfirmDelete = () => {
@@ -90,9 +92,17 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
     e.preventDefault();
     const formData = new FormData();
     formData.append("nama", data.nama);
-    formData.append("jumlah_jiwa", data.jumlah_jiwa.toString());
-    formData.append("nik", data.nik);
-    formData.append("alamat", data.alamat);
+    formData.append("is_komunal", data.is_komunal ? "1" : "0");
+
+    if (data.is_komunal) {
+      formData.append("jumlah_jiwa", ""); // Send empty string or null
+      formData.append("nik", ""); // Send empty string or null
+      formData.append("alamat", ""); // Send empty string or null
+    } else {
+      formData.append("jumlah_jiwa", data.jumlah_jiwa.toString());
+      formData.append("nik", data.nik);
+      formData.append("alamat", data.alamat);
+    }
 
     if (data.id && canEditPenerima) {
       put(route("penerima.update", [pekerjaan.id, data.id]), {
@@ -141,6 +151,7 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
         jumlah_jiwa: penerima.jumlah_jiwa,
         nik: penerima.nik,
         alamat: penerima.alamat || "",
+        is_komunal: penerima.is_komunal || false,
       });
     }
   };
@@ -179,7 +190,8 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
                   type="number"
                   value={data.jumlah_jiwa}
                   onChange={(e) => setData("jumlah_jiwa", Number(e.target.value))}
-                  required
+                  required={!data.is_komunal}
+                  disabled={data.is_komunal}
                 />
                 {penerimaErrors.jumlah_jiwa && <span className="text-red-500 text-sm">{penerimaErrors.jumlah_jiwa}</span>}
               </div>
@@ -189,7 +201,8 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
                   id="nik"
                   value={data.nik}
                   onChange={(e) => setData("nik", e.target.value)}
-                  required
+                  required={!data.is_komunal}
+                  disabled={data.is_komunal}
                 />
                 {penerimaErrors.nik && <span className="text-red-500 text-sm">{penerimaErrors.nik}</span>}
               </div>
@@ -199,10 +212,20 @@ export function OutcomeTab({ pekerjaan, penerimas, auth, errors, flash }: PagePr
                   id="alamat"
                   value={data.alamat}
                   onChange={(e) => setData("alamat", e.target.value)}
+                  disabled={data.is_komunal}
                 />
                 {penerimaErrors.alamat && <span className="text-red-500 text-sm">{penerimaErrors.alamat}</span>}
               </div>
-              
+              <div className="space-y-2 md:col-span-2 flex items-center space-x-2">
+                <Input
+                  id="is_komunal"
+                  type="checkbox"
+                  checked={data.is_komunal}
+                  onChange={(e) => setData("is_komunal", e.target.checked)}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_komunal">Komunal</Label>
+              </div>
             </div>
             
               <Button

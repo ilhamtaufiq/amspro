@@ -89,7 +89,6 @@ class FotoController extends Controller
             'keterangan' => 'required|string|in:0%,25%,50%,75%,100%',
             'komponen_id' => 'required|exists:tbl_output,id',
             'penerima_id' => 'nullable|exists:tbl_penerima,id',
-            'unit_penerima_text' => 'nullable|string|max:255',
             'koordinat' => 'required|string',
             'validasi_koordinat' => 'boolean',
             'validasi_koordinat_message' => 'nullable|string',

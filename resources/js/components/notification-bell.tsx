@@ -21,7 +21,7 @@ interface Notification {
   id: string
   title: string
   description: string
-  timestamp: string
+  timestamp?: string
   type: 'info' | 'warning' | 'success' | 'error'
   read: boolean
   user?: {
@@ -52,7 +52,10 @@ export function NotificationBell({ notifications = [], className }: Notification
     }
   }
 
-  const formatTimestamp = (timestamp: string) => {
+  const formatTimestamp = (timestamp?: string) => {
+    if (!timestamp) {
+      return "No date";
+    }
     try {
         const date = parseISO(timestamp);
         return formatDistanceToNow(date, { addSuffix: true });
