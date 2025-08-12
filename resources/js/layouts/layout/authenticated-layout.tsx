@@ -5,6 +5,7 @@ import { Header } from './header'
 import { TopNav } from './top-nav'
 import { ModernBreadcrumb } from '@/components/modern-breadcrumb'
 import { cn } from '@/lib/utils'
+import { ThemeProvider } from '@/components/theme-provider'
 
 interface Props {
   children: React.ReactNode
@@ -40,28 +41,30 @@ export function AuthenticatedLayout({ children, user, header, navigation }: Prop
   ]
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar user={user} />
-      <div id='content' className={cn(
-        'flex flex-col',
-        'h-screen w-full',
-        'bg-background',
-        'transition-[margin] ease-linear duration-300',
-        // 'lg:ml-[--sidebar-width]',
-        // 'peer-data-[collapsible=icon]:md:ml-[calc(var(--sidebar-width-icon))]'
-      )}>
-        <Header>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            {/* <TopNav links={navLinks} /> */}
-            {header && (
-              <ModernBreadcrumb items={[{ title: header as string, isActive: true }]} />
-            )}
-          </div>
-        </Header>
-        <main className="h-full overflow-auto">
-          {children}
-        </main>
-      </div>
-    </SidebarProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <SidebarProvider defaultOpen={defaultOpen}>
+        <AppSidebar user={user} />
+        <div id='content' className={cn(
+          'flex flex-col',
+          'h-screen w-full',
+          'bg-background',
+          'transition-[margin] ease-linear duration-300',
+          // 'lg:ml-[--sidebar-width]',
+          // 'peer-data-[collapsible=icon]:md:ml-[calc(var(--sidebar-width-icon))]'
+        )}>
+          <Header>
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              {/* <TopNav links={navLinks} /> */}
+              {header && (
+                <ModernBreadcrumb items={[{ title: header as string, isActive: true }]} />
+              )}
+            </div>
+          </Header>
+          <main className="h-full overflow-auto">
+            {children}
+          </main>
+        </div>
+      </SidebarProvider>
+    </ThemeProvider>
   )
 }

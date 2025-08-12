@@ -28,12 +28,7 @@ createInertiaApp({
         const root = createRoot(el);
 
         root.render(
-            <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-            >
+            <ThemeProvider>
                 <NavigationProgress />
                 <App {...props} />
                 <AlertHandler flash={props.initialPage.props.flash as any} errors={props.initialPage.props.errors as any} />

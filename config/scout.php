@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'driver' => env('SCOUT_DRIVER', 'meilisearch'),
+    'driver' => env('SCOUT_DRIVER', 'typesense'),
 
     /*
     |--------------------------------------------------------------------------
@@ -159,7 +159,7 @@ return [
 
     'typesense' => [
         'client-settings' => [
-            'api_key' => env('TYPESENSE_API_KEY', 'xyz'),
+            'api_key' => env('TYPESENSE_API_KEY', 'xyz123'),
             'nodes' => [
                 [
                     'host' => env('TYPESENSE_HOST', 'localhost'),
@@ -181,28 +181,216 @@ return [
         ],
         // 'max_total_results' => env('TYPESENSE_MAX_TOTAL_RESULTS', 1000),
         'model-settings' => [
-            // User::class => [
-            //     'collection-schema' => [
-            //         'fields' => [
-            //             [
-            //                 'name' => 'id',
-            //                 'type' => 'string',
-            //             ],
-            //             [
-            //                 'name' => 'name',
-            //                 'type' => 'string',
-            //             ],
-            //             [
-            //                 'name' => 'created_at',
-            //                 'type' => 'int64',
-            //             ],
-            //         ],
-            //         'default_sorting_field' => 'created_at',
-            //     ],
-            //     'search-parameters' => [
-            //         'query_by' => 'name'
-            //     ],
-            // ],
+            \App\Models\Pekerjaan::class => [
+                'collection-schema' => [
+                    'fields' => [
+                        [
+                            'name' => 'id',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'nama_paket',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'pagu',
+                            'type' => 'float',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'kode_rekening',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'tahun_anggaran',
+                            'type' => 'string',
+                            'optional' => true,
+                            'facet' => true,
+                        ],
+                        [
+                            'name' => 'n_kec',
+                            'type' => 'string',
+                            'optional' => true,
+                            'facet' => true,
+                        ],
+                        [
+                            'name' => 'n_desa',
+                            'type' => 'string',
+                            'optional' => true,
+                            'facet' => true,
+                        ],
+                        [
+                            'name' => 'kegiatan_nama',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'created_at',
+                            'type' => 'int64',
+                            // 'optional' => true,
+                        ],
+                        [
+                            'name' => 'updated_at',
+                            'type' => 'int64',
+                            'optional' => true,
+                        ],
+                    ],
+                    'default_sorting_field' => 'created_at',
+                ],
+                'search-parameters' => [
+                    'query_by' => 'nama_paket,kode_rekening,n_kec,n_desa,kegiatan_nama',
+                ],
+            ],
+            \App\Models\Kontrak::class => [
+                'collection-schema' => [
+                    'fields' => [
+                        [
+                            'name' => 'id',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'kode_rup',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'kode_paket',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'nomor_penawaran',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'nilai_kontrak',
+                            'type' => 'float',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'nama_penyedia',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'nama_paket',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'sppbj',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'spk',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'spmk',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'created_at',
+                            'type' => 'int64',
+                            'optional' => true,
+                        ],
+                    ],
+                    'default_sorting_field' => 'id',
+                ],
+                'search-parameters' => [
+                    'query_by' => 'kode_rup,kode_paket,nomor_penawaran,nama_penyedia,nama_paket,sppbj,spk,spmk',
+                ],
+            ],
+            \App\Models\User::class => [
+                'collection-schema' => [
+                    'fields' => [
+                        [
+                            'name' => 'id',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'name',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'email',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'roles',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'created_at',
+                            'type' => 'int64',
+                            'optional' => true,
+                        ],
+                    ],
+                    'default_sorting_field' => 'id',
+                ],
+                'search-parameters' => [
+                    'query_by' => 'name,email,roles',
+                ],
+            ],
+            \App\Models\Penyedia::class => [
+                'collection-schema' => [
+                    'fields' => [
+                        [
+                            'name' => 'id',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'nama',
+                            'type' => 'string',
+                        ],
+                        [
+                            'name' => 'direktur',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'no_akta',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'notaris',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'alamat',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'bank',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'norek',
+                            'type' => 'string',
+                            'optional' => true,
+                        ],
+                        [
+                            'name' => 'created_at',
+                            'type' => 'int64',
+                            'optional' => true,
+                        ],
+                    ],
+                    'default_sorting_field' => 'id',
+                ],
+                'search-parameters' => [
+                    'query_by' => 'nama,direktur,no_akta,notaris,alamat,bank,norek',
+                ],
+            ],
         ],
     ],
 

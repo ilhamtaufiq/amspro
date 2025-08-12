@@ -475,9 +475,10 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                                     {displayedPenerimas.map((penerima) => (
                                                         <CommandItem
                                                             key={penerima.id}
-                                                            value={penerima.id.toString()}
+                                                            value={penerima.nama}
                                                             onSelect={(currentValue) => {
-                                                                setData("penerima_id", currentValue);
+                                                                const selectedPenerima = displayedPenerimas.find(p => p.nama === currentValue);
+                                                                setData("penerima_id", selectedPenerima ? selectedPenerima.id.toString() : null);
                                                                 setPenerimaOpen(false);
                                                             }}
                                                         >
@@ -984,9 +985,10 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                                         {displayedEditPenerimas.map((penerima) => (
                                                             <CommandItem
                                                                 key={penerima.id}
-                                                                value={penerima.id.toString()}
+                                                                value={penerima.nama}
                                                                 onSelect={(currentValue) => {
-                                                                    setEditData("penerima_id", currentValue);
+                                                                    const selectedPenerima = displayedEditPenerimas.find(p => p.nama === currentValue);
+                                                                    setEditData("penerima_id", selectedPenerima ? selectedPenerima.id.toString() : null);
                                                                     setEditPenerimaOpen(false);
                                                                 }}
                                                             >

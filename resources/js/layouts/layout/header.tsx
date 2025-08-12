@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { GlobalSearch } from '@/components/global-search'
 import { NotificationBell } from '@/components/notification-bell'
-import AppearanceDropdown from '@/components/appearance-dropdown'
+import { ModeToggle } from '@/components/mode-toggle'
 import PilihTahun from '@/components/tahun'
 import axios from 'axios'
 
@@ -60,7 +60,7 @@ export const Header = ({
         <GlobalSearch />
         <NotificationBell notifications={notifications} />
         <PilihTahun />
-        <AppearanceDropdown />
+        <ModeToggle />
       </div>
     </header>
   )

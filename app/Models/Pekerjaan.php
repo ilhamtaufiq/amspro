@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
-// use Laravel\Scout\Searchable;
+use Laravel\Scout\Searchable;
 
 class Pekerjaan extends Model
 {
-    use HasFactory;
-    // use Searchable;
+    use HasFactory, Searchable;
+    
     protected $table = "tbl_pekerjaan";
     protected $fillable = [
         'nama_paket',
@@ -21,23 +21,39 @@ class Pekerjaan extends Model
         'desa_id',
     ];
 
-    // /**
-    //  * Configure the Meilisearch index settings.
-    //  */
-    // public function configureSearchableIndex()
-    // {
-    //     $engine = $this->searchableUsing();
-    //     $engine->updateIndexSettings($this->searchableAs(), [
-    //         'filterableAttributes' => ['tahun_anggaran', 'n_kec', 'n_desa'],
-    //     ]);
-    // }
-
     /**
      * Get the index name for the model.
      */
     public function searchableAs()
     {
-        return 'tbl_pekerjaan';
+        return 'pekerjaan';
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     */
+    public function toSearchableArray()
+    {
+        return [
+            'id' => (string) $this->id,
+            'nama_paket' => $this->nama_paket,
+            'pagu' => $this->pagu,
+            'kode_rekening' => $this->kode_rekening,
+            'tahun_anggaran' => $this->kegiatan->tahun_anggaran ?? null,
+            'n_kec' => $this->kecamatan->n_kec ?? null,
+            'n_desa' => $this->desa->n_desa ?? null,
+            'kegiatan_nama' => $this->kegiatan->nama_kegiatan ?? null,
+            'created_at' => $this->created_at ? $this->created_at->timestamp : 0,
+            'updated_at' => $this->updated_at ? $this->updated_at->timestamp : 0,
+        ];
+    }
+
+    /**
+     * Determine if the model should be searchable.
+     */
+    public function shouldBeSearchable()
+    {
+        return !empty($this->nama_paket);
     }
 
     /**

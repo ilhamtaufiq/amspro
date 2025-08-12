@@ -20,6 +20,7 @@ use App\Http\Controllers\TodoController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\DokumenPekerjaanController;
+use App\Http\Controllers\SearchController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,15 @@ Route::post('/set-tahun', function (Request $request) {
 
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+
+// Search routes
+Route::middleware('auth')->group(function () {
+    Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+    Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
+    Route::post('/search', [SearchController::class, 'search'])->name('search.api');
+    Route::get('/search/stats', [SearchController::class, 'stats'])->name('search.stats');
+});
+
 Route::get('/peta', [MapController::class, 'index'])->name('peta.index')->middleware('auth');
 Route::get('/dokumen-pekerjaan', [DokumenPekerjaanController::class, 'index'])->name('dokumen-pekerjaan.index')->middleware('auth');
 

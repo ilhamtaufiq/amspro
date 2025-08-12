@@ -10,10 +10,11 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Role as CustomRole;
+use Laravel\Scout\Searchable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, Searchable;
 
     /**
      * The attributes that are mass assignable.
@@ -45,6 +46,36 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Get the index name for the model.
+     */
+    public function searchableAs()
+    {
+        return 'users';
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     */
+    public function toSearchableArray()
+    {
+        return [
+            'id' => (string) $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'roles' => $this->roles->pluck('name')->implode(', '),
+            'created_at' => $this->created_at ? $this->created_at->timestamp : null,
+        ];
+    }
+
+    /**
+     * Determine if the model should be searchable.
+     */
+    public function shouldBeSearchable()
+    {
+        return !empty($this->name) && !empty($this->email);
+    }
 
     public function pengawasan()
     {
