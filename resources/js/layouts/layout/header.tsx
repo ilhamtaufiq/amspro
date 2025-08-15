@@ -8,6 +8,20 @@ import { ModeToggle } from '@/components/mode-toggle'
 import PilihTahun from '@/components/tahun'
 import axios from 'axios'
 
+interface Notification {
+  id: string
+  title: string
+  message: string
+  created_at: string
+  type: 'info' | 'warning' | 'success' | 'error'
+  read_at: string | null
+  sender?: {
+    name: string
+    avatar?: string
+    initials: string
+  }
+}
+
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   fixed?: boolean
   ref?: React.Ref<HTMLElement>
@@ -21,7 +35,8 @@ export const Header = ({
   ...props
 }: HeaderProps) => {
   const [offset, setOffset] = React.useState(0)
-  const [notifications, setNotifications] = useState([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const onScroll = () => {
@@ -36,9 +51,20 @@ export const Header = ({
   }, [])
 
   useEffect(() => {
-    axios.get(route('notifications.index')).then(response => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.get(route('notifications.index'))
         setNotifications(response.data)
-    })
+      } catch (error) {
+        console.error('Error fetching notifications:', error)
+        setNotifications([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNotifications()
   }, [])
 
   return (

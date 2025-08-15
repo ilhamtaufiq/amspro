@@ -135,20 +135,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/settings/menu', [\App\Http\Controllers\MenuSettingsController::class, 'index'])->name('settings.menu.index')->middleware('role:Super Admin');
     Route::post('/settings/menu', [\App\Http\Controllers\MenuSettingsController::class, 'store'])->name('settings.menu.store')->middleware('role:Super Admin');
-});
 
-require __DIR__ . '/auth.php';
-
-Route::middleware(['auth', 'verified'])->group(function () {
+    // Notification routes
     Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/all', [App\Http\Controllers\NotificationController::class, 'all'])->name('notifications.all');
     Route::post('/notifications/{notification}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    
+    // Notification management routes (Super Admin only)
+    Route::middleware(['role:Super Admin'])->group(function () {
+        Route::get('/notifications/create', [App\Http\Controllers\NotificationController::class, 'create'])->name('notifications.create');
+        Route::post('/notifications', [App\Http\Controllers\NotificationController::class, 'store'])->name('notifications.store');
+    });
 });
 
-Route::middleware(['auth', 'verified', 'role:Super Admin'])->group(function () {
-    Route::get('/notifications/create', [App\Http\Controllers\NotificationController::class, 'create'])->name('notifications.create');
-    Route::post('/notifications', [App\Http\Controllers\NotificationController::class, 'store'])->name('notifications.store');
-});
+require __DIR__ . '/auth.php';
 
 use App\Http\Controllers\ReverseGeocodeController;
 

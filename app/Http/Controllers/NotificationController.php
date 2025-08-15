@@ -12,10 +12,26 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $notifications = Notification::where('recipient_id', Auth::id())
+        $notifications = Notification::with('sender')
+            ->where('recipient_id', Auth::id())
             ->whereNull('read_at')
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'title' => $notification->title,
+                    'message' => $notification->message,
+                    'type' => $notification->type,
+                    'created_at' => $notification->created_at->toISOString(),
+                    'read_at' => $notification->read_at?->toISOString(),
+                    'sender' => $notification->sender ? [
+                        'name' => $notification->sender->name,
+                        'avatar' => null, // Add avatar if you have it
+                        'initials' => strtoupper(substr($notification->sender->name, 0, 2)),
+                    ] : null,
+                ];
+            });
 
         return response()->json($notifications);
     }
@@ -52,14 +68,16 @@ class NotificationController extends Controller
     {
         if ($notification->recipient_id === Auth::id()) {
             $notification->update(['read_at' => now()]);
+            return response()->json(['success' => true]);
         }
-
-        return back();
+        
+        return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
     }
 
     public function all()
     {
-        $notifications = Notification::where('recipient_id', Auth::id())
+        $notifications = Notification::with('sender')
+            ->where('recipient_id', Auth::id())
             ->latest()
             ->paginate(10);
 
