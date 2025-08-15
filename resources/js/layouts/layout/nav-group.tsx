@@ -32,7 +32,34 @@ export function NavGroup({ title, items }: NavGroup) {
   const href = window.location.pathname
 
   const handleNavigation = (url: string) => {
-    router.visit(url)
+    try {
+      // Validate URL
+      if (!url || typeof url !== 'string') {
+        console.error('Invalid URL:', url);
+        return;
+      }
+
+      // Ensure URL starts with /
+      const validUrl = url.startsWith('/') ? url : `/${url}`;
+      
+      console.log('Navigating to:', validUrl);
+      router.visit(validUrl, {
+        onError: (errors) => {
+          console.error('Navigation error:', errors);
+        },
+        onFinish: () => {
+          console.log('Navigation finished');
+        }
+      });
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to window.location if router fails
+      try {
+        window.location.href = url;
+      } catch (fallbackError) {
+        console.error('Fallback navigation also failed:', fallbackError);
+      }
+    }
   }
 
   return (

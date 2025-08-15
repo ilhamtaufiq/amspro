@@ -4,11 +4,41 @@ namespace App\Http\Controllers;
 
 use App\Models\Progress;
 use App\Models\Output;
+use App\Models\Pekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
 class ProgressController extends Controller
 {
+    public function dashboard()
+    {
+        // Get all progress data for the dashboard
+        $progressData = Progress::with('output', 'pekerjaan')->get();
+        
+        // Transform data for the charts
+        $chartData = [];
+        
+        // Group by pekerjaan for better visualization
+        $progressByPekerjaan = $progressData->groupBy('pekerjaan_id');
+        
+        foreach ($progressByPekerjaan as $pekerjaanId => $items) {
+            $pekerjaan = $items->first()->pekerjaan;
+            if ($pekerjaan) {
+                $chartData[] = [
+                    'id' => $pekerjaanId,
+                    'name' => $pekerjaan->nama_pekerjaan ?? 'Pekerjaan ' . $pekerjaanId,
+                    'realisasi' => $items->avg('realisasi_fisik'),
+                    'target' => 100,
+                ];
+            }
+        }
+        
+        return Inertia::render('Progress/Index', [
+            'progressData' => $progressData,
+            'chartData' => $chartData,
+        ]);
+    }
     public function index($pekerjaanId)
     {
         $progresses = Progress::with('output')->where('pekerjaan_id', $pekerjaanId)->get();

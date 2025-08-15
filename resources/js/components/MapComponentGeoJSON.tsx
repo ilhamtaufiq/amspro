@@ -2,6 +2,21 @@ import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+// Fix for default Leaflet icons
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png?url';
+import markerIcon from 'leaflet/dist/images/marker-icon.png?url';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png?url';
+
+const defaultIcon = L.icon({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 declare module 'leaflet' {
   interface MarkerOptions {
     _isPekerjaanMarker?: boolean;
@@ -32,6 +47,17 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<L.Map | null>(null);
     const geoJsonLayersRef = useRef<L.GeoJSON[]>([]);
+
+    console.log('MapComponentGeoJSON rendered with:', {
+        geojsonLength: geojson?.length || 0,
+        selectedFeatureGeoJSON: !!selectedFeatureGeoJSON,
+        selectedKecamatanId,
+        selectedDesaId,
+        kecamatanListLength: kecamatanList?.length || 0,
+        desaListLength: desaList?.length || 0,
+        pekerjaanListLength: pekerjaanList?.length || 0,
+        showHeatmap
+    });
 
     // Memoize style function to prevent unnecessary recalculations
     const getFeatureStyle = useCallback((feature: GeoJSON.Feature | undefined) => {
@@ -129,43 +155,125 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({
 
     // Initialize map
     useEffect(() => {
-        if (mapRef.current && !mapInstance.current) {
-            mapInstance.current = L.map(mapRef.current).setView([-6.88, 107.13], 10);
+        const initializeMap = () => {
+            if (mapRef.current && !mapInstance.current) {
+                try {
+                    // Check if Leaflet is available
+                    if (typeof L === 'undefined') {
+                        console.error('Leaflet is not loaded');
+                        return;
+                    }
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(mapInstance.current);
+                    // Check if container has proper dimensions
+                    const rect = mapRef.current.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) {
+                        console.log('Map container has no dimensions, retrying...');
+                        setTimeout(initializeMap, 100);
+                        return;
+                    }
+
+                    console.log('Initializing map...');
+                    mapInstance.current = L.map(mapRef.current).setView([-6.88, 107.13], 10);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(mapInstance.current);
+
+                    // Set default icon options here
+                    L.Marker.prototype.options.icon = defaultIcon;
+                    
+                    // Invalidate map size to ensure proper rendering
+                    setTimeout(() => {
+                        if (mapInstance.current) {
+                            mapInstance.current.invalidateSize();
+                        }
+                    }, 100);
+                    
+                    console.log('Map initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing map:', error);
+                }
+            }
+        };
+
+        // Try to initialize immediately
+        initializeMap();
+
+        // If not ready, try again after a short delay
+        if (!mapRef.current) {
+            const timer = setTimeout(initializeMap, 100);
+            return () => clearTimeout(timer);
         }
+
+        // Cleanup function
+        return () => {
+            if (mapInstance.current) {
+                try {
+                    mapInstance.current.remove();
+                    mapInstance.current = null;
+                } catch (error) {
+                    console.error('Error cleaning up map:', error);
+                }
+            }
+        };
     }, []);
 
     // Clear existing layers
     const clearLayers = useCallback(() => {
         if (!mapInstance.current) return;
 
-        // Clear GeoJSON layers
-        geoJsonLayersRef.current.forEach(layer => {
-            mapInstance.current?.removeLayer(layer);
-        });
-        geoJsonLayersRef.current = [];
+        try {
+            // Clear GeoJSON layers
+            geoJsonLayersRef.current.forEach(layer => {
+                try {
+                    mapInstance.current?.removeLayer(layer);
+                } catch (error) {
+                    console.warn('Error removing layer:', error);
+                }
+            });
+            geoJsonLayersRef.current = [];
+        } catch (error) {
+            console.error('Error clearing layers:', error);
+        }
     }, []);
 
     // Add GeoJSON layers
     const addGeoJsonLayers = useCallback(() => {
         if (!mapInstance.current) return;
 
-        geojson.forEach(geo => {
-            const geoJsonLayer = L.geoJSON(geo, {
-                style: getFeatureStyle,
-                onEachFeature: (feature, layer) => {
-                    const popupContent = createPopupContent(feature);
-                    if (popupContent) {
-                        layer.bindPopup(popupContent);
-                    }
+        // Validate geojson data
+        if (!Array.isArray(geojson) || geojson.length === 0) {
+            console.warn('No valid GeoJSON data provided');
+            return;
+        }
+
+        geojson.forEach((geo, index) => {
+            try {
+                // Validate individual GeoJSON object
+                if (!geo || typeof geo !== 'object' || !geo.type || geo.type !== 'FeatureCollection') {
+                    console.warn(`Invalid GeoJSON structure at index ${index}:`, geo);
+                    return;
                 }
-            });
-            
-            geoJsonLayer.addTo(mapInstance.current!);
-            geoJsonLayersRef.current.push(geoJsonLayer);
+
+                const geoJsonLayer = L.geoJSON(geo, {
+                    style: getFeatureStyle,
+                    onEachFeature: (feature, layer) => {
+                        try {
+                            const popupContent = createPopupContent(feature);
+                            if (popupContent) {
+                                layer.bindPopup(popupContent);
+                            }
+                        } catch (error) {
+                            console.warn('Error creating popup content:', error);
+                        }
+                    }
+                });
+                
+                geoJsonLayer.addTo(mapInstance.current!);
+                geoJsonLayersRef.current.push(geoJsonLayer);
+            } catch (error) {
+                console.error(`Error processing GeoJSON layer ${index}:`, error);
+            }
         });
     }, [geojson, getFeatureStyle, createPopupContent]);
 
@@ -173,35 +281,87 @@ const MapComponentGeoJSON: React.FC<MapComponentGeoJSONProps> = ({
     const fitMapToBounds = useCallback(() => {
         if (!mapInstance.current) return;
 
-        if (selectedFeatureGeoJSON) {
-            const selectedBounds = L.geoJSON(selectedFeatureGeoJSON).getBounds();
-            if (selectedBounds.isValid()) {
-                mapInstance.current.fitBounds(selectedBounds);
-                return;
+        try {
+            if (selectedFeatureGeoJSON) {
+                const selectedBounds = L.geoJSON(selectedFeatureGeoJSON).getBounds();
+                if (selectedBounds.isValid()) {
+                    mapInstance.current.fitBounds(selectedBounds);
+                    return;
+                }
             }
-        }
 
-        // Fit to all GeoJSON bounds
-        const allGeoJsonBounds = L.latLngBounds([]);
-        geoJsonLayersRef.current.forEach(layer => {
-            allGeoJsonBounds.extend(layer.getBounds());
-        });
+            // Fit to all GeoJSON bounds
+            const allGeoJsonBounds = L.latLngBounds([]);
+            geoJsonLayersRef.current.forEach(layer => {
+                try {
+                    allGeoJsonBounds.extend(layer.getBounds());
+                } catch (error) {
+                    console.warn('Error extending bounds:', error);
+                }
+            });
 
-        if (allGeoJsonBounds.isValid()) {
-            mapInstance.current.fitBounds(allGeoJsonBounds);
+            if (allGeoJsonBounds.isValid()) {
+                mapInstance.current.fitBounds(allGeoJsonBounds);
+            }
+        } catch (error) {
+            console.error('Error fitting map to bounds:', error);
         }
     }, [selectedFeatureGeoJSON]);
 
     // Main effect for updating map layers
     useEffect(() => {
-        if (!mapInstance.current) return;
+        if (!mapInstance.current) {
+            console.log('Map instance not ready, skipping layer update');
+            return;
+        }
 
-        clearLayers();
-        addGeoJsonLayers();
-        fitMapToBounds();
+        try {
+            clearLayers();
+            addGeoJsonLayers();
+            fitMapToBounds();
+        } catch (error) {
+            console.error('Error updating map layers:', error);
+        }
     }, [geojson, selectedFeatureGeoJSON, clearLayers, addGeoJsonLayers, fitMapToBounds]);
 
-    return <div ref={mapRef} style={{ height: '100%', width: '100%' }} className="rounded-md" />;
+    // Invalidate map size when component mounts and on window resize
+    useEffect(() => {
+        const handleResize = () => {
+            if (mapInstance.current) {
+                try {
+                    mapInstance.current.invalidateSize();
+                } catch (error) {
+                    console.warn('Error invalidating map size on resize:', error);
+                }
+            }
+        };
+
+        if (mapInstance.current) {
+            const timer = setTimeout(() => {
+                try {
+                    mapInstance.current?.invalidateSize();
+                } catch (error) {
+                    console.warn('Error invalidating map size:', error);
+                }
+            }, 200);
+            
+            // Add resize listener
+            window.addEventListener('resize', handleResize);
+            
+            return () => {
+                clearTimeout(timer);
+                window.removeEventListener('resize', handleResize);
+            };
+        }
+    }, []);
+
+    return (
+        <div 
+            ref={mapRef} 
+            style={{ height: '100%', width: '100%' }} 
+            className="rounded-md"
+        />
+    );
 };
 
 export default React.memo(MapComponentGeoJSON);

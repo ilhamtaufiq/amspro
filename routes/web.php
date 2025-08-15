@@ -57,7 +57,12 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/peta', [MapController::class, 'index'])->name('peta.index')->middleware('auth');
+
 Route::get('/dokumen-pekerjaan', [DokumenPekerjaanController::class, 'index'])->name('dokumen-pekerjaan.index')->middleware('auth');
+
+Route::get('/progress', [ProgressController::class, 'dashboard'])->name('progress.dashboard')->middleware('auth');
+Route::get('/keuangan', [KeuanganController::class, 'dashboard'])->name('keuangan.dashboard')->middleware('auth');
+Route::get('/output', [OutputController::class, 'dashboard'])->name('output.dashboard')->middleware('auth');
 
 
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -27,6 +27,38 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
+        // Add error boundary for Inertia errors
+        const handleError = (error: any) => {
+            console.error('Inertia error:', error);
+        };
+
+        // Check if browser history API is working
+        const checkHistoryAPI = () => {
+            try {
+                if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+                    // Test pushState
+                    const testState = { test: true };
+                    window.history.pushState(testState, '', window.location.href);
+                    window.history.replaceState(null, '', window.location.href);
+                    console.log('Browser history API is working');
+                    return true;
+                } else {
+                    console.warn('Browser history API not available');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Browser history API error:', error);
+                return false;
+            }
+        };
+
+        // Check history API on startup
+        checkHistoryAPI();
+
+        // Add global error handler
+        window.addEventListener('error', handleError);
+        window.addEventListener('unhandledrejection', handleError);
+
         root.render(
             <ThemeProvider>
                 <NavigationProgress />

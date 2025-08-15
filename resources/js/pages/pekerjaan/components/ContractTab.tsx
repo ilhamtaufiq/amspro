@@ -158,8 +158,8 @@ export function ContractTab({ pekerjaan, kontrak, penyediaList, berkasList, erro
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (file && file.size > 10 * 1024 * 1024) { // 10MB
-        alert("Ukuran file tidak boleh melebihi 10MB.");
+    if (file && file.size > 30720 * 1024) { // 30MB
+        alert("Ukuran file tidak boleh melebihi 30MB.");
         return;
     }
     setBerkasData("file", file);

@@ -19,7 +19,7 @@ class BerkasController extends Controller
     public function store(Request $request, $pekerjaanId)
     {
         $request->validate([
-            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
+            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:30720',
             'jenis_dokumen' => 'required|string|max:255',
         ]);
 

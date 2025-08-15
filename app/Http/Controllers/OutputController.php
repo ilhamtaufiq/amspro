@@ -6,9 +6,64 @@ use App\Models\Output;
 use App\Models\Pekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class OutputController extends Controller
 {
+    /**
+     * Display the dashboard page for outputs
+     */
+    public function dashboard()
+    {
+        // Get all output data for the dashboard
+        $outputData = Output::with('pekerjaan')->get();
+        
+        // Transform data for charts
+        $barChartData = [];
+        
+        // Group by satuan for pie chart
+        $outputBySatuan = [];
+        $satuanCounts = [];
+        
+        foreach ($outputData as $output) {
+            // Prepare data for bar chart
+            $barChartData[] = [
+                'id' => $output->id,
+                'name' => $output->komponen,
+                'volume' => $output->volume,
+                'satuan' => $output->satuan,
+                'pekerjaan_name' => $output->pekerjaan->nama_pekerjaan ?? 'Pekerjaan ' . $output->pekerjaan_id
+            ];
+            
+            // Count satuan for pie chart
+            if (!isset($satuanCounts[$output->satuan])) {
+                $satuanCounts[$output->satuan] = 0;
+            }
+            $satuanCounts[$output->satuan]++;
+        }
+        
+        // Convert satuan counts to array for pie chart
+        foreach ($satuanCounts as $satuan => $count) {
+            $outputBySatuan[] = [
+                'satuan' => $satuan,
+                'count' => $count
+            ];
+        }
+        
+        // Calculate summary data
+        $summary = [
+            'total_komponen' => count($outputData),
+            'total_satuan' => count($outputBySatuan),
+            'total_volume' => $outputData->sum('volume')
+        ];
+        
+        return Inertia::render('Output/Index', [
+            'outputData' => $outputData,
+            'barChartData' => $barChartData,
+            'outputBySatuan' => $outputBySatuan,
+            'summary' => $summary
+        ]);
+    }
     /**
      * Display a listing of the resource.
      */
