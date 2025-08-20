@@ -55,6 +55,8 @@ export interface Foto {
   koordinat: string;
   validasi_koordinat: boolean;
   validasi_koordinat_message?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Meta {

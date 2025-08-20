@@ -736,6 +736,8 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                     <TableHead>Penerima</TableHead>
                                     <TableHead>Koordinat</TableHead>
                                     <TableHead>Status Koordinat</TableHead>
+                                    <TableHead>Dibuat</TableHead>
+                                    <TableHead>Diperbarui</TableHead>
                                     <TableHead>Aksi</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -762,6 +764,12 @@ export function PhotosTab({ pekerjaan, fotos, penerimas, outputs, errors, flash,
                                             ) : (
                                                 <span className="text-red-600">{foto.validasi_koordinat_message || "Tidak Sesuai"}</span>
                                             )}
+                                        </TableCell>
+                                        <TableCell>
+                                            {foto.created_at ? new Date(foto.created_at).toLocaleString('id-ID') : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                            {foto.updated_at ? new Date(foto.updated_at).toLocaleString('id-ID') : 'N/A'}
                                         </TableCell>
                                         <TableCell className="space-x-2">
                                             <Button variant="outline" size="sm" onClick={() => handleEdit(foto)}>

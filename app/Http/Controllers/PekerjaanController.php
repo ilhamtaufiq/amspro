@@ -244,6 +244,7 @@ class PekerjaanController extends Controller
                 'validasi_koordinat' => $foto->validasi_koordinat,
                 'validasi_koordinat_message' => $foto->validasi_koordinat_message,
                 'created_at' => $foto->created_at->toDateTimeString(),
+                'updated_at' => $foto->updated_at->toDateTimeString(),
                 'photo_url' => $foto->getFirstMediaUrl('foto/pekerjaan'),
                 'photo_thumb_url' => $foto->getFirstMediaUrl('foto/pekerjaan', 'thumb'),
                 'photo_medium_url' => $foto->getFirstMediaUrl('foto/pekerjaan', 'medium'),

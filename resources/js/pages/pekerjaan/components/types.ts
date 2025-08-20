@@ -65,6 +65,7 @@ export interface Foto {
   keterangan: string;
   koordinat: string;
   created_at: string | null;
+  updated_at: string | null;
   photo_url: string;
   photo_thumb_url: string;
   photo_medium_url: string;
