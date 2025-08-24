@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import { Head, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Users, Package, Activity } from 'lucide-react';
+import { DollarSign, Users, Package, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import MapComponent from '@/components/MapComponent';
@@ -12,6 +12,7 @@ import { RecentActivity } from '@/components/recent-activity';
 import { GlobalSearch } from '@/components/global-search';
 import { QuickActions } from '@/components/quick-actions';
 import { CalendarWidget } from '@/components/calendar-widget';
+import { useState } from 'react';
 
 interface DashboardProps extends PageProps {
     stats: {
@@ -68,6 +69,10 @@ interface DashboardProps extends PageProps {
 }
 
 export default function Dashboard({ auth, stats, recentPekerjaan, progressData, kontrakStats, locations, recentTodos, tahun_aktif, isSuperAdmin, monthlyProgress, recentActivities, calendarEvents }: DashboardProps) {
+    // State for minimize functionality - menggunakan satu set state untuk semua user
+    const [isFotoMinimized, setIsFotoMinimized] = useState(true);
+    const [isPenerimaMinimized, setIsPenerimaMinimized] = useState(true);
+
     // Prepare data for new components
     const dashboardStats = {
         totalUsers: stats?.totalUsers || 0,
@@ -110,35 +115,101 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 mb-8">
                                 <Card className="bg-yellow-100 border-yellow-400 text-yellow-800">
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Foto</CardTitle>
-                                        <Package className="h-4 w-4 text-yellow-800" />
+                                        <div className="flex items-center space-x-2">
+                                            <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Foto</CardTitle>
+                                            <Package className="h-4 w-4 text-yellow-800" />
+                                        </div>
+                                        <button
+                                            onClick={() => setIsFotoMinimized(!isFotoMinimized)}
+                                            className="p-1 hover:bg-yellow-200 rounded transition-colors"
+                                            title={isFotoMinimized ? "Klik untuk melihat detail" : "Klik untuk menyembunyikan detail"}
+                                        >
+                                            {isFotoMinimized ? (
+                                                <ChevronDown className="h-4 w-4 text-yellow-800" />
+                                            ) : (
+                                                <ChevronUp className="h-4 w-4 text-yellow-800" />
+                                            )}
+                                        </button>
                                     </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{stats.pekerjaanTanpaFoto.length}</div>
-                                        <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki foto</p>
-                                        {stats.pekerjaanTanpaFoto.length > 0 && (
-                                            <ul className="mt-2 text-sm text-yellow-800">
-                                                {stats.pekerjaanTanpaFoto.map((pekerjaan) => (
-                                                    <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
-                                                ))}
-                                            </ul>
+                                    <CardContent className={isFotoMinimized ? "pb-2" : ""}>
+                                        {isFotoMinimized ? (
+                                            // Tampilan minimize - hanya ringkasan
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <div className="text-2xl font-bold">{stats.pekerjaanTanpaFoto.length}</div>
+                                                    <p className="text-xs text-yellow-700">Pekerjaan tanpa foto</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs text-yellow-600">
+                                                        {stats.pekerjaanTanpaFoto.length > 0 
+                                                            ? `${stats.pekerjaanTanpaFoto.length} item` 
+                                                            : "Tidak ada data"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            // Tampilan expand - detail lengkap
+                                            <div>
+                                                <div className="text-2xl font-bold">{stats.pekerjaanTanpaFoto.length}</div>
+                                                <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki foto</p>
+                                                {stats.pekerjaanTanpaFoto.length > 0 && (
+                                                    <ul className="mt-2 text-sm text-yellow-800">
+                                                        {stats.pekerjaanTanpaFoto.map((pekerjaan) => (
+                                                            <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
                                         )}
                                     </CardContent>
                                 </Card>
                                 <Card className="bg-yellow-100 border-yellow-400 text-yellow-800">
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Penerima</CardTitle>
-                                        <Users className="h-4 w-4 text-yellow-800" />
+                                        <div className="flex items-center space-x-2">
+                                            <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Penerima</CardTitle>
+                                            <Users className="h-4 w-4 text-yellow-800" />
+                                        </div>
+                                        <button
+                                            onClick={() => setIsPenerimaMinimized(!isPenerimaMinimized)}
+                                            className="p-1 hover:bg-yellow-200 rounded transition-colors"
+                                            title={isPenerimaMinimized ? "Klik untuk melihat detail" : "Klik untuk menyembunyikan detail"}
+                                        >
+                                            {isPenerimaMinimized ? (
+                                                <ChevronDown className="h-4 w-4 text-yellow-800" />
+                                            ) : (
+                                                <ChevronUp className="h-4 w-4 text-yellow-800" />
+                                            )}
+                                        </button>
                                     </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{stats.pekerjaanTanpaPenerima.length}</div>
-                                        <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki penerima</p>
-                                        {stats.pekerjaanTanpaPenerima.length > 0 && (
-                                            <ul className="mt-2 text-sm text-yellow-800">
-                                                {stats.pekerjaanTanpaPenerima.map((pekerjaan) => (
-                                                    <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
-                                                ))}
-                                            </ul>
+                                    <CardContent className={isPenerimaMinimized ? "pb-2" : ""}>
+                                        {isPenerimaMinimized ? (
+                                            // Tampilan minimize - hanya ringkasan
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <div className="text-2xl font-bold">{stats.pekerjaanTanpaPenerima.length}</div>
+                                                    <p className="text-xs text-yellow-700">Pekerjaan tanpa penerima</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs text-yellow-600">
+                                                        {stats.pekerjaanTanpaPenerima.length > 0 
+                                                            ? `${stats.pekerjaanTanpaPenerima.length} item` 
+                                                            : "Tidak ada data"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            // Tampilan expand - detail lengkap
+                                            <div>
+                                                <div className="text-2xl font-bold">{stats.pekerjaanTanpaPenerima.length}</div>
+                                                <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki penerima</p>
+                                                {stats.pekerjaanTanpaPenerima.length > 0 && (
+                                                    <ul className="mt-2 text-sm text-yellow-800">
+                                                        {stats.pekerjaanTanpaPenerima.map((pekerjaan) => (
+                                                            <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
                                         )}
                                     </CardContent>
                                 </Card>
@@ -186,35 +257,101 @@ export default function Dashboard({ auth, stats, recentPekerjaan, progressData, 
                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 mb-8 mt-8">
                          <Card className="bg-yellow-100 border-yellow-400 text-yellow-800">
                              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                 <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Foto</CardTitle>
-                                 <Package className="h-4 w-4 text-yellow-800" />
+                                 <div className="flex items-center space-x-2">
+                                     <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Foto</CardTitle>
+                                     <Package className="h-4 w-4 text-yellow-800" />
+                                 </div>
+                                 <button
+                                     onClick={() => setIsFotoMinimized(!isFotoMinimized)}
+                                     className="p-1 hover:bg-yellow-200 rounded transition-colors"
+                                     title={isFotoMinimized ? "Klik untuk melihat detail" : "Klik untuk menyembunyikan detail"}
+                                 >
+                                     {isFotoMinimized ? (
+                                         <ChevronDown className="h-4 w-4 text-yellow-800" />
+                                     ) : (
+                                         <ChevronUp className="h-4 w-4 text-yellow-800" />
+                                     )}
+                                 </button>
                              </CardHeader>
-                             <CardContent>
-                                 <div className="text-2xl font-bold">{stats.pekerjaanTanpaFoto.length}</div>
-                                 <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki foto</p>
-                                 {stats.pekerjaanTanpaFoto.length > 0 && (
-                                     <ul className="mt-2 text-sm text-yellow-800">
-                                         {stats.pekerjaanTanpaFoto.map((pekerjaan) => (
-                                             <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
-                                         ))}
-                                     </ul>
+                             <CardContent className={isFotoMinimized ? "pb-2" : ""}>
+                                 {isFotoMinimized ? (
+                                     // Tampilan minimize - hanya ringkasan
+                                     <div className="flex items-center justify-between">
+                                         <div>
+                                             <div className="text-2xl font-bold">{stats.pekerjaanTanpaFoto.length}</div>
+                                             <p className="text-xs text-yellow-700">Pekerjaan tanpa foto</p>
+                                         </div>
+                                         <div className="text-right">
+                                             <p className="text-xs text-yellow-600">
+                                                 {stats.pekerjaanTanpaFoto.length > 0 
+                                                     ? `${stats.pekerjaanTanpaFoto.length} item` 
+                                                     : "Tidak ada data"}
+                                             </p>
+                                         </div>
+                                     </div>
+                                 ) : (
+                                     // Tampilan expand - detail lengkap
+                                     <div>
+                                         <div className="text-2xl font-bold">{stats.pekerjaanTanpaFoto.length}</div>
+                                         <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki foto</p>
+                                         {stats.pekerjaanTanpaFoto.length > 0 && (
+                                             <ul className="mt-2 text-sm text-yellow-800">
+                                                 {stats.pekerjaanTanpaFoto.map((pekerjaan) => (
+                                                     <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
+                                                 ))}
+                                             </ul>
+                                         )}
+                                     </div>
                                  )}
                              </CardContent>
                          </Card>
                          <Card className="bg-yellow-100 border-yellow-400 text-yellow-800">
                              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                 <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Penerima</CardTitle>
-                                 <Users className="h-4 w-4 text-yellow-800" />
+                                 <div className="flex items-center space-x-2">
+                                     <CardTitle className="text-sm font-medium">Pekerjaan Tanpa Penerima</CardTitle>
+                                     <Users className="h-4 w-4 text-yellow-800" />
+                                 </div>
+                                 <button
+                                     onClick={() => setIsPenerimaMinimized(!isPenerimaMinimized)}
+                                     className="p-1 hover:bg-yellow-200 rounded transition-colors"
+                                     title={isPenerimaMinimized ? "Klik untuk melihat detail" : "Klik untuk menyembunyikan detail"}
+                                 >
+                                     {isPenerimaMinimized ? (
+                                         <ChevronDown className="h-4 w-4 text-yellow-800" />
+                                     ) : (
+                                         <ChevronUp className="h-4 w-4 text-yellow-800" />
+                                     )}
+                                 </button>
                              </CardHeader>
-                             <CardContent>
-                                 <div className="text-2xl font-bold">{stats.pekerjaanTanpaPenerima.length}</div>
-                                 <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki penerima</p>
-                                 {stats.pekerjaanTanpaPenerima.length > 0 && (
-                                     <ul className="mt-2 text-sm text-yellow-800">
-                                         {stats.pekerjaanTanpaPenerima.map((pekerjaan) => (
-                                             <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
-                                         ))}
-                                     </ul>
+                             <CardContent className={isPenerimaMinimized ? "pb-2" : ""}>
+                                 {isPenerimaMinimized ? (
+                                     // Tampilan minimize - hanya ringkasan
+                                     <div className="flex items-center justify-between">
+                                         <div>
+                                             <div className="text-2xl font-bold">{stats.pekerjaanTanpaPenerima.length}</div>
+                                             <p className="text-xs text-yellow-700">Pekerjaan tanpa penerima</p>
+                                         </div>
+                                         <div className="text-right">
+                                             <p className="text-xs text-yellow-600">
+                                                 {stats.pekerjaanTanpaPenerima.length > 0 
+                                                     ? `${stats.pekerjaanTanpaPenerima.length} item` 
+                                                     : "Tidak ada data"}
+                                             </p>
+                                         </div>
+                                     </div>
+                                 ) : (
+                                     // Tampilan expand - detail lengkap
+                                     <div>
+                                         <div className="text-2xl font-bold">{stats.pekerjaanTanpaPenerima.length}</div>
+                                         <p className="text-xs text-yellow-700">Pekerjaan yang belum memiliki penerima</p>
+                                         {stats.pekerjaanTanpaPenerima.length > 0 && (
+                                             <ul className="mt-2 text-sm text-yellow-800">
+                                                 {stats.pekerjaanTanpaPenerima.map((pekerjaan) => (
+                                                     <li key={pekerjaan.id}>{pekerjaan.nama_paket}</li>
+                                                 ))}
+                                             </ul>
+                                         )}
+                                     </div>
                                  )}
                              </CardContent>
                          </Card>
