@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Penunjukan Penyedia Barang/Jasa (SPPBJ)</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm 2cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+            padding: 15px 20px;
+            max-width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+        }
+        
+        .page-number {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .kop-surat {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .kop-surat img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+        
+        .document-info {
+            margin-bottom: 12px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 3px;
+        }
+        
+        .info-label {
+            width: 110px;
+            flex-shrink: 0;
+        }
+        
+        .info-separator {
+            width: 15px;
+            flex-shrink: 0;
+        }
+        
+        .info-value {
+            flex: 1;
+        }
+        
+        .date-right {
+            text-align: right;
+            margin-bottom: 12px;
+        }
+        
+        .recipient {
+            font-weight: bold;
+        }
+        
+        .content {
+            text-align: justify;
+            margin-bottom: 20px;
+        }
+        
+        .content p {
+            margin-bottom: 10px;
+        }
+        
+        .signature-block {
+            margin-top: 30px;
+        }
+        
+        .signature-content {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .signature-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .signature-space {
+            flex: 1;
+            min-height: 70px;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .signature-position {
+            margin-bottom: 2px;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+                min-height: auto;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            @page {
+                margin: 1.5cm 2cm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-number">222</div>
+    
+    <div class="kop-surat">
+        <img src="kop-surat.png" alt="Kop Surat">
+    </div>
+    
+    <div class="header">
+        <h1>SURAT PENUNJUKAN PENYEDIA BARANG/JASA (SPPBJ)</h1>
+    </div>
+    
+    <div class="document-info">
+        <div class="info-row">
+            <div class="info-label">Nomor</div>
+            <div class="info-separator">:</div>
+            <div class="info-value">{{nomor_sppbj}}</div>
+        </div>
+        <div class="date-right">{{kota}}, {{tanggal_surat}}</div>
+        <div class="info-row">
+            <div class="info-label">Lampiran</div>
+            <div class="info-separator">:</div>
+            <div class="info-value">{{lampiran}}</div>
+        </div>
+    </div>
+    
+    <div class="document-info">
+        <div class="info-row">
+            <div class="info-label">Kepada Yth.</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label"></div>
+            <div class="info-value recipient">{{nama_penyedia}}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Di</div>
+            <div class="info-value">{{lokasi_penyedia}}</div>
+        </div>
+    </div>
+    
+    <div class="document-info">
+        <div class="info-row">
+            <div class="info-label">Perihal</div>
+            <div class="info-separator">:</div>
+            <div class="info-value">Penunjukan Penyedia untuk Pelaksanaan Paket Pekerjaan {{nama_paket}}</div>
+        </div>
+    </div>
+    
+    <div class="content">
+        <p>
+            Dengan ini kami beritahukan bahwa penawaran saudara nomor {{nomor_penawaran}} tanggal {{tanggal_penawaran}} perihal {{nama_paket}} dengan [nilai penawaran/penawaran terkoreksi] sebesar {{nilai_penawaran_text}} ({{nilai_penawaran_terbilang}}) kami nyatakan diterima/disetujui.
+        </p>
+        
+        <p>
+            Sebagai tindaklanjut dari Surat Penunjukan Penyedia Barang/Jasa (SPPBJ) ini saudara diharuskan untuk menandatangani Surat Perjanjian paling lambat 14 (empat belas) hari kerja setelah diterbitkannya SPPBJ.
+        </p>
+        
+        <p>
+            Kegagalan saudara untuk menerima penunjukan ini yang disusun berdasarkan evaluasi terhadap penawaran, akan dikenakan sanksi sesuai ketentuan dalam Peraturan Perundangan terkait tentang Pengadaan Barang/Jasa Pemerintah beserta petunjuk teknisnya.
+        </p>
+    </div>
+    
+    <div class="signature-block">
+        <div class="signature-content">
+            <div class="signature-title">Satuan Kerja {{nama_satuan_kerja}}</div>
+            <div class="signature-title">{{jabatan_penandatangan}}</div>
+            <div class="signature-space"></div>
+            <div class="signature-name">{{nama_penandatangan}}</div>
+            <div class="signature-position">{{jabatan_detail}}</div>
+            <div class="signature-position">NIP. {{nip_penandatangan}}</div>
+        </div>
+    </div>
+    
+    <!-- Button untuk print (opsional) -->
+    <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 8px 16px; font-size: 12pt; cursor: pointer;">
+            Cetak Dokumen
+        </button>
+    </div>
+</body>
+</html>

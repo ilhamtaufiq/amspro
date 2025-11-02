@@ -7,61 +7,49 @@ use App\Models\Pekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-
+use DB;
 class OutputController extends Controller
 {
     /**
      * Display the dashboard page for outputs
      */
-    public function dashboard()
+        public function dashboard(Request $request)
     {
-        // Get all output data for the dashboard
-        $outputData = Output::with('pekerjaan')->get();
-        
-        // Transform data for charts
-        $barChartData = [];
-        
-        // Group by satuan for pie chart
-        $outputBySatuan = [];
-        $satuanCounts = [];
-        
-        foreach ($outputData as $output) {
-            // Prepare data for bar chart
-            $barChartData[] = [
-                'id' => $output->id,
-                'name' => $output->komponen,
-                'volume' => $output->volume,
-                'satuan' => $output->satuan,
-                'pekerjaan_name' => $output->pekerjaan->nama_pekerjaan ?? 'Pekerjaan ' . $output->pekerjaan_id
-            ];
-            
-            // Count satuan for pie chart
-            if (!isset($satuanCounts[$output->satuan])) {
-                $satuanCounts[$output->satuan] = 0;
+        $user = Auth::user();
+        $isSuperAdmin = $user->hasRole('Super Admin');
+        $tahun = $request->query('tahun', session('tahun', now()->year));
+
+        // Base query for Pekerjaan, filtered by year and role
+        $pekerjaanQuery = Pekerjaan::query()
+            ->whereHas('kegiatan', fn ($q) => $q->where('tahun_anggaran', $tahun));
+
+        if (!$isSuperAdmin) {
+            $roleId = $user->roles->first()->id ?? null;
+            if ($roleId) {
+                $pekerjaanQuery->whereHas('kegiatan.roles', fn ($q) => $q->where('role_id', $roleId));
+            } else {
+                $pekerjaanQuery->whereRaw('1 = 0');
             }
-            $satuanCounts[$output->satuan]++;
         }
-        
-        // Convert satuan counts to array for pie chart
-        foreach ($satuanCounts as $satuan => $count) {
-            $outputBySatuan[] = [
-                'satuan' => $satuan,
-                'count' => $count
-            ];
-        }
-        
-        // Calculate summary data
+
+        $pekerjaanIds = $pekerjaanQuery->pluck('id');
+
+        $outputs = DB::table('tbl_output as o')
+            ->whereIn('o.pekerjaan_id', $pekerjaanIds)
+            ->selectRaw('o.komponen, o.satuan, SUM(o.volume) as total_volume, COUNT(DISTINCT o.pekerjaan_id) as jumlah_pekerjaan')
+            ->groupBy('o.komponen', 'o.satuan')
+            ->orderBy('o.komponen')
+            ->get();
+
         $summary = [
-            'total_komponen' => count($outputData),
-            'total_satuan' => count($outputBySatuan),
-            'total_volume' => $outputData->sum('volume')
+            'total_jenis_output' => $outputs->count(),
+            'total_pekerjaan_dengan_output' => DB::table('tbl_output')->whereIn('pekerjaan_id', $pekerjaanIds)->distinct('pekerjaan_id')->count(),
         ];
-        
-        return Inertia::render('Output/Index', [
-            'outputData' => $outputData,
-            'barChartData' => $barChartData,
-            'outputBySatuan' => $outputBySatuan,
-            'summary' => $summary
+
+        return Inertia::render('Output/Dashboard', [
+            'summary' => $summary,
+            'outputs' => $outputs,
+            'filters' => ['tahun' => $tahun],
         ]);
     }
     /**

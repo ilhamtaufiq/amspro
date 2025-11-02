@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Perintah Mulai Kerja (SPMK)</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm 2cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            line-height: 1.35;
+            color: #000;
+            background: #fff;
+            padding: 15px 20px;
+            max-width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+        }
+        
+        .page-number {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .kop-surat {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .kop-surat img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        
+        .header h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+        
+        .document-number {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        
+        .project-info {
+            text-align: left;
+            margin-bottom: 12px;
+            font-size: 10.5pt;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 6px;
+            margin-top: 10px;
+        }
+        
+        .party-info {
+            margin-bottom: 10px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 3px;
+        }
+        
+        .info-label {
+            width: 160px;
+            flex-shrink: 0;
+        }
+        
+        .info-separator {
+            width: 15px;
+            flex-shrink: 0;
+        }
+        
+        .info-value {
+            flex: 1;
+        }
+        
+        .info-value.bold {
+            font-weight: bold;
+        }
+        
+        .contract-terms {
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .term-item {
+            display: flex;
+            margin-bottom: 6px;
+        }
+        
+        .term-number {
+            width: 180px;
+            flex-shrink: 0;
+        }
+        
+        .term-separator {
+            width: 15px;
+            flex-shrink: 0;
+        }
+        
+        .term-value {
+            flex: 1;
+        }
+        
+        .signature-section {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .signature-block {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .signature-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 10.5pt;
+        }
+        
+        .signature-space {
+            flex: 1;
+            min-height: 70px;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .date-location {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            margin-bottom: 8px;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+                min-height: auto;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            @page {
+                margin: 1.5cm 2cm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-number">222</div>
+    
+    <div class="kop-surat">
+        <img src="kop-surat.png" alt="Kop Surat">
+    </div>
+    
+    <div class="header">
+        <h1>SURAT PERINTAH MULAI KERJA (SPMK)</h1>
+    </div>
+    
+    <div class="document-number">
+        Nomor: {{nomor_spmk}}
+    </div>
+    
+    <div class="project-info">
+        Paket Pekerjaan Pekerjaan Konstruksi: {{nama_paket}}
+    </div>
+    
+    <div class="section-title">Yang bertanda tangan di bawah ini :</div>
+    
+    <div class="party-info">
+        <div class="info-row">
+            <div class="info-label">Nama</div>
+            <div class="info-separator">:</div>
+            <div class="info-value bold">{{nama_ppk}}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Jabatan</div>
+            <div class="info-separator">:</div>
+            <div class="info-value">{{jabatan_ppk}}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Alamat</div>
+            <div class="info-separator">:</div>
+            <div class="info-value">{{alamat_ppk}}</div>
+        </div>
+    </div>
+    
+    <p>
+        selanjutnya disebut sebagai <strong>Pejabat Pembuat Komitmen</strong>;
+    </p>
+    
+    <p>
+        berdasarkan Surat Perjanjian {{nama_paket}} nomor {{nomor_spk_referensi}} tanggal {{tanggal_spk}} bersama ini memerintahkan:
+    </p>
+    
+    <div class="party-info">
+        <div class="info-value bold" style="margin-bottom: 3px;">{{nama_penyedia}}</div>
+        <div class="info-value" style="margin-bottom: 3px;">{{alamat_penyedia}}</div>
+        <div class="info-value" style="margin-bottom: 8px;">yang dalam hal ini diwakili oleh {{nama_direktur}}</div>
+    </div>
+    
+    <p>
+        Selanjutnya disebut sebagai <strong>penyedia</strong>;
+    </p>
+    
+    <p>
+        untuk segera memulai pelaksanaan pekerjaan dengan memperhatikan ketentuan-ketentuan sebagai berikut:
+    </p>
+    
+    <div class="contract-terms">
+        <div class="term-item">
+            <div class="term-number">1. Paket Pengadaan</div>
+            <div class="term-separator">:</div>
+            <div class="term-value">{{nama_paket}}</div>
+        </div>
+        <div class="term-item">
+            <div class="term-number">2. Tanggal Mulai Kerja</div>
+            <div class="term-separator">:</div>
+            <div class="term-value">{{tanggal_mulai}}</div>
+        </div>
+        <div class="term-item">
+            <div class="term-number">3. Syarat-syarat Pekerjaan</div>
+            <div class="term-separator">:</div>
+            <div class="term-value">sesuai dengan persyaratan dan ketentuan Kontrak;</div>
+        </div>
+        <div class="term-item">
+            <div class="term-number">4. Waktu Peneyelesaian</div>
+            <div class="term-separator">:</div>
+            <div class="term-value">selama {{durasi_hari}} Hari Kalender dan pekerjaan harus sudah selesai pada tanggal {{tanggal_selesai}}</div>
+        </div>
+        <div class="term-item" style="align-items: flex-start;">
+            <div class="term-number">5. Denda</div>
+            <div class="term-separator">:</div>
+            <div class="term-value">
+                Terhadap setiap hari keterlambatan pelaksanaan/penyelesaian pekerjaan Penyedia akan dikenakan Denda Keterlambatan sebesar 1/1000 (satu permil) dari Nilai SPK atau dari nilai bagian SPK (tidak termasuk PPN) sesuai ketentuan dalam SPK.
+            </div>
+        </div>
+    </div>
+    
+    <div class="date-location">
+        {{kota}}, {{tanggal_ttd}}
+    </div>
+    
+    <div class="signature-section">
+        <div class="signature-block">
+            <div class="signature-title">Untuk dan atas nama {{nama_dinas}}</div>
+            <div class="signature-title">Pejabat Pembuat Komitmen</div>
+            <div class="signature-space"></div>
+            <div class="signature-name">{{nama_ppk}}</div>
+            <div>NIP. {{nip_ppk}}</div>
+        </div>
+        
+        <div class="signature-block">
+            <div class="signature-title">Menerima dan menyetujui :</div>
+            <div class="signature-title">{{nama_penyedia}}</div>
+            <div class="signature-space"></div>
+            <div class="signature-name">{{nama_direktur}}</div>
+            <div>{{jabatan_direktur}}</div>
+        </div>
+    </div>
+    
+    <!-- Button untuk print (opsional) -->
+    <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 8px 16px; font-size: 12pt; cursor: pointer;">
+            Cetak Dokumen
+        </button>
+    </div>
+</body>
+</html>

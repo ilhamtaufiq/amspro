@@ -123,4 +123,23 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Konfigurasi PPK dan Dinas untuk Dokumen Kontrak
+    |--------------------------------------------------------------------------
+    |
+    | Konfigurasi ini digunakan untuk generate dokumen SPK, SPMK, dan SPPBJ.
+    | Dapat diatur melalui file .env atau langsung di file ini.
+    |
+    */
+
+    'ppk_nama' => env('APP_PPK_NAMA', 'AGUNG DELI SAHPUTRA, ST'),
+    'ppk_nip' => env('APP_PPK_NIP', '3203012111770001'),
+    'ppk_jabatan' => env('APP_PPK_JABATAN', 'Pejabat Pembuat Komitmen'),
+    'ppk_jabatan_detail' => env('APP_PPK_JABATAN_DETAIL', 'Kepala Bidang'),
+    'ppk_alamat' => env('APP_PPK_ALAMAT', 'Alamat PPK'),
+    'nama_dinas' => env('APP_NAMA_DINAS', 'Dinas Perumahan dan Kawasan Permukiman Kabupaten Cianjur'),
+    'nama_satuan_kerja' => env('APP_NAMA_SATUAN_KERJA', 'Dinas Perumahan dan Kawasan Permukiman Kabupaten Cianjur'),
+    'kota' => env('APP_KOTA', 'Cianjur'),
+
 ];

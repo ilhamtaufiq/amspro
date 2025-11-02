@@ -7,65 +7,85 @@ use App\Models\Kontrak;
 use App\Models\Pekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class KeuanganController extends Controller
 {
-    public function dashboard()
+        public function dashboard(Request $request)
     {
-        // Get all keuangan data for the dashboard
-        $keuanganData = Keuangan::with('pekerjaan')->get();
-        $kontrakData = Kontrak::all();
-        
-        // Transform data for the charts
-        $chartData = [];
-        $totalRealisasi = 0;
-        $totalNilaiKontrak = 0;
-        
-        // Prepare monthly spending data (mock data for now)
-        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        $monthlySpending = array_map(function($month) {
-            return [
-                'name' => $month,
-                'realisasi' => 0
-            ];
-        }, $months);
-        
-        // Process data for charts
-        foreach ($keuanganData as $keuangan) {
-            $kontrak = $kontrakData->where('id_pekerjaan', $keuangan->pekerjaan_id)->first();
-            $nilaiKontrak = $kontrak ? $kontrak->nilai_kontrak : 0;
-            
-            $chartData[] = [
-                'id' => $keuangan->id,
-                'pekerjaan_id' => $keuangan->pekerjaan_id,
-                'pekerjaan_name' => $keuangan->pekerjaan->nama_pekerjaan ?? 'Pekerjaan ' . $keuangan->pekerjaan_id,
-                'realisasi' => $keuangan->realisasi,
-                'nilai_kontrak' => $nilaiKontrak,
-                'sisa' => max(0, $nilaiKontrak - $keuangan->realisasi),
-                'persentase' => $nilaiKontrak > 0 ? ($keuangan->realisasi / $nilaiKontrak) * 100 : 0
-            ];
-            
-            $totalRealisasi += $keuangan->realisasi;
-            $totalNilaiKontrak += $nilaiKontrak;
-            
-            // For demo purposes, put all realization in December
-            // In a real app, you would use the actual dates from the database
-            $monthlySpending[11]['realisasi'] += $keuangan->realisasi;
+        $user = Auth::user();
+        $isSuperAdmin = $user->hasRole('Super Admin');
+        $tahun = $request->query('tahun', session('tahun', now()->year));
+
+        // Base query for Pekerjaan, filtered by year and role
+        $pekerjaanQuery = Pekerjaan::query()
+            ->whereHas('kegiatan', fn ($q) => $q->where('tahun_anggaran', $tahun));
+
+        if (!$isSuperAdmin) {
+            $roleId = $user->roles->first()->id ?? null;
+            if ($roleId) {
+                $pekerjaanQuery->whereHas('kegiatan.roles', fn ($q) => $q->where('role_id', $roleId));
+            } else {
+                $pekerjaanQuery->whereRaw('1 = 0');
+            }
         }
-        
-        $summary = [
-            'total_realisasi' => $totalRealisasi,
-            'total_nilai_kontrak' => $totalNilaiKontrak,
-            'total_sisa' => max(0, $totalNilaiKontrak - $totalRealisasi),
-            'persentase_total' => $totalNilaiKontrak > 0 ? ($totalRealisasi / $totalNilaiKontrak) * 100 : 0
-        ];
-        
-        return Inertia::render('Keuangan/Index', [
-            'keuanganData' => $keuanganData,
-            'chartData' => $chartData,
-            'monthlySpending' => array_values($monthlySpending),
-            'summary' => $summary
+
+        // Get IDs of filtered pekerjaan
+        $pekerjaanIds = $pekerjaanQuery->pluck('id');
+
+        // Get aggregated data from the database
+        $summary = DB::table('tbl_pekerjaan as p')
+            ->join('tbl_kegiatan as k', 'p.kegiatan_id', '=', 'k.id')
+            ->leftJoin('tbl_kontrak as kon', 'p.id', '=', 'kon.id_pekerjaan')
+            ->leftJoin('tbl_keuangan as keu', 'p.id', '=', 'keu.pekerjaan_id')
+            ->whereIn('p.id', $pekerjaanIds)
+            ->selectRaw('SUM(p.pagu) as total_pagu, SUM(kon.nilai_kontrak) as total_kontrak, SUM(keu.realisasi) as total_realisasi')
+            ->first();
+
+        // Monthly spending
+        $monthlySpending = DB::table('tbl_keuangan')
+            ->whereIn('pekerjaan_id', $pekerjaanIds)
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(realisasi) as total')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [$item->month => $item->total];
+            });
+
+        $months = collect(range(1, 12))->map(function ($month) use ($tahun, $monthlySpending) {
+            $monthStr = sprintf('%04d-%02d', $tahun, $month);
+            return [
+                'name' => date('M', mktime(0, 0, 0, $month, 1)),
+                'realisasi' => $monthlySpending[$monthStr] ?? 0,
+            ];
+        });
+
+        // Chart by Kegiatan
+        $byKegiatan = DB::table('tbl_pekerjaan as p')
+            ->join('tbl_kegiatan as k', 'p.kegiatan_id', '=', 'k.id')
+            ->leftJoin('tbl_kontrak as kon', 'p.id', '=', 'kon.id_pekerjaan')
+            ->leftJoin('tbl_keuangan as keu', 'p.id', '=', 'keu.pekerjaan_id')
+            ->whereIn('p.id', $pekerjaanIds)
+            ->selectRaw('k.nama as nama_kegiatan, SUM(kon.nilai_kontrak) as nilai_kontrak, SUM(keu.realisasi) as realisasi')
+            ->groupBy('k.nama')
+            ->get();
+
+        return Inertia::render('Keuangan/Dashboard', [
+            'summary' => [
+                'total_pagu' => (float) $summary->total_pagu,
+                'total_kontrak' => (float) $summary->total_kontrak,
+                'total_realisasi' => (float) $summary->total_realisasi,
+                'sisa_pagu' => (float) $summary->total_pagu - (float) $summary->total_realisasi,
+                'sisa_kontrak' => (float) $summary->total_kontrak - (float) $summary->total_realisasi,
+                'persen_realisasi_pagu' => $summary->total_pagu > 0 ? ((float) $summary->total_realisasi / (float) $summary->total_pagu) * 100 : 0,
+                'persen_realisasi_kontrak' => $summary->total_kontrak > 0 ? ((float) $summary->total_realisasi / (float) $summary->total_kontrak) * 100 : 0,
+            ],
+            'monthlySpending' => $months,
+            'byKegiatan' => $byKegiatan,
+            'filters' => ['tahun' => $tahun],
         ]);
     }
     public function show($pekerjaanId)

@@ -1,7 +1,15 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, FileText } from "lucide-react";
 import { Link } from "@inertiajs/react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface Kontrak {
     id: number;
@@ -138,5 +146,57 @@ export const columns: ColumnDef<Kontrak>[] = [
         accessorKey: "spmk",
         header: "SPMK",
         enableHiding: true,
+    },
+    {
+        id: "actions",
+        header: "Aksi",
+        cell: ({ row }) => {
+            const kontrak = row.original;
+
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Buka menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Generate Dokumen</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link 
+                                href={route('kontrak.sppbjPdf', kontrak.id)} 
+                                className="w-full flex items-center gap-2"
+                                target="_blank"
+                            >
+                                <FileText className="h-4 w-4" />
+                                Generate SPPBJ
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link 
+                                href={route('kontrak.spkPdf', kontrak.id)} 
+                                className="w-full flex items-center gap-2"
+                                target="_blank"
+                            >
+                                <FileText className="h-4 w-4" />
+                                Generate SPK
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link 
+                                href={route('kontrak.spmkPdf', kontrak.id)} 
+                                className="w-full flex items-center gap-2"
+                                target="_blank"
+                            >
+                                <FileText className="h-4 w-4" />
+                                Generate SPMK
+                            </Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            );
+        },
     },
 ];

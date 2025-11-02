@@ -89,6 +89,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('kontrak', [KontrakController::class, 'storeOrUpdate'])->name('kontrak.store')->middleware('permission:create kontrak');
     Route::put('kontrak/{kontrak}', [KontrakController::class, 'storeOrUpdate'])->name('kontrak.update')->middleware('permission:edit kontrak');
     Route::get('kontrak/{kontrak}/cover-pdf', [KontrakController::class, 'generateCoverPdf'])->name('kontrak.coverPdf')->middleware('permission:view kontrak');
+    Route::get('kontrak/{kontrak}/spk-pdf', [KontrakController::class, 'generateSpkPdf'])->name('kontrak.spkPdf')->middleware('permission:view kontrak');
+    Route::get('kontrak/{kontrak}/spmk-pdf', [KontrakController::class, 'generateSpmkPdf'])->name('kontrak.spmkPdf')->middleware('permission:view kontrak');
+    Route::get('kontrak/{kontrak}/sppbj-pdf', [KontrakController::class, 'generateSppbjPdf'])->name('kontrak.sppbjPdf')->middleware('permission:view kontrak');
     Route::resource('kontrak', KontrakController::class)->except(['store', 'update'])->middleware(['permission:view kontrak|create kontrak|edit kontrak|delete kontrak']);
 
     Route::middleware(['permission:view kegiatan|create kegiatan|edit kegiatan|delete kegiatan'])->group(function () {
